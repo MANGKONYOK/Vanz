@@ -47,6 +47,120 @@ A 12-report suite split into Simple and Analytical deliverables, segmented by th
     * Validates array logic natively (e.g., preventing empty dispatches or 0-item vouchers).
 *   **Standardized Enums:** Incorporates backend-matching specific Enums for status flows (`SUBMITTED`, `DRAFT`, `APPROVED`, `REJECTED`, `PERCENTAGE`, `FIXED_AMOUNT`).
 
+## 📁 File / Dependencies Schema
+
+The application is organized into 4 architectural layers:
+
+### Architecture Diagram
+
+```
+src/
+├── data/
+│   └── mockData.js                              ← All 17 mock data constants
+│
+├── components/
+│   ├── ui/                                      ← 15 Reusable UI primitives + barrel
+│   │   ├── index.js                               (barrel re-export)
+│   │   ├── Btn.jsx
+│   │   ├── Badge.jsx
+│   │   ├── Card.jsx
+│   │   ├── CardHeader.jsx
+│   │   ├── FormField.jsx
+│   │   ├── Input.jsx
+│   │   ├── Select.jsx
+│   │   ├── LovInput.jsx
+│   │   ├── LovModal.jsx                           (uses createPortal)
+│   │   ├── Table.jsx                              (includes Tr + Td)
+│   │   ├── StatCard.jsx                           (imports Card)
+│   │   ├── RankBadge.jsx
+│   │   ├── FilterBar.jsx                          (imports Card)
+│   │   ├── FilterField.jsx
+│   │   └── PageHeader.jsx
+│   │
+│   └── layout/
+│       ├── Sidebar.jsx                          ← NavGroup, NavItem, Section
+│       └── AppHeader.jsx                        ← Top header bar
+│
+├── views/
+│   ├── index.js                                 ← Master barrel (re-exports all)
+│   ├── DashboardView.jsx
+│   │
+│   ├── operations/
+│   │   ├── index.js
+│   │   ├── CustomerOrderListView.jsx
+│   │   ├── CustomerOrderFormView.jsx
+│   │   └── DelivererDispatchView.jsx
+│   │
+│   ├── finance/
+│   │   ├── index.js
+│   │   ├── ExpenseListView.jsx
+│   │   ├── ExpenseFormView.jsx
+│   │   ├── DelivererPaymentListView.jsx
+│   │   ├── DelivererPaymentView.jsx
+│   │   └── RevenueTripView.jsx
+│   │
+│   ├── master/
+│   │   ├── index.js
+│   │   ├── CustomerListView.jsx                   (co-locates CustomerFormInline)
+│   │   ├── DelivererListView.jsx                  (co-locates DelivererFormInline)
+│   │   ├── StoreListView.jsx                      (co-locates StoreFormInline)
+│   │   ├── ProductListView.jsx                    (co-locates ProductFormInline)
+│   │   ├── PromotionListView.jsx
+│   │   └── PromotionFormView.jsx
+│   │
+│   └── reports/
+│       ├── index.js
+│       ├── simple/
+│       │   ├── index.js
+│       │   ├── DeliveredOrdersReportView.jsx
+│       │   ├── OrderReceiptView.jsx
+│       │   ├── StoreProductsReportView.jsx
+│       │   ├── FavStoresReportView.jsx
+│       │   ├── UnapprovedVouchersReportView.jsx
+│       │   ├── DelivererRankingReportView.jsx
+│       │   ├── DelivererHistoryReportView.jsx
+│       │   └── CategoryProductsReportView.jsx
+│       │
+│       └── analytics/
+│           ├── index.js
+│           ├── ReportTopProductsView.jsx
+│           ├── TopDeliverersReportView.jsx
+│           ├── ExpenseSummaryReportView.jsx
+│           └── PromoPerfReportView.jsx
+│
+├── App.jsx                                      ← Slim orchestrator (~90 lines)
+├── App.css                                      ← All styles (fonts, animations, scrollbars)
+├── index.css
+└── main.jsx                                     ← Entry point
+```
+
+### Dependency Flow
+
+```
+main.jsx → App.jsx → Sidebar + AppHeader (layout)
+                   → views/* (all views via barrel import)
+                        ↓
+                   components/ui/* (via barrel index.js)
+                   data/mockData.js
+                   lucide-react
+```
+
+Every **view** file imports:
+1. UI primitives from `../../components/ui` (barrel)
+2. Mock data from `../../data/mockData` (named exports)
+3. Icons directly from `lucide-react`
+
+### File Count Summary
+
+| Layer | Files | Description |
+|-------|-------|-------------|
+| Data | 1 | Mock data constants |
+| UI Components | 16 | 15 components + barrel |
+| Layout | 2 | Sidebar + AppHeader |
+| Views | 29 | 22 view files + 7 barrels |
+| Core | 2 | App.jsx + App.css |
+| **Total** | **50** | |
+
 ## 🚀 How to Run locally
 
 ```bash
@@ -56,8 +170,3 @@ npm install
 # Start the Vite development server
 npm run dev
 ```
-
-## 📁 Files to Review
-
-If you are inspecting or auditing the project, the entire application logic, view structures, reports, and simulated mock data arrays are elegantly combined inside:
-👉 `src/App.jsx`
