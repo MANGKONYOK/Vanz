@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Plus, Edit2, Trash2, ArrowLeft, Save, Star } from 'lucide-react';
-import { PageHeader, Btn, Card, Table, Tr, Td, Badge, FormField, Input, Select } from '../../components/ui';
+import { Search, Plus, Edit2, Trash2, ArrowLeft, Save, Star } from 'lucide-react';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, FormField, Input, Select } from '../../components/ui';
 import { MOCK_DELIVERERS } from '../../data/mockData';
 
 function DelivererFormInline({ data, onBack, showToast }) {
@@ -49,14 +49,26 @@ function DelivererFormInline({ data, onBack, showToast }) {
 
 export default function DelivererListView({ showToast }) {
     const [editing, setEditing] = useState(null);
+    const [search, setSearch] = useState('');
+
     if (editing) return <DelivererFormInline data={editing} onBack={() => setEditing(null)} showToast={showToast} />;
+
+    const filtered = MOCK_DELIVERERS.filter(d => 
+        d.name.toLowerCase().includes(search.toLowerCase()) ||
+        d.id.toLowerCase().includes(search.toLowerCase()) ||
+        d.license.toLowerCase().includes(search.toLowerCase())
+    );
+
     return (
-        <div className="fade-in">
+        <div className="fade-in space-y-5">
             <PageHeader title="Deliverers" subtitle="Manage deliverer profiles"
                 action={<Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Add Deliverer</Btn>} />
-            <Card>
+            <Card className="overflow-hidden">
+                <CardHeader 
+                    search={<Input icon={Search} placeholder="Search ID, name, license..." value={search} onChange={e => setSearch(e.target.value)} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                />
                 <Table headers={[{ label: 'ID' }, { label: 'Name' }, { label: 'License Plate' }, { label: 'Vehicle' }, { label: 'Phone' }, { label: 'Status', center: true }, { label: 'Rating', center: true }, { label: '', right: true }]}>
-                    {MOCK_DELIVERERS.map(d => (
+                    {filtered.map(d => (
                         <Tr key={d.id}>
                             <Td mono className="text-xs">{d.id}</Td>
                             <Td bold>{d.name}</Td>

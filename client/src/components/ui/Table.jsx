@@ -13,6 +13,7 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                                 <th 
                                     key={i} 
                                     onClick={() => isSortable && onSort(h.key)}
+                                    style={{ width: h.width }}
                                     className={`px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-slate-600 whitespace-nowrap 
                                         ${h.right ? 'text-right' : ''} ${h.center ? 'text-center' : ''} 
                                         ${isSortable ? 'cursor-pointer hover:bg-slate-200 transition-colors' : ''}`}
@@ -22,7 +23,7 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                                         {isSortable && (
                                             <span className="text-slate-400">
                                                 {isSorted ? (
-                                                    sortConfig.direction === 'asc' ? <ChevronUp size={12} className="text-red-500" /> : <ChevronDown size={12} className="text-red-500" />
+                                                    sortConfig.direction === 'asc' ? <ChevronUp size={12} className="text-slate-400" /> : <ChevronDown size={12} className="text-slate-400" />
                                                 ) : (
                                                     <ChevronsUpDown size={12} className="opacity-30" />
                                                 )}

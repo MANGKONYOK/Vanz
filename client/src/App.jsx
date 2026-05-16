@@ -51,14 +51,14 @@ export default function App() {
                         {currentView === 'dashboard' && <DashboardView onNavigate={setCurrentView} />}
 
                         {/* Operations */}
-                        {currentView === 'customer_order_list' && <CustomerOrderListView onNavigate={() => setCurrentView('customer_order_form')} />}
+                        {currentView === 'customer_order_list' && <CustomerOrderListView showToast={showToast} onNavigate={(data) => setCurrentView('customer_order_form')} />}
                         {currentView === 'customer_order_form' && <CustomerOrderFormView showToast={showToast} onNavigateBack={() => setCurrentView('customer_order_list')} />}
                         {currentView === 'dispatch_form' && <DelivererDispatchView showToast={showToast} />}
 
                         {/* Finance */}
                         {currentView === 'expense_list' && <ExpenseListView onNavigate={() => setCurrentView('expense_form')} />}
                         {currentView === 'expense_form' && <ExpenseFormView onNavigateBack={() => setCurrentView('expense_list')} showToast={showToast} />}
-                        {currentView === 'payment_list' && <DelivererPaymentListView onNavigate={() => setCurrentView('payment_form')} />}
+                        {currentView === 'payment_list' && <DelivererPaymentListView showToast={showToast} onNavigate={() => setCurrentView('payment_form')} />}
                         {currentView === 'payment_form' && <DelivererPaymentView showToast={showToast} onNavigateBack={() => setCurrentView('payment_list')} />}
                         {currentView === 'revenue_trip' && <RevenueTripView showToast={showToast} />}
 

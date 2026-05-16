@@ -28,8 +28,8 @@ export const MOCK_PRODUCTS = [
 ];
 
 export const INITIAL_ORDERS = [
-    { id: 'ORD-2026-000123', date: '2026-03-22', fee: 40, bonus: 0, adjustment: 0, status: 'Unpaid', customer: 'Adisak M.', deliverer: 'D-001' },
-    { id: 'ORD-2026-000124', date: '2026-03-21', fee: 40, bonus: 0, adjustment: 0, status: 'Unpaid', customer: 'Nattapong K.', deliverer: 'D-001' },
+    { id: 'ORD-2026-000123', date: '2026-03-22', store: 'Somchai Kitchen', total: 320, fee: 40, bonus: 0, adjustment: 0, status: 'Unpaid', customer: 'Adisak M.', deliverer: 'D-001' },
+    { id: 'ORD-2026-000124', date: '2026-03-21', store: 'BKK Cafe', total: 150, fee: 40, bonus: 0, adjustment: 0, status: 'Unpaid', customer: 'Nattapong K.', deliverer: 'D-001' },
 ];
 
 export const INITIAL_EXPENSE_VOUCHERS = [

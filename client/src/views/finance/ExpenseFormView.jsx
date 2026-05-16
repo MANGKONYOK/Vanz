@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Search } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, Td, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { MOCK_DELIVERERS } from '../../data/mockData';
 
@@ -7,7 +7,9 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
     const [items, setItems] = useState([{ id: 1, type: 'Toll', desc: 'Expressway', amount: 50, receipt: 'RC-9901' }]);
     const [delivererId, setDelivererId] = useState('');
     const [isLovOpen, setIsLovOpen] = useState(false);
+    const [search, setSearch] = useState('');
     const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+
     const handleSave = () => {
         if (!delivererId) return showToast('Please select a deliverer', 'error');
         if (items.length === 0) return showToast('Voucher must contain at least one expense item', 'error');
@@ -15,6 +17,13 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
         if (items.some(i => !i.desc.trim())) return showToast('Please provide descriptions for all expense items', 'error');
         showToast('Voucher saved successfully!'); onNavigateBack();
     };
+
+    const filteredItems = items.filter(i => 
+        i.desc.toLowerCase().includes(search.toLowerCase()) ||
+        i.type.toLowerCase().includes(search.toLowerCase()) ||
+        i.receipt.toLowerCase().includes(search.toLowerCase())
+    );
+
     return (
         <div className="fade-in space-y-5">
             <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
@@ -44,18 +53,21 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 </div>
             </Card>
             <Card className="overflow-hidden">
-                <CardHeader title="Expense Items" action={
-                    <Btn size="sm" variant="secondary" onClick={() => setItems([...items, { id: Date.now(), type: 'Fuel', desc: '', amount: 0, receipt: '' }])}>
-                        <Plus className="w-3.5 h-3.5" /> Add Row
-                    </Btn>
-                } />
+                <CardHeader 
+                    search={<Input icon={Search} placeholder="Search description, receipt..." value={search} onChange={e => setSearch(e.target.value)} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    action={
+                        <Btn size="sm" variant="secondary" onClick={() => setItems([...items, { id: Date.now(), type: 'Fuel', desc: '', amount: 0, receipt: '' }])}>
+                            <Plus className="w-3.5 h-3.5" /> Add Row
+                        </Btn>
+                    } 
+                />
                 <Table headers={[{ label: 'Type' }, { label: 'Description' }, { label: 'Receipt Reference' }, { label: 'Amount', right: true }, { label: '', center: true }]} minWidth="650px">
-                    {items.map((item, i) => (
+                    {filteredItems.map((item, i) => (
                         <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                            <Td><select value={item.type} onChange={e => { const n = [...items]; n[i].type = e.target.value; setItems(n); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 bg-white w-full"><option>Toll</option><option>Fuel</option><option>Parking</option><option>MAINTENANCE</option><option>OTHER</option></select></Td>
+                            <Td><select value={item.type} onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].type = e.target.value; setItems(n); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 bg-white w-full"><option>Toll</option><option>Fuel</option><option>Parking</option><option>MAINTENANCE</option><option>OTHER</option></select></Td>
                             <Td><input defaultValue={item.desc} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full min-w-[120px]" /></Td>
                             <Td><input defaultValue={item.receipt} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full mono" /></Td>
-                            <td className="px-4 py-3 text-right"><input type="number" value={item.amount} onChange={e => { const n = [...items]; n[i].amount = Number(e.target.value); setItems(n); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 text-right w-24" /></td>
+                            <td className="px-4 py-3 text-right"><input type="number" value={item.amount} onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].amount = Number(e.target.value); setItems(n); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 text-right w-24" /></td>
                             <td className="px-4 py-3 text-center"><button onClick={() => setItems(items.filter(x => x.id !== item.id))} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button></td>
                         </tr>
                     ))}

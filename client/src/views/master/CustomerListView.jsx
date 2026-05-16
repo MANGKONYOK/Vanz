@@ -1,5 +1,5 @@
 import { Search, Plus, Edit2, Trash2, ArrowLeft, Save, Check } from 'lucide-react';
-import { PageHeader, Btn, Card, Table, Tr, Td, FormField, Input, FilterBar, FilterField, Pagination } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, FormField, Input, Pagination } from '../../components/ui';
 import { MOCK_CUSTOMERS } from '../../data/mockData';
 
 function CustomerFormInline({ data, onBack, showToast }) {
@@ -124,20 +124,10 @@ export default function CustomerListView({ showToast }) {
             <PageHeader title="Customers" subtitle="Manage customer profiles and contact information"
                 action={<Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Add Customer</Btn>} />
             
-            <FilterBar>
-                <div className="w-full md:w-80">
-                    <FilterField label="Search Customers">
-                        <Input 
-                            icon={Search} 
-                            placeholder="Search code, name, phone..." 
-                            value={search}
-                            onChange={e => { setSearch(e.target.value); setPage(1); }}
-                        />
-                    </FilterField>
-                </div>
-            </FilterBar>
-
             <Card className="overflow-hidden">
+                <CardHeader 
+                    search={<Input icon={Search} placeholder="Search code, name, phone..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                />
                 <Table 
                     headers={[
                         { label: 'ID', key: 'id', sortable: true }, 

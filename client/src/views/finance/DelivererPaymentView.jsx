@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Save, CreditCard, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Save, CreditCard, RefreshCw, Search } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { MOCK_DELIVERERS, INITIAL_ORDERS } from '../../data/mockData';
 
@@ -11,6 +11,8 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     const [paymentDate, setPaymentDate] = useState('2026-03-23');
     const [startDate, setStartDate] = useState('2026-03-01');
     const [endDate, setEndDate] = useState('2026-03-31');
+    const [search, setSearch] = useState('');
+
     const handleSave = () => {
         if (!deliverer) return showToast('Please select a deliverer', 'error');
         if (!paymentDate) return showToast('Please specify a payment date', 'error');
@@ -18,8 +20,15 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
         if (selected.length === 0) return showToast('Please select at least one unpaid order', 'error');
         showToast('Payment confirmed successfully!'); setSelected([]); setDeliverer(''); onBack();
     };
+
+    const filteredOrders = INITIAL_ORDERS.filter(o => 
+        o.id.toLowerCase().includes(search.toLowerCase()) ||
+        o.date.includes(search)
+    );
+
     const selectedOrders = INITIAL_ORDERS.filter(o => selected.includes(o.id));
     const total = selectedOrders.reduce((s, o) => s + o.fee + o.bonus + o.adjustment, 0);
+
     return (
         <div className="fade-in space-y-5">
             <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
@@ -47,11 +56,12 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                 </div>
             </Card>
             <Card className="overflow-hidden">
-                <CardHeader title="Unpaid Deliveries" action={
-                    <Btn size="sm" variant="secondary"><RefreshCw className="w-3.5 h-3.5" /> Load Orders</Btn>
-                } />
+                <CardHeader 
+                    search={<Input icon={Search} placeholder="Search Order ID..." value={search} onChange={e => setSearch(e.target.value)} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    action={<Btn size="sm" variant="secondary"><RefreshCw className="w-3.5 h-3.5" /> Load Orders</Btn>} 
+                />
                 <Table headers={[{ label: '', center: true }, { label: 'Order ID' }, { label: 'Date' }, { label: 'Status', center: true }, { label: 'Fee', right: true }, { label: 'Bonus', right: true }, { label: 'Adjustment', right: true }, { label: 'Extended Price', right: true }]} minWidth="700px">
-                    {INITIAL_ORDERS.map(o => (
+                    {filteredOrders.map(o => (
                         <Tr key={o.id}>
                             <Td center><input type="checkbox" className="rounded accent-red-600" checked={selected.includes(o.id)} onChange={() => setSelected(p => p.includes(o.id) ? p.filter(x => x !== o.id) : [...p, o.id])} /></Td>
                             <Td bold mono>{o.id}</Td>
