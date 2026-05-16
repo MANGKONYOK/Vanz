@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Search, Plus, Edit2, Trash2, ArrowLeft, Save, Check } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, FormField, Input, Pagination } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, FormField, Input, Select, Pagination } from '../../components/ui';
 import { MOCK_CUSTOMERS } from '../../data/mockData';
 
 function CustomerFormInline({ data, onBack, showToast }) {
@@ -30,16 +31,16 @@ function CustomerFormInline({ data, onBack, showToast }) {
                         Customer Profile
                     </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-4">
                         <div className="flex items-end gap-3">
                             <div className="flex-1">
                                 <FormField label="Customer Code" required>
-                                    <Input 
-                                        value={displayId} 
-                                        onChange={e => setId(e.target.value.toUpperCase())} 
-                                        placeholder="C-001" 
+                                    <Input
+                                        value={displayId}
+                                        onChange={e => setId(e.target.value.toUpperCase())}
+                                        placeholder="C-001"
                                         readOnly={autoId}
                                         className={autoId ? 'bg-slate-50 text-slate-500 font-mono' : 'font-mono'}
                                     />
@@ -47,9 +48,9 @@ function CustomerFormInline({ data, onBack, showToast }) {
                             </div>
                             <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
                                 <div className="relative">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={autoId} 
+                                    <input
+                                        type="checkbox"
+                                        checked={autoId}
                                         onChange={e => setAutoId(e.target.checked)}
                                         className="sr-only peer"
                                     />
@@ -94,7 +95,7 @@ export default function CustomerListView({ showToast }) {
     if (editing) return <CustomerFormInline data={editing} onBack={() => setEditing(null)} showToast={showToast} />;
 
     // 1. Filter
-    const filtered = MOCK_CUSTOMERS.filter(c => 
+    const filtered = MOCK_CUSTOMERS.filter(c =>
         c.name.toLowerCase().includes(search.toLowerCase()) ||
         c.id.toLowerCase().includes(search.toLowerCase()) ||
         c.phone.includes(search)
@@ -111,6 +112,8 @@ export default function CustomerListView({ showToast }) {
 
     // 3. Paginate
     const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
+    const start = filtered.length > 0 ? (page - 1) * pageSize + 1 : 0;
+    const end = Math.min(page * pageSize, filtered.length);
 
     const handleSort = (key) => {
         setSort(prev => ({
@@ -123,18 +126,28 @@ export default function CustomerListView({ showToast }) {
         <div className="fade-in space-y-5">
             <PageHeader title="Customers" subtitle="Manage customer profiles and contact information"
                 action={<Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Add Customer</Btn>} />
-            
+
             <Card className="overflow-hidden">
-                <CardHeader 
+                <CardHeader
                     search={<Input icon={Search} placeholder="Search code, name, phone..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    filter={
+                        <div className="flex items-center gap-3">
+                            <span className="text-xs font-medium text-slate-400">
+                                {start}-{end} of {filtered.length} customers
+                            </span>
+                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 border-slate-200 bg-white shadow-sm w-24">
+                                {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
+                            </Select>
+                        </div>
+                    }
                 />
-                <Table 
+                <Table
                     headers={[
-                        { label: 'ID', key: 'id', sortable: true }, 
-                        { label: 'Name', key: 'name', sortable: true }, 
-                        { label: 'Phone', key: 'phone', sortable: true }, 
-                        { label: 'Address', key: 'address' }, 
-                        { label: 'Joined', key: 'created', sortable: true }, 
+                        { label: 'ID', key: 'id', sortable: true },
+                        { label: 'Name', key: 'name', sortable: true },
+                        { label: 'Phone', key: 'phone', sortable: true },
+                        { label: 'Address', key: 'address' },
+                        { label: 'Joined', key: 'created', sortable: true },
                         { label: '', right: true }
                     ]}
                     onSort={handleSort}
@@ -157,12 +170,12 @@ export default function CustomerListView({ showToast }) {
                     ))}
                 </Table>
 
-                <Pagination 
+                <Pagination
                     totalItems={filtered.length}
                     itemsPerPage={pageSize}
                     currentPage={page}
                     onPageChange={setPage}
-                    onItemsPerPageChange={(val) => { setPageSize(val); setPage(1); }}
+                    showSummary={false}
                     itemLabel="customers"
                 />
             </Card>

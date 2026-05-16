@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Pagination } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
 import { INITIAL_ORDERS } from '../../data/mockData';
 
 export default function CustomerOrderListView({ onNavigate, showToast }) {
@@ -18,7 +18,7 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
     };
 
     // 1. Filter
-    const filtered = orders.filter(o => 
+    const filtered = orders.filter(o =>
         o.id.toLowerCase().includes(search.toLowerCase()) ||
         o.customer.toLowerCase().includes(search.toLowerCase()) ||
         o.store.toLowerCase().includes(search.toLowerCase())
@@ -35,6 +35,8 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
 
     // 3. Paginate
     const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
+    const start = filtered.length > 0 ? (page - 1) * pageSize + 1 : 0;
+    const end = Math.min(page * pageSize, filtered.length);
 
     const handleSort = (key) => {
         setSort(prev => ({
@@ -47,20 +49,30 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
         <div className="fade-in space-y-5">
             <PageHeader title="Customer Orders" subtitle="Manage all customer orders and tracking"
                 action={<Btn onClick={onNavigate}><Plus className="w-4 h-4" /> Create Order</Btn>} />
-            
+
             <Card className="overflow-hidden">
-                <CardHeader 
+                <CardHeader
                     search={<Input icon={Search} placeholder="Search ID, customer, store..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    filter={
+                        <div className="flex items-center gap-3">
+                            <span className="text-xs font-medium text-slate-400">
+                                {start}-{end} of {filtered.length} orders
+                            </span>
+                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 border-slate-200 bg-white shadow-sm w-24">
+                                {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
+                            </Select>
+                        </div>
+                    }
                 />
-                <Table 
+                <Table
                     onSort={handleSort}
                     sortConfig={sort}
                     headers={[
-                        { label: 'Order ID', key: 'id', sortable: true, width: '16%' }, 
-                        { label: 'Date', key: 'date', sortable: true, width: '16%' }, 
-                        { label: 'Customer', key: 'customer', sortable: true, width: '20%' }, 
-                        { label: 'Store', key: 'store', sortable: true, width: '20%' }, 
-                        { label: 'Order Total', key: 'total', right: true, sortable: true, width: '14%' }, 
+                        { label: 'Order ID', key: 'id', sortable: true, width: '16%' },
+                        { label: 'Date', key: 'date', sortable: true, width: '16%' },
+                        { label: 'Customer', key: 'customer', sortable: true, width: '20%' },
+                        { label: 'Store', key: 'store', sortable: true, width: '20%' },
+                        { label: 'Order Total', key: 'total', right: true, sortable: true, width: '14%' },
                         { label: 'Actions', right: true, width: '14%' }
                     ]}
                 >
@@ -81,12 +93,12 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                     ))}
                 </Table>
 
-                <Pagination 
+                <Pagination
                     totalItems={filtered.length}
                     itemsPerPage={pageSize}
                     currentPage={page}
                     onPageChange={setPage}
-                    onItemsPerPageChange={(val) => { setPageSize(val); setPage(1); }}
+                    showSummary={false}
                     itemLabel="orders"
                 />
             </Card>

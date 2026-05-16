@@ -1,59 +1,64 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 export default function Pagination({ 
     totalItems, 
     itemsPerPage, 
     currentPage, 
     onPageChange, 
-    onItemsPerPageChange,
-    itemLabel = 'items'
+    itemLabel = 'items',
+    showSummary = true
 }) {
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const start = (currentPage - 1) * itemsPerPage + 1;
-    const end = Math.min(currentPage * itemsPerPage, totalItems);
+    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 5;
+        let start = Math.max(1, currentPage - 2);
+        let end = Math.min(totalPages, start + maxVisible - 1);
+        
+        if (end - start < maxVisible - 1) {
+            start = Math.max(1, end - maxVisible + 1);
+        }
+
+        for (let i = start; i <= end; i++) pages.push(i);
+        return pages;
+    };
 
     return (
-        <div className="px-5 py-4 bg-white border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-slate-500">
-                {totalItems > 0 ? (
-                    <span>Showing <span className="font-bold text-slate-900">{start}-{end}</span> of <span className="font-bold text-slate-900">{totalItems}</span> {itemLabel}</span>
-                ) : (
-                    <span>No {itemLabel} found</span>
-                )}
-            </div>
+        <div className="px-5 py-3 bg-white border-t border-slate-100 flex items-center justify-between">
+            {showSummary && (
+                <div className="hidden sm:block text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    Total {totalItems} {itemLabel}
+                </div>
+            )}
             
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <select 
-                        value={itemsPerPage} 
-                        onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-                        className="border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none focus:border-red-400 bg-slate-50 font-medium"
-                    >
-                        {[10, 25, 50, 100].map(size => (
-                            <option key={size} value={size}>{size} / page</option>
-                        ))}
-                    </select>
-                </div>
+            <div className={`flex items-center gap-1.5 ${showSummary ? 'ml-auto' : 'w-full justify-end'}`}>
+                <button onClick={() => onPageChange(1)} disabled={currentPage === 1} className="p-1.5 rounded-lg border border-slate-100 hover:bg-slate-50 disabled:opacity-20 transition-colors">
+                    <ChevronsLeft size={14} className="text-slate-600" />
+                </button>
+                <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="p-1.5 rounded-lg border border-slate-100 hover:bg-slate-50 disabled:opacity-20 transition-colors">
+                    <ChevronLeft size={14} className="text-slate-600" />
+                </button>
 
-                <div className="flex items-center gap-1">
+                {getPageNumbers().map(p => (
                     <button 
-                        onClick={() => onPageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                        key={p} 
+                        onClick={() => onPageChange(p)}
+                        className={`min-w-[32px] h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all
+                            ${currentPage === p 
+                                ? 'bg-indigo-600 text-white shadow-sm' 
+                                : 'text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-200'}`}
                     >
-                        <ChevronLeft size={16} />
+                        {p}
                     </button>
-                    <div className="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 min-w-[40px] text-center">
-                        {currentPage} / {totalPages || 1}
-                    </div>
-                    <button 
-                        onClick={() => onPageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages || totalPages === 0}
-                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                    >
-                        <ChevronRight size={16} />
-                    </button>
-                </div>
+                ))}
+
+                <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-1.5 rounded-lg border border-slate-100 hover:bg-slate-50 disabled:opacity-20 transition-colors">
+                    <ChevronRight size={14} className="text-slate-600" />
+                </button>
+                <button onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages} className="p-1.5 rounded-lg border border-slate-100 hover:bg-slate-50 disabled:opacity-20 transition-colors">
+                    <ChevronsRight size={14} className="text-slate-600" />
+                </button>
             </div>
         </div>
     );
