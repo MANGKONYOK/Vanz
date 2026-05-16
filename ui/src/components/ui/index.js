@@ -13,3 +13,4 @@ export { default as RankBadge } from './RankBadge';
 export { default as FilterBar } from './FilterBar';
 export { default as FilterField } from './FilterField';
 export { default as PageHeader } from './PageHeader';
+export { default as Pagination } from './Pagination';
