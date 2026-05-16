@@ -4,16 +4,16 @@ A marketplace system where customers order food from stores, dispatchers assign 
 
 ## Project Structure
 
-- `ui/`: The React-based administrative dashboard (Vite + Tailwind CSS).
+- `client/`: The React-based administrative dashboard (Vite + Tailwind CSS).
 - `docs/`: (Future) Documentation and design assets.
 - `backend/`: (Future) Node.js API services.
 
 ## Getting Started
 
-To run the UI locally:
+To run the client locally:
 
 ```bash
-cd ui
+cd client
 npm install
 npm run dev
 ```
