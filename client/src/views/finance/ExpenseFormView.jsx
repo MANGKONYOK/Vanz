@@ -8,6 +8,12 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
     const [delivererId, setDelivererId] = useState('');
     const [isLovOpen, setIsLovOpen] = useState(false);
     const [search, setSearch] = useState('');
+    
+    // Header states
+    const [voucherDate, setVoucherDate] = useState('2026-03-23');
+    const [status, setStatus] = useState('DRAFT');
+    const [approvedBy, setApprovedBy] = useState('Admin User');
+
     const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
 
     const handleSave = () => {
@@ -29,9 +35,11 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
             <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Vehicle' }]}
                 data={MOCK_DELIVERERS} onSelect={r => { setDelivererId(`${r.id} – ${r.name}`); setIsLovOpen(false); }} />
+            
             <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 transition-colors font-medium">
                 <ArrowLeft className="w-4 h-4" /> Back to Vouchers
             </button>
+            
             <Card className="p-5">
                 <h3 className="font-bold text-slate-900 mb-4">Voucher Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -42,16 +50,22 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                         <LovInput value={delivererId} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer..." />
                     </FormField>
                     <FormField label="Voucher Date" required>
-                        <Input type="date" defaultValue="2026-03-23" />
+                        <Input type="date" value={voucherDate} onChange={e => setVoucherDate(e.target.value)} />
                     </FormField>
                     <FormField label="Status">
-                        <Select><option value="DRAFT">DRAFT</option><option value="SUBMITTED">SUBMITTED</option><option value="APPROVED">APPROVED</option><option value="REJECTED">REJECTED</option></Select>
+                        <Select value={status} onChange={e => setStatus(e.target.value)}>
+                            <option value="DRAFT">DRAFT</option>
+                            <option value="SUBMITTED">SUBMITTED</option>
+                            <option value="APPROVED">APPROVED</option>
+                            <option value="REJECTED">REJECTED</option>
+                        </Select>
                     </FormField>
                     <FormField label="Approved By" required>
-                        <Input placeholder="Manager Name" defaultValue="Admin User" />
+                        <Input placeholder="Manager Name" value={approvedBy} onChange={e => setApprovedBy(e.target.value)} />
                     </FormField>
                 </div>
             </Card>
+            
             <Card className="overflow-hidden">
                 <CardHeader 
                     search={<Input icon={Search} placeholder="Search description, receipt..." value={search} onChange={e => setSearch(e.target.value)} className="bg-white border-slate-200 h-10 shadow-sm" />}
@@ -64,11 +78,51 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 <Table headers={[{ label: 'Type' }, { label: 'Description' }, { label: 'Receipt Reference' }, { label: 'Amount', right: true }, { label: '', center: true }]} minWidth="650px">
                     {filteredItems.map((item, i) => (
                         <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                            <Td><select value={item.type} onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].type = e.target.value; setItems(n); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 bg-white w-full"><option>Toll</option><option>Fuel</option><option>Parking</option><option>MAINTENANCE</option><option>OTHER</option></select></Td>
-                            <Td><input defaultValue={item.desc} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full min-w-[120px]" /></Td>
-                            <Td><input defaultValue={item.receipt} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full mono" /></Td>
-                            <td className="px-4 py-3 text-right"><input type="number" value={item.amount} onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].amount = Number(e.target.value); setItems(n); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 text-right w-24" /></td>
-                            <td className="px-4 py-3 text-center"><button onClick={() => setItems(items.filter(x => x.id !== item.id))} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button></td>
+                            <Td>
+                                <select 
+                                    value={item.type} 
+                                    onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].type = e.target.value; setItems(n); }} 
+                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 bg-white w-full"
+                                >
+                                    <option>Toll</option>
+                                    <option>Fuel</option>
+                                    <option>Parking</option>
+                                    <option>MAINTENANCE</option>
+                                    <option>OTHER</option>
+                                </select>
+                            </Td>
+                            <Td>
+                                <input 
+                                    value={item.desc} 
+                                    onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].desc = e.target.value; setItems(n); }} 
+                                    placeholder="e.g. Expressway Toll"
+                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full min-w-[120px]" 
+                                />
+                            </Td>
+                            <Td>
+                                <input 
+                                    value={item.receipt} 
+                                    onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].receipt = e.target.value; setItems(n); }} 
+                                    placeholder="e.g. RC-1234"
+                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full mono" 
+                                />
+                            </Td>
+                            <td className="px-4 py-3 text-right">
+                                <input 
+                                    type="number" 
+                                    value={item.amount} 
+                                    onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].amount = Number(e.target.value); setItems(n); }} 
+                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 text-right w-24" 
+                                />
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                                <button 
+                                    onClick={() => setItems(items.filter(x => x.id !== item.id))} 
+                                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </td>
                         </tr>
                     ))}
                 </Table>

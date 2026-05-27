@@ -72,7 +72,7 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                         { label: 'Date', key: 'date', sortable: true, width: '16%' },
                         { label: 'Customer', key: 'customer', sortable: true, width: '20%' },
                         { label: 'Store', key: 'store', sortable: true, width: '20%' },
-                        { label: 'Order Total', key: 'total', right: true, sortable: true, width: '14%' },
+                        { label: 'Total Order', key: 'total', right: true, sortable: true, width: '14%' },
                         { label: 'Actions', right: true, width: '14%' }
                     ]}
                 >

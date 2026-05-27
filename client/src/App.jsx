@@ -56,7 +56,7 @@ export default function App() {
                         {currentView === 'dispatch_form' && <DelivererDispatchView showToast={showToast} />}
 
                         {/* Finance */}
-                        {currentView === 'expense_list' && <ExpenseListView onNavigate={() => setCurrentView('expense_form')} />}
+                        {currentView === 'expense_list' && <ExpenseListView showToast={showToast} onNavigate={() => setCurrentView('expense_form')} />}
                         {currentView === 'expense_form' && <ExpenseFormView onNavigateBack={() => setCurrentView('expense_list')} showToast={showToast} />}
                         {currentView === 'payment_list' && <DelivererPaymentListView showToast={showToast} onNavigate={() => setCurrentView('payment_form')} />}
                         {currentView === 'payment_form' && <DelivererPaymentView showToast={showToast} onNavigateBack={() => setCurrentView('payment_list')} />}

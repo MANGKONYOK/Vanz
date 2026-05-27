@@ -42,7 +42,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
             <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 transition-colors font-medium mb-2"><ArrowLeft className="w-4 h-4" /> Back to Orders</button>
             <PageHeader title="Customer Order" subtitle="Create a new order for a customer from a specific store" />
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-4">Order Details</h3>
+                <h3 className="font-bold text-slate-900 mb-4">Order Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-end gap-3">
                         <div className="flex-1">
@@ -118,7 +118,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                 </Table>
                 <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-end items-center gap-4">
                     <div className="text-right">
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Order Total</p>
+                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Order</p>
                         <p className="text-3xl font-black text-slate-900 mono">฿{total}</p>
                     </div>
                     <Btn onClick={handleSave} size="lg"><Save className="w-4 h-4" /> Place Order</Btn>

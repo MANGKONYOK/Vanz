@@ -12,6 +12,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     const [startDate, setStartDate] = useState('2026-03-01');
     const [endDate, setEndDate] = useState('2026-03-31');
     const [search, setSearch] = useState('');
+    const [status, setStatus] = useState('PENDING');
 
     const handleSave = () => {
         if (!deliverer) return showToast('Please select a deliverer', 'error');
@@ -21,10 +22,20 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
         showToast('Payment confirmed successfully!'); setSelected([]); setDeliverer(''); onBack();
     };
 
-    const filteredOrders = INITIAL_ORDERS.filter(o => 
-        o.id.toLowerCase().includes(search.toLowerCase()) ||
-        o.date.includes(search)
-    );
+    const handleLoadOrders = () => {
+        showToast('Orders reloaded successfully!');
+    };
+
+    // Extract deliverer ID (e.g. 'D-001' from 'D-001 – Somchai J.')
+    const delivererId = deliverer ? deliverer.split(' – ')[0] : '';
+
+    const filteredOrders = INITIAL_ORDERS.filter(o => {
+        const matchesSearch = o.id.toLowerCase().includes(search.toLowerCase()) || o.date.includes(search);
+        const matchesDeliverer = !delivererId || o.deliverer === delivererId;
+        const matchesStartDate = !startDate || o.date >= startDate;
+        const matchesEndDate = !endDate || o.date <= endDate;
+        return matchesSearch && matchesDeliverer && matchesStartDate && matchesEndDate;
+    });
 
     const selectedOrders = INITIAL_ORDERS.filter(o => selected.includes(o.id));
     const total = selectedOrders.reduce((s, o) => s + o.fee + o.bonus + o.adjustment, 0);
@@ -33,9 +44,14 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
         <div className="fade-in space-y-5">
             <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Vehicle' }]}
-                data={MOCK_DELIVERERS} onSelect={r => { setDeliverer(`${r.id} – ${r.name}`); setIsLovOpen(false); }} />
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 transition-colors font-medium mb-2"><ArrowLeft className="w-4 h-4" /> Back to Payments</button>
+                data={MOCK_DELIVERERS} onSelect={r => { setDeliverer(`${r.id} – ${r.name}`); setSelected([]); setIsLovOpen(false); }} />
+            
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 transition-colors font-medium mb-2">
+                <ArrowLeft className="w-4 h-4" /> Back to Payments
+            </button>
+            
             <PageHeader title="Deliverer Payment" subtitle="Process payments for completed deliverer trips" />
+            
             <Card className="p-5">
                 <h3 className="font-bold text-slate-900 mb-4">Payment Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -48,34 +64,58 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                     <FormField label="Payment Date" required>
                         <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
                     </FormField>
-                    <FormField label="Period Start"><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></FormField>
-                    <FormField label="Period End"><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></FormField>
+                    <FormField label="Period Start">
+                        <Input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setSelected([]); }} />
+                    </FormField>
+                    <FormField label="Period End">
+                        <Input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setSelected([]); }} />
+                    </FormField>
                     <FormField label="Status">
-                        <Select><option value="PENDING">PENDING</option><option value="PAID">PAID</option><option value="CANCELLED">CANCELLED</option></Select>
+                        <Select value={status} onChange={e => setStatus(e.target.value)}>
+                            <option value="PENDING">PENDING</option>
+                            <option value="PAID">PAID</option>
+                            <option value="CANCELLED">CANCELLED</option>
+                        </Select>
                     </FormField>
                 </div>
             </Card>
+            
             <Card className="overflow-hidden">
                 <CardHeader 
                     search={<Input icon={Search} placeholder="Search Order ID..." value={search} onChange={e => setSearch(e.target.value)} className="bg-white border-slate-200 h-10 shadow-sm" />}
-                    action={<Btn size="sm" variant="secondary"><RefreshCw className="w-3.5 h-3.5" /> Load Orders</Btn>} 
+                    action={<Btn size="sm" variant="secondary" onClick={handleLoadOrders}><RefreshCw className="w-3.5 h-3.5" /> Load Orders</Btn>} 
                 />
                 <Table headers={[{ label: '', center: true }, { label: 'Order ID' }, { label: 'Date' }, { label: 'Status', center: true }, { label: 'Fee', right: true }, { label: 'Bonus', right: true }, { label: 'Adjustment', right: true }, { label: 'Extended Price', right: true }]} minWidth="700px">
-                    {filteredOrders.map(o => (
-                        <Tr key={o.id}>
-                            <Td center><input type="checkbox" className="rounded accent-red-600" checked={selected.includes(o.id)} onChange={() => setSelected(p => p.includes(o.id) ? p.filter(x => x !== o.id) : [...p, o.id])} /></Td>
-                            <Td bold mono>{o.id}</Td>
-                            <Td>{o.date}</Td>
-                            <Td center><Badge color="amber">{o.status}</Badge></Td>
-                            <Td right>฿{o.fee}</Td>
-                            <Td right>฿{o.bonus}</Td>
-                            <Td right>฿{o.adjustment}</Td>
-                            <Td right bold>฿{o.fee + o.bonus + o.adjustment}</Td>
-                        </Tr>
-                    ))}
+                    {filteredOrders.length === 0 ? (
+                        <tr>
+                            <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-400 font-medium">
+                                No unpaid orders found for the selected criteria.
+                            </td>
+                        </tr>
+                    ) : (
+                        filteredOrders.map(o => (
+                            <Tr key={o.id}>
+                                <Td center>
+                                    <input 
+                                        type="checkbox" 
+                                        className="rounded accent-red-600 cursor-pointer" 
+                                        checked={selected.includes(o.id)} 
+                                        onChange={() => setSelected(p => p.includes(o.id) ? p.filter(x => x !== o.id) : [...p, o.id])} 
+                                    />
+                                </Td>
+                                <Td bold mono>{o.id}</Td>
+                                <Td>{o.date}</Td>
+                                <Td center><Badge color="amber">{o.status}</Badge></Td>
+                                <Td right>฿{o.fee}</Td>
+                                <Td right>฿{o.bonus}</Td>
+                                <Td right>฿{o.adjustment}</Td>
+                                <Td right bold>฿{o.fee + o.bonus + o.adjustment}</Td>
+                            </Tr>
+                        ))
+                    )}
                 </Table>
                 <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <p className="text-sm text-slate-500">{selected.length} order(s) selected</p>
+                    <p className="text-sm text-slate-500 font-medium">{selected.length} order(s) selected</p>
                     <div className="flex items-center gap-6">
                         <div className="text-right">
                             <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Payment</p>
