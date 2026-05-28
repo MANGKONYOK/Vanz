@@ -73,8 +73,8 @@ exports.create = async (data) => {
     const { rows: [chk] } = await client.query('SELECT id FROM delivery WHERE id=$1', [deliveryId]);
     if (!chk) throw Object.assign(new Error(`Delivery ${data.delivery_code} not found`), { name: 'NotFoundError' });
     const { rows: [ins] } = await client.query(
-      'INSERT INTO payment (delivery_id,payment_period_start,payment_period_end,total_payment,status) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-      [deliveryId, data.payment_period_start, data.payment_period_end, data.total_payment, 'PENDING']
+      'INSERT INTO payment (delivery_id,payment_period_start,payment_period_end,total_payment,status,code,payment_datetime) VALUES ($1,$2,$3,$4,$5,$6,NOW()) RETURNING id',
+      [deliveryId, data.payment_period_start, data.payment_period_end, data.total_payment, 'PENDING', 'PAY-TMP-' + Date.now()]
     );
     const year = new Date().getFullYear();
     const code = 'PAY-' + year + '-' + String(ins.id).padStart(6, '0');

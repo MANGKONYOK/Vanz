@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, Badge } from '../../components/ui';
-import { MOCK_PROMOTIONS } from '../../data/mockData';
+import { MOCK_PROMOTIONS } from '../../data/liveData';
 
 export default function PromotionListView({ onNavigate }) {
     return (

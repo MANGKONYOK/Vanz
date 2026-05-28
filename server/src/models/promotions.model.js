@@ -40,6 +40,12 @@ async function attachItemsBatch(headers) {
   return headers.map(h => ({ ...h, promotion_items: byPromotionId[h.promotion_id] || [] }));
 }
 
+// Get next safe id for promotion_items (plain bigint, no sequence)
+async function nextPromotionItemId(client) {
+  const { rows: [r] } = await client.query('SELECT COALESCE(MAX(id), 0) + 1 AS nxt FROM promotion_items');
+  return Number(r.nxt);
+}
+
 exports.findAll = async (f) => {
   let q = `SELECT p.* FROM promotion p
              JOIN store s ON p.store_id=s.id
@@ -57,20 +63,29 @@ exports.create = async (data) => {
     await client.query('BEGIN');
     const { rows: [s] } = await client.query('SELECT id FROM store WHERE code=$1', [data.store_code]);
     if (!s) throw Object.assign(new Error(`Store ${data.store_code} not found`), { name: 'NotFoundError' });
+
+    // promotion.code is NOT NULL UNIQUE — insert a temp placeholder, then UPDATE with real code
+    const tmp = 'PROMO-TMP-' + Date.now();
     const { rows: [ins] } = await client.query(
-      'INSERT INTO promotion (store_id,name,start_date,end_date,discount_type) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-      [s.id, data.name, data.start_date, data.end_date, data.discount_type]
+      'INSERT INTO promotion (store_id,name,start_date,end_date,discount_type,code) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
+      [s.id, data.name, data.start_date, data.end_date, data.discount_type, tmp]
     );
     const code = 'PROMO-' + String(ins.id).padStart(4, '0');
     const { rows: [hdr] } = await client.query('UPDATE promotion SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);
+
+    // promotion_items.id is plain bigint NOT NULL — must supply explicitly
     const items = [];
-    for (const item of data.promotion_items) {
-      const { rows: [i] } = await client.query(
-        'INSERT INTO promotion_items (promotion_id,product_id,discount_value) VALUES ($1,$2,$3) RETURNING *',
-        [ins.id, item.product_id, item.discount_value]
-      );
-      items.push(fmtItem(i));
+    if (Array.isArray(data.promotion_items) && data.promotion_items.length) {
+      let nextItemId = await nextPromotionItemId(client);
+      for (const item of data.promotion_items) {
+        const { rows: [i] } = await client.query(
+          'INSERT INTO promotion_items (id,promotion_id,product_id,discount_value) VALUES ($1,$2,$3,$4) RETURNING *',
+          [nextItemId++, ins.id, item.product_id, item.discount_value]
+        );
+        items.push(fmtItem(i));
+      }
     }
+
     await client.query('COMMIT');
     return { ...fmtHeader(hdr), promotion_items: items };
   } catch (e) { await client.query('ROLLBACK'); throw e; }
@@ -97,10 +112,11 @@ exports.update = async (id, data) => {
     if (Array.isArray(data.promotion_items)) {
       await client.query('DELETE FROM promotion_items WHERE promotion_id=$1', [id]);
       items = [];
+      let nextItemId = await nextPromotionItemId(client);
       for (const item of data.promotion_items) {
         const { rows: [i] } = await client.query(
-          'INSERT INTO promotion_items (promotion_id,product_id,discount_value) VALUES ($1,$2,$3) RETURNING *',
-          [id, item.product_id, item.discount_value]
+          'INSERT INTO promotion_items (id,promotion_id,product_id,discount_value) VALUES ($1,$2,$3,$4) RETURNING *',
+          [nextItemId++, id, item.product_id, item.discount_value]
         );
         items.push(fmtItem(i));
       }

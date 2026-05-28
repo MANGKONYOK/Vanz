@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BarChart3 } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, RankBadge, FilterBar, FilterField, Input, LovInput, LovModal } from '../../../components/ui';
-import { MOCK_STORES, MOCK_TOP_PRODUCTS } from '../../../data/mockData';
+import { MOCK_STORES, MOCK_TOP_PRODUCTS } from '../../../data/liveData';
 
 export default function ReportTopProductsView() {
     const [isLovOpen, setIsLovOpen] = useState(false);

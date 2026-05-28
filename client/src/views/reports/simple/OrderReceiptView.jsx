@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Eye, Printer, ShoppingBag } from 'lucide-react';
 import { PageHeader, Btn, Card, FilterBar, FilterField, LovInput, LovModal } from '../../../components/ui';
-import { MOCK_RECEIPT_ITEMS, MOCK_DELIVERED_ORDERS } from '../../../data/mockData';
+import { MOCK_RECEIPT_ITEMS, MOCK_DELIVERED_ORDERS } from '../../../data/liveData';
 
 export default function OrderReceiptView() {
     const subtotal = MOCK_RECEIPT_ITEMS.reduce((s, i) => s + i.total, 0);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, Badge, FilterBar, FilterField, Select, LovInput, LovModal } from '../../../components/ui';
-import { MOCK_STORES, MOCK_PRODUCTS } from '../../../data/mockData';
+import { MOCK_STORES, MOCK_PRODUCTS } from '../../../data/liveData';
 
 export default function CategoryProductsReportView() {
     const [isLovOpen, setIsLovOpen] = useState(false);

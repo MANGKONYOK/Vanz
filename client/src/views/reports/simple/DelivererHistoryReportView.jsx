@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { History } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, FilterBar, FilterField, Input, LovInput, LovModal } from '../../../components/ui';
-import { MOCK_DELIVERERS, MOCK_DELIVERER_HISTORY } from '../../../data/mockData';
+import { MOCK_DELIVERERS, MOCK_DELIVERER_HISTORY } from '../../../data/liveData';
 
 export default function DelivererHistoryReportView() {
     const [isLovOpen, setIsLovOpen] = useState(false);

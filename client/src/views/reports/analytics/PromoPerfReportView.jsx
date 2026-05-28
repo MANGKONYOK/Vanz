@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { TrendingUp, Target } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, StatCard, FilterBar, FilterField, Input, LovInput, LovModal } from '../../../components/ui';
-import { MOCK_STORES, MOCK_PROMOTIONS } from '../../../data/mockData';
+import { MOCK_STORES, MOCK_PROMOTIONS } from '../../../data/liveData';
 
 export default function PromoPerfReportView() {
     const [isLovOpen, setIsLovOpen] = useState(false);

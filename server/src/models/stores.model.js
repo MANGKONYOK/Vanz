@@ -31,8 +31,8 @@ exports.create = async (data) => {
   try {
     await client.query('BEGIN');
     const { rows: [ins] } = await client.query(
-      'INSERT INTO store (name,address_id,category,status) VALUES ($1,$2,$3,$4) RETURNING id',
-      [data.name, data.address_id, data.category, data.status || 'ACTIVE']
+      'INSERT INTO store (name,address_id,category,status,code) VALUES ($1,$2,$3,$4,$5) RETURNING id',
+      [data.name, data.address_id, data.category, data.status || 'ACTIVE', 'STR-TMP-' + Date.now()]
     );
     const code = 'STR-' + String(ins.id).padStart(4, '0');
     const { rows: [r] } = await client.query('UPDATE store SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);

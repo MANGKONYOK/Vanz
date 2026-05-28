@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, FilterBar, FilterField, Input } from '../../../components/ui';
-import { MOCK_DELIVERED_ORDERS } from '../../../data/mockData';
+import { MOCK_DELIVERED_ORDERS } from '../../../data/liveData';
 
 export default function DeliveredOrdersReportView() {
     return (

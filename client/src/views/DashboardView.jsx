@@ -1,6 +1,6 @@
 import { Package, Truck, TrendingUp, Receipt } from 'lucide-react';
 import { StatCard, Card, CardHeader, Btn, Badge } from '../components/ui';
-import { MOCK_PREPARED_ORDERS, INITIAL_EXPENSE_VOUCHERS } from '../data/mockData';
+import { MOCK_PREPARED_ORDERS, INITIAL_EXPENSE_VOUCHERS } from '../data/liveData';
 
 export default function DashboardView({ onNavigate }) {
     return (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Heart } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, FilterBar, FilterField, LovInput, LovModal } from '../../../components/ui';
-import { MOCK_STORES, MOCK_CUSTOMERS, MOCK_FAV_STORES } from '../../../data/mockData';
+import { MOCK_STORES, MOCK_CUSTOMERS, MOCK_FAV_STORES } from '../../../data/liveData';
 
 export default function FavStoresReportView() {
     const [activeLov, setActiveLov] = useState(null);

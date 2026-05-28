@@ -1,6 +1,6 @@
 import { Award, Star } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, RankBadge, FilterBar, FilterField, Input } from '../../../components/ui';
-import { MOCK_TOP_DELIVERERS } from '../../../data/mockData';
+import { MOCK_TOP_DELIVERERS } from '../../../data/liveData';
 
 export default function TopDeliverersReportView() {
     return (

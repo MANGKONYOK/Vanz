@@ -1,6 +1,6 @@
 import { FileText, DollarSign, BarChart3, Calculator } from 'lucide-react';
 import { PageHeader, Btn, Card, StatCard, FilterBar, FilterField, Input } from '../../../components/ui';
-import { INITIAL_EXPENSE_VOUCHERS } from '../../../data/mockData';
+import { INITIAL_EXPENSE_VOUCHERS } from '../../../data/liveData';
 
 export default function ExpenseSummaryReportView() {
     const count = INITIAL_EXPENSE_VOUCHERS.length;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Search, Star } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, RankBadge, FilterBar, FilterField, Input, Select, LovInput, LovModal } from '../../../components/ui';
-import { MOCK_DELIVERERS } from '../../../data/mockData';
+import { MOCK_DELIVERERS } from '../../../data/liveData';
 
 export default function DelivererRankingReportView() {
     const [isLovOpen, setIsLovOpen] = useState(false);

@@ -31,8 +31,8 @@ exports.create = async (data) => {
   try {
     await client.query('BEGIN');
     const { rows: [ins] } = await client.query(
-      'INSERT INTO deliverer (profile_id,vehicle_type,license_plate,current_status) VALUES ($1,$2,$3,$4) RETURNING id',
-      [data.profile_id, data.vehicle_type, data.license_plate, data.current_status || 'AVAILABLE']
+      'INSERT INTO deliverer (profile_id,vehicle_type,license_plate,current_status,code) VALUES ($1,$2,$3,$4,$5) RETURNING id',
+      [data.profile_id, data.vehicle_type, data.license_plate, data.current_status || 'AVAILABLE', 'DLV-TMP-' + Date.now()]
     );
     const code = 'DLV-' + String(ins.id).padStart(4, '0');
     const { rows: [r] } = await client.query('UPDATE deliverer SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);

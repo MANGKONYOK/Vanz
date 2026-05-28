@@ -30,8 +30,8 @@ exports.create = async (data) => {
   try {
     await client.query('BEGIN');
     const { rows: [ins] } = await client.query(
-      'INSERT INTO customer (profile_id,address_id,membership_level,total_spent) VALUES ($1,$2,$3,0) RETURNING id',
-      [data.profile_id, data.address_id, data.membership_level]
+      'INSERT INTO customer (profile_id,address_id,membership_level,total_spent,code) VALUES ($1,$2,$3,0,$4) RETURNING id',
+      [data.profile_id, data.address_id, data.membership_level, 'CUST-TMP-' + Date.now()]
     );
     const code = 'CUST-' + String(ins.id).padStart(4, '0');
     const { rows: [r] } = await client.query(

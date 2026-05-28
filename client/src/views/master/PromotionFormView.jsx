@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
-import { MOCK_STORES, MOCK_PRODUCTS } from '../../data/mockData';
+import { MOCK_STORES, MOCK_PRODUCTS } from '../../data/liveData';
+import { postJson, getApiErrorMessage } from '../../api/http';
+
+function extractCode(value) {
+    return String(value || '').split(' – ')[0].trim();
+}
 
 export default function PromotionFormView({ onNavigateBack, showToast }) {
     const [items, setItems] = useState([{ id: 1, productId: '', productName: '', discount: 0 }]);
@@ -10,16 +15,33 @@ export default function PromotionFormView({ onNavigateBack, showToast }) {
     const [store, setStore] = useState('');
     const [storeIsLov, setStoreIsLov] = useState(false);
     const [name, setName] = useState('');
+    const [discountType, setDiscountType] = useState('PERCENTAGE');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!store) return showToast('Please select a target store', 'error');
         if (!name.trim()) return showToast('Campaign Name is required', 'error');
         if (!startDate || !endDate) return showToast('Please specify both Start and End Dates', 'error');
         if (new Date(endDate) < new Date(startDate)) return showToast('End Date cannot be before Start Date', 'error');
         if (items.length === 0) return showToast('Must include at least one product in the campaign', 'error');
         if (items.some(i => !i.productName || i.discount <= 0)) return showToast('All products must have valid positive discounts', 'error');
-        showToast('Promotion Campaign saved successfully!'); onNavigateBack();
+        try {
+            await postJson('/promotions', {
+                store_code: extractCode(store),
+                name: name.trim(),
+                start_date: startDate,
+                end_date: endDate,
+                discount_type: discountType,
+                promotion_items: items.map((item) => ({
+                    product_id: Number(item.productId),
+                    discount_value: Number(item.discount),
+                })),
+            });
+            showToast('Promotion Campaign saved successfully!');
+            onNavigateBack();
+        } catch (error) {
+            showToast(getApiErrorMessage(error, 'Unable to save promotion'), 'error');
+        }
     };
     return (
         <div className="fade-in space-y-5">
@@ -41,7 +63,7 @@ export default function PromotionFormView({ onNavigateBack, showToast }) {
                     </FormField>
                     <FormField label="Campaign Name" required><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Summer Sale" /></FormField>
                     <FormField label="Discount Type" required>
-                        <Select><option value="PERCENTAGE">Percentage</option><option value="FIXED_AMOUNT">Fixed Amount</option></Select>
+                        <Select value={discountType} onChange={e => setDiscountType(e.target.value)}><option value="PERCENTAGE">Percentage</option><option value="FIXED_AMOUNT">Fixed Amount</option></Select>
                     </FormField>
                     <FormField label="Start Date" required><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></FormField>
                     <FormField label="End Date" required><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></FormField>

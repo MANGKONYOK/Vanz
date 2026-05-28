@@ -46,9 +46,10 @@ async function attachItemsBatch(headers) {
 exports.findAll = async (f) => {
   let q = 'SELECT * FROM "order" WHERE 1=1';
   const p = [];
-  if (f.order_code) { p.push(f.order_code); q += ` AND code = $${p.length}`; }
-  if (f.customer_id){ p.push(f.customer_id); q += ` AND customer_id = $${p.length}`; }
-  q += ' ORDER BY id';
+  if (f.order_code)  { p.push(f.order_code);  q += ` AND code = $${p.length}`; }
+  if (f.customer_id) { p.push(f.customer_id); q += ` AND customer_id = $${p.length}`; }
+  if (f.status)      { p.push(f.status);       q += ` AND status = $${p.length}`; }
+  q += ' ORDER BY id DESC';
   const { rows } = await pool.query(q, p);
   return attachItemsBatch(rows.map(fmtHeader));
 };
@@ -67,8 +68,8 @@ exports.create = async (data) => {
     const { rows: [store] } = await client.query('SELECT id FROM store WHERE code=$1', [data.store_code]);
     if (!store) throw Object.assign(new Error(`Store ${data.store_code} not found`), { name: 'NotFoundError' });
     const { rows: [ins] } = await client.query(
-      'INSERT INTO "order" (customer_id,store_id,total_price,address_snapshot,status) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-      [cust.id, store.id, data.total_price, data.address_snapshot, 'PENDING']
+      'INSERT INTO "order" (customer_id,store_id,total_price,address_snapshot,status,code) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
+      [cust.id, store.id, data.total_price, data.address_snapshot, 'PENDING', 'ORD-TMP-' + Date.now()]
     );
     const year = new Date().getFullYear();
     const code = 'ORD-' + year + '-' + String(ins.id).padStart(6, '0');

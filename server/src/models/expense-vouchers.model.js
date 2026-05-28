@@ -42,6 +42,9 @@ async function attachItemsBatch(headers) {
   return headers.map(h => ({ ...h, expense_items: byVoucherId[h.expense_voucher_id] || [] }));
 }
 
+// Both expense_voucher and expense_voucher_items use plain bigint NOT NULL — no sequence.
+// We compute the next safe ID using MAX(id)+1 inside the transaction.
+
 exports.findAll = async (f) => {
   let q = `SELECT ev.* FROM expense_voucher ev
            JOIN delivery d ON ev.delivery_id=d.id
@@ -67,21 +70,31 @@ exports.create = async (data) => {
     const deliveryId = parseInt(data.delivery_code, 10);
     const { rows: [chk] } = await client.query('SELECT id FROM delivery WHERE id=$1', [deliveryId]);
     if (!chk) throw Object.assign(new Error(`Delivery ${data.delivery_code} not found`), { name: 'NotFoundError' });
-    const { rows: [ins] } = await client.query(
-      'INSERT INTO expense_voucher (delivery_id,voucher_date,status,total_amount) VALUES ($1,$2,$3,$4) RETURNING id',
-      [deliveryId, data.voucher_date, 'DRAFT', data.total_amount]
-    );
+
+    // expense_voucher.id is plain bigint NOT NULL (no GENERATED ALWAYS, no sequence)
+    const { rows: [idRow] } = await client.query('SELECT COALESCE(MAX(id), 0) + 1 AS nxt FROM expense_voucher');
+    const nextId = Number(idRow.nxt);
     const year = new Date().getFullYear();
-    const code = 'EXP-' + year + '-' + String(ins.id).padStart(6, '0');
-    const { rows: [hdr] } = await client.query('UPDATE expense_voucher SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);
+    const code = 'EXP-' + year + '-' + String(nextId).padStart(6, '0');
+
+    // Insert header with all NOT NULL fields in one step
+    const { rows: [hdr] } = await client.query(
+      'INSERT INTO expense_voucher (id,delivery_id,voucher_date,status,total_amount,code,updated_at) VALUES ($1,$2,$3,$4,$5,$6,NOW()) RETURNING *',
+      [nextId, deliveryId, data.voucher_date, 'DRAFT', data.total_amount, code]
+    );
+
+    // expense_voucher_items.id is also plain bigint NOT NULL
+    const { rows: [maxItemRow] } = await client.query('SELECT COALESCE(MAX(id), 0) AS mx FROM expense_voucher_items');
+    let nextItemId = Number(maxItemRow.mx) + 1;
     const items = [];
-    for (const item of data.expense_items) {
+    for (const item of (data.expense_items || [])) {
       const { rows: [i] } = await client.query(
-        'INSERT INTO expense_voucher_items (expense_voucher_id,expense_type,description,amount,receipt_reference_code) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-        [ins.id, item.expense_type, item.description, item.amount, item.receipt_reference_code || null]
+        'INSERT INTO expense_voucher_items (id,expense_voucher_id,expense_type,description,amount,receipt_reference_code) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+        [nextItemId++, nextId, item.expense_type, item.description, item.amount, item.receipt_reference_code || '']
       );
       items.push(fmtItem(i));
     }
+
     await client.query('COMMIT');
     return { ...fmtHeader(hdr), expense_items: items };
   } catch (e) { await client.query('ROLLBACK'); throw e; }
@@ -108,11 +121,13 @@ exports.update = async (id, data) => {
     let items;
     if (Array.isArray(data.expense_items)) {
       await client.query('DELETE FROM expense_voucher_items WHERE expense_voucher_id=$1', [id]);
+      const { rows: [maxItemRow] } = await client.query('SELECT COALESCE(MAX(id), 0) AS mx FROM expense_voucher_items');
+      let nextItemId = Number(maxItemRow.mx) + 1;
       items = [];
       for (const item of data.expense_items) {
         const { rows: [i] } = await client.query(
-          'INSERT INTO expense_voucher_items (expense_voucher_id,expense_type,description,amount,receipt_reference_code) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-          [id, item.expense_type, item.description, item.amount, item.receipt_reference_code || null]
+          'INSERT INTO expense_voucher_items (id,expense_voucher_id,expense_type,description,amount,receipt_reference_code) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+          [nextItemId++, id, item.expense_type, item.description, item.amount, item.receipt_reference_code || '']
         );
         items.push(fmtItem(i));
       }
