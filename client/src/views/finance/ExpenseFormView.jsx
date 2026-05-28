@@ -109,16 +109,24 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 />
                 <Table 
                     headers={[
+                        { label: 'Receipt', width: '22%' }, 
                         { label: 'Type', width: '20%' }, 
                         { label: 'Description', width: '38%' }, 
-                        { label: 'Receipt Reference', width: '22%' }, 
                         { label: 'Expense', right: true, width: '14%' }, 
                         { label: '', center: true, width: '6%' }
                     ]} 
                     minWidth="650px"
                 >
-                    {filteredItems.map((item, i) => (
+                    {filteredItems.map((item) => (
                         <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                            <Td>
+                                <input 
+                                    value={item.receipt} 
+                                    onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].receipt = e.target.value; setItems(n); }} 
+                                    placeholder="e.g. RC-1234"
+                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full mono" 
+                                />
+                            </Td>
                             <Td>
                                 <select 
                                     value={item.type} 
@@ -138,14 +146,6 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                                     onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].desc = e.target.value; setItems(n); }} 
                                     placeholder="e.g. Expressway Toll"
                                     className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full min-w-[120px]" 
-                                />
-                            </Td>
-                            <Td>
-                                <input 
-                                    value={item.receipt} 
-                                    onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].receipt = e.target.value; setItems(n); }} 
-                                    placeholder="e.g. RC-1234"
-                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full mono" 
                                 />
                             </Td>
                             <Td right>

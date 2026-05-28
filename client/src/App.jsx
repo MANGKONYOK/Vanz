@@ -51,7 +51,7 @@ export default function App() {
                         {currentView === 'dashboard' && <DashboardView onNavigate={setCurrentView} />}
 
                         {/* Operations */}
-                        {currentView === 'customer_order_list' && <CustomerOrderListView showToast={showToast} onNavigate={(data) => setCurrentView('customer_order_form')} />}
+                        {currentView === 'customer_order_list' && <CustomerOrderListView showToast={showToast} onNavigate={() => setCurrentView('customer_order_form')} />}
                         {currentView === 'customer_order_form' && <CustomerOrderFormView showToast={showToast} onNavigateBack={() => setCurrentView('customer_order_list')} />}
                         {currentView === 'dispatch_form' && <DelivererDispatchView showToast={showToast} />}
 

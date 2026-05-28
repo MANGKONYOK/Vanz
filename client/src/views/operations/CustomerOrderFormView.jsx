@@ -101,7 +101,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                     } 
                 />
                 <Table headers={[{ label: 'Product' }, { label: 'Qty', center: true }, { label: 'Unit Price', right: true }, { label: 'Extended Price', right: true }, { label: '', center: true }]} minWidth="600px">
-                    {filteredItems.map((it, i) => (
+                    {filteredItems.map((it) => (
                         <tr key={it.id} className="hover:bg-slate-50 transition-colors">
                             <td className="px-4 py-3 min-w-[200px]">
                                 <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-red-400">

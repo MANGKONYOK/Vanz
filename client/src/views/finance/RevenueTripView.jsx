@@ -16,8 +16,8 @@ export default function RevenueTripView({ showToast }) {
         const newRate = {
             id: Date.now(),
             date: today,
-            revenue: 45, // Default to a standard rate
-            notes: 'New Rate Adjustment'
+            revenue: 0,
+            notes: ''
         };
         setRates([newRate, ...rates]);
         showToast('New rate row added!', 'success');
@@ -124,7 +124,7 @@ export default function RevenueTripView({ showToast }) {
                                 <Input 
                                     value={r.notes} 
                                     onChange={e => handleUpdateRate(r.id, 'notes', e.target.value)}
-                                    placeholder="e.g. Q2 adjustment" 
+                                    placeholder="write..." 
                                     className="bg-white border-slate-200 focus:border-red-400"
                                 />
                             </Td>
