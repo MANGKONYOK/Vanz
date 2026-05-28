@@ -4,5 +4,6 @@ export { default as DelivererListView } from './DelivererListView';
 export { default as StoreListView } from './StoreListView';
 export { default as StoreFormView } from './StoreFormView';
 export { default as ProductListView } from './ProductListView';
+export { default as ProductFormView } from './ProductFormView';
 export { default as PromotionListView } from './PromotionListView';
 export { default as PromotionFormView } from './PromotionFormView';
