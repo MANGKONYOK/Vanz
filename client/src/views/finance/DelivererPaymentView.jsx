@@ -87,9 +87,10 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
         setSaving(true);
         try {
             await postJson('/payments', {
-                delivery_code:        String(selectedRows[0].deliveryId), // API expects delivery_id as string
-                payment_period_start: startDate || null,
-                payment_period_end:   endDate   || null,
+                delivery_id:          selectedRows[0].deliveryId,
+                payment_period_start: startDate || undefined,
+                payment_period_end:   endDate   || undefined,
+                payment_datetime:     paymentDate ? `${paymentDate}T00:00:00.000Z` : undefined,
                 total_payment:        total,
                 payment_items: selectedRows.map(r => ({
                     order_code:        r.orderCode,

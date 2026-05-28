@@ -66,12 +66,9 @@ exports.create = async (data) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const { rows: [d] } = await client.query('SELECT id FROM delivery WHERE id=$1 OR id=(SELECT id FROM delivery WHERE order_id=(SELECT id FROM "order" WHERE code=$1) LIMIT 1)', [data.delivery_code]);
-    // delivery_code per API is actually a delivery_id integer OR we look up by order_code relation
-    // API.md says delivery_code = "Must exist in Delivery" — Delivery has no code, so treat as delivery_id integer
-    const deliveryId = parseInt(data.delivery_code, 10);
+    const deliveryId = parseInt(data.delivery_id, 10);
     const { rows: [chk] } = await client.query('SELECT id FROM delivery WHERE id=$1', [deliveryId]);
-    if (!chk) throw Object.assign(new Error(`Delivery ${data.delivery_code} not found`), { name: 'NotFoundError' });
+    if (!chk) throw Object.assign(new Error(`Delivery ${data.delivery_id} not found`), { name: 'NotFoundError' });
     const { rows: [ins] } = await client.query(
       'INSERT INTO payment (delivery_id,payment_period_start,payment_period_end,total_payment,status,code,payment_datetime) VALUES ($1,$2,$3,$4,$5,$6,NOW()) RETURNING id',
       [deliveryId, data.payment_period_start, data.payment_period_end, data.total_payment, 'PENDING', 'PAY-TMP-' + Date.now()]

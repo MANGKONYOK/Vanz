@@ -1,6 +1,6 @@
 # DESIGN.md — Vanz Frontend Architecture & UI Design
 
-> Version 1.2 · Updated 28 May 2026  
+> Version 1.3 · Updated 28 May 2026  
 > Tech Stack: React 18 · Vite · Tailwind CSS v4 · Lucide React
 
 ---
@@ -87,11 +87,8 @@
 
 ### 2.2 Data Loading Strategy
 
-**Boot-time snapshot** (`mockData.js`)  
-On page load, `mockData.js` calls `loadLiveData()` which fires 12 API endpoints in parallel and maps the raw responses into UI-friendly shapes (`MOCK_CUSTOMERS`, `MOCK_STORES`, etc.). This snapshot is used by report views and the dashboard which don't mutate data.
-
-**Per-view reactive loading** (Master Data views)  
-Every Master Data list view manages its own data lifecycle:
+**Per-view reactive loading** (all views — Dashboard, Master Data, Operations, Finance, Reports)  
+Every view manages its own data lifecycle independently. There is no shared boot-time snapshot. `mockData.js` and `liveData.js` remain in the codebase but are no longer imported by any view component.
 
 ```
 useState([]) + useEffect → getJson() → setRows()   ← initial load
@@ -104,11 +101,14 @@ refresh() (tick increment) → useEffect re-fires    ← after mutate
 | `refresh()` | after create / update / delete | Sets `tick = tick + 1` → re-fetch |
 | Loading state | between fetch start and completion | Shows "Loading…" placeholder row |
 
+Dashboard and all Report views use `useEffect([])` (single fetch on mount, no tick/refresh cycle needed since they are read-only).
+
 **Joins are performed client-side** (parallel fetch, then Map lookup):
 - Customer list = `/customers` + `/profiles` + `/addresses` joined by `profile_id` / `address_id`
 - Deliverer list = `/deliverers` + `/profiles` joined by `profile_id`
 - Store list = `/stores` + `/addresses` joined by `address_id`
 - Product list = `/store-products` + `/stores` joined by `store_id`
+- Dashboard = `/orders` + `/deliverers` + `/expense-vouchers` + `/deliveries` + `/stores` + `/customers` + `/profiles`
 
 ### 2.2 Folder Structure
 
@@ -122,8 +122,8 @@ client/src/
 ├── api/
 │   └── http.js                    ← Axios client (baseURL, Bearer token, helpers)
 ├── data/
-│   ├── mockData.js                ← Live data loader: fetches API at boot, maps to UI shape
-│   └── liveData.js                ← Re-exports from mockData (compatibility layer)
+│   ├── mockData.js                ← Legacy boot-time loader (unused — no view imports it)
+│   └── liveData.js                ← Re-exports from mockData (unused — compatibility layer)
 ├── components/
 │   ├── layout/
 │   │   ├── Sidebar.jsx            ← Collapsible nav (240px, bg-red-800)
@@ -274,7 +274,7 @@ Greeting text (h2 + p)
    red/Package      blue/Truck          green/TrendingUp   amber/Receipt
    grid-cols-2 lg:grid-cols-4
 
-[Prepared Queue Card]            [Recent Vouchers Card]
+[Dispatch Queue Card]            [Recent Vouchers Card]
   amber rows (animate-pulse dot)   Badge + bold amount rows
   → navigates to dispatch_form     → navigates to expense_list
    grid-cols-1 lg:grid-cols-2
@@ -284,7 +284,10 @@ Greeting text (h2 + p)
 
 | Variable | Type | Purpose |
 |----------|------|---------|
-| — | — | Stateless; reads from `mockData` |
+| `pendingOrders[]` | array | CONFIRMED/PREPARING orders for dispatch queue (up to 5) |
+| `recentVouchers[]` | array | Last 5 expense vouchers sorted by `updated_at` |
+| `stats` | `{orders, deliverers, revenue, pendingVouchers}` | Live KPI values |
+| `loading` | boolean | Single loading flag for all parallel fetches |
 
 ### Actions
 
@@ -293,9 +296,14 @@ Greeting text (h2 + p)
 | "Open Dispatch →" | `onNavigate('dispatch_form')` |
 | "View All →" | `onNavigate('expense_list')` |
 
-### API
-- `GET /api/v1/orders` (stats + prepared queue)
-- `GET /api/v1/expense-vouchers` (recent vouchers)
+### API (7 parallel calls on mount)
+- `GET /api/v1/orders` — today's orders count + CONFIRMED/PREPARING dispatch queue
+- `GET /api/v1/deliverers` — non-OFFLINE count
+- `GET /api/v1/expense-vouchers` — SUBMITTED count + recent vouchers list
+- `GET /api/v1/deliveries` — delivery→deliverer join for vouchers panel
+- `GET /api/v1/stores` — store name join for queue
+- `GET /api/v1/customers` — customer→profile join for queue
+- `GET /api/v1/profiles` — name resolution for customers and deliverers
 
 ---
 
@@ -454,7 +462,7 @@ Footer: `Order Total = Σ(extend_price)` — displayed as `฿{total}` — **fro
 | Deliverer* | LovInput → deliverer list (id, name, vehicle) |
 | Est. Time (Mins) | Input number |
 
-#### Card 2 — Prepared Queue Table
+#### Card 2 — Dispatch Queue Table
 
 | Column | Style |
 |--------|-------|
@@ -470,7 +478,7 @@ Empty state: "All orders have been dispatched ✓"
 
 | Variable | Purpose |
 |----------|---------|
-| `queue[]` | PREPARED orders waiting for dispatch |
+| `queue[]` | CONFIRMED or PREPARING orders waiting for dispatch |
 | `orderId` | Selected order from LoV |
 | `delivererId` | Selected deliverer from LoV |
 | `lovTarget` | `'order'` or `'deliverer'` |
@@ -1041,13 +1049,28 @@ useEffect([tick])
 |--------|-------|
 | ID | mono xs |
 | Campaign Name | bold |
-| Store | default |
+| Store | default (live join from `/stores`) |
 | Period | `start → end` xs |
 | Discount Type | default |
-| Status | `Badge` (green) |
+| Status | `Badge` (green = ACTIVE, blue = UPCOMING, gray = EXPIRED) — computed client-side from current date vs. start/end |
+| Actions | Delete button |
+
+#### Data Loading Pipeline
+
+```
+useEffect([tick])
+  → parallel: GET /promotions, GET /stores
+  → storeMap by store_id for promo→store join
+  → isActive = today >= start_date && today <= end_date
+  → isUpcoming = today < start_date
+  → setRows([{id:promotion_code, name, store, startDate, endDate, discountType, status}])
+```
+
+#### Delete Flow
+`DELETE /promotions/{promotion_code}` → `refresh()`
 
 #### API
-- `GET /api/v1/promotions`
+- `GET /api/v1/promotions` + `GET /api/v1/stores`
 - `DELETE /api/v1/promotions/{promotion_code}`
 
 ---
@@ -1090,13 +1113,23 @@ useEffect([tick])
 | Discount Value | number input right |
 | Delete | icon button |
 
+#### LoV Data Sources (live API)
+
+| LoV | Endpoint | Filter |
+|-----|----------|--------|
+| Store picker | `GET /api/v1/stores` | All stores |
+| Product picker | `GET /api/v1/store-products` | Filtered to selected store's `store_id` on selection |
+
 #### State
 
 | Variable | Purpose |
 |----------|---------|
 | `store`, `storeIsLov` | Store selection |
 | `name`, `startDate`, `endDate` | Campaign header fields |
+| `discountType` | PERCENTAGE / FIXED_AMOUNT |
 | `items[]` | `{id, productId, productName, discount}` |
+| `lovStores[]` | Live store list for store LoV modal |
+| `lovProducts[]` | Live product list filtered to selected store |
 | `isLovOpen`, `lovIdx` | Product modal + which row |
 
 #### Validation
@@ -1379,11 +1412,14 @@ Card → Table (results)
 
 ## 9. Cross-Document Consistency Notes
 
-| # | Issue | Impact | Recommendation |
-|---|-------|--------|----------------|
-| 1 | `Delivery` has no `code` column in DB | API.md v1.0 used `delivery_code` path param | Fixed in API v1.1 → uses `delivery_id` |
-| 2 | `Store_Products` has no `code` column in DB | API.md v1.0 used `product_code` path param | Fixed in API v1.1 → uses `product_id` |
+| # | Issue | Impact | Resolution |
+|---|-------|--------|------------|
+| 1 | `Delivery` has no `code` column in DB | API.md v1.0 used `delivery_code` path param | **Fixed** in API v1.1 → uses `delivery_id` (integer) |
+| 2 | `Store_Products` has no `code` column in DB | API.md v1.0 used `product_code` path param | **Fixed** in API v1.1 → uses `product_id` (integer) |
 | 3 | `Order.status` typed as `int8` in DB schema | Documentation error | Should be `enum` — DB column is correct, markdown typo |
 | 4 | `Order_Items.unit_price` typed as `text` in DB | Documentation error | Should be `numeric` — markdown typo |
 | 5 | `StoreListView` has `phone` + `operating_hours` | Neither exists in `Store` table | Either add fields to DB or remove from UI |
 | 6 | `CustomerOrderFormView` has `payment_method` | Not in `Order` table | Remove from UI or add to DB |
+| 7 | `payments.service.js` and `expense-vouchers.service.js` validated `delivery_code` | Server rejected valid POST bodies | **Fixed** — both services now validate `delivery_id` (positive integer); models updated to match |
+| 8 | `ExpenseFormView` included `PARKING` expense type | Not in API spec enum (FUEL/MAINTENANCE/TOLL/OTHER) | **Fixed** — PARKING removed from frontend type list |
+| 9 | `DelivererDispatchView` filtered `status === 'PREPARED'` | No such value in Order status enum | **Fixed** — filter now matches `CONFIRMED` or `PREPARING` |

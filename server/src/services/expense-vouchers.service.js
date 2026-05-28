@@ -7,7 +7,10 @@ exports.list = (q) => model.findAll(q);
 
 exports.create = async (data) => {
   const fe = [];
-  if (!data.delivery_code) fe.push({ field: 'requestBody.delivery_code', reason: 'required' });
+  if (data.delivery_id === undefined || data.delivery_id === null)
+    fe.push({ field: 'requestBody.delivery_id', reason: 'required' });
+  if (data.delivery_id !== undefined && (isNaN(data.delivery_id) || Number(data.delivery_id) <= 0))
+    fe.push({ field: 'requestBody.delivery_id', reason: 'must be a positive integer' });
   if (!data.voucher_date)  fe.push({ field: 'requestBody.voucher_date',  reason: 'required' });
   if (data.total_amount === undefined || data.total_amount === null)
     fe.push({ field: 'requestBody.total_amount', reason: 'required (calculated by frontend)' });

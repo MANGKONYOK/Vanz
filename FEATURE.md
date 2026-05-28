@@ -10,10 +10,10 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Summary stat cards | PENDING | Numbers are hardcoded (24, 12, ฿3,480, 5) — not from API |
-| Prepared orders queue | DONE | Reads live data from API |
-| Recent expense vouchers list | DONE | Reads live data from API |
-| Quick-navigate buttons | DONE | Navigate to Dispatch / Expense Form |
+| Summary stat cards | **DONE** | Live from API — Orders Today, Active Deliverers, Revenue Today, Pending Vouchers |
+| Dispatch queue panel | **DONE** | Shows CONFIRMED / PREPARING orders from live API |
+| Recent expense vouchers list | **DONE** | Last 5 vouchers from live API with deliverer name resolution |
+| Quick-navigate buttons | **DONE** | Navigate to Dispatch / Expense List |
 
 ---
 
@@ -27,8 +27,8 @@
 | Deliverer List | ✅ Live | ✅ Real API | ✅ Real API | ✅ Real API | **DONE** |
 | Store List | ✅ Live | ✅ Real API | ✅ Real API | ✅ Real API | **DONE** |
 | Product List | ✅ Live | ✅ Real API | ✅ Real API | ✅ Real API | **DONE** |
-| Promotion List | ✅ Live | → Promotion Form | — | — | **UI-ONLY** |
-| Promotion Form (Create) | ✅ Live LOV | UI-ONLY | — | — | **UI-ONLY** |
+| Promotion List | ✅ Live | → Promotion Form | — | ✅ Real API (DELETE) | **DONE** |
+| Promotion Form (Create) | ✅ Live LoV (stores + products filtered by store) | ✅ Real API | — | — | **DONE** |
 
 ---
 
@@ -40,7 +40,7 @@
 |------|-----------|--------|--------|
 | Customer Order List | ✅ Live — GET /orders + /customers + /profiles + /stores | Search + status filter | **DONE** |
 | Customer Order Form (Create) | ✅ Live LoV — customers, stores, products from API; products filtered by selected store | POST /orders | **DONE** |
-| Deliverer Dispatch | ✅ Live — PREPARED orders queue + all deliverers from API | POST /dispatch-assignments | **DONE** |
+| Deliverer Dispatch | ✅ Live — CONFIRMED/PREPARING orders queue + all deliverers from API | POST /dispatch-assignments | **DONE** |
 
 ---
 
@@ -51,9 +51,9 @@
 | Page | View Data | Action | Status |
 |------|-----------|--------|--------|
 | Expense Voucher List | ✅ Live — GET /expense-vouchers + joins via /deliveries /deliverers /profiles | Search + status filter | **DONE** |
-| Expense Voucher Form (Create) | ✅ Live LoV — deliverers from API | POST /expense-vouchers (links latest delivery) | **DONE** |
+| Expense Voucher Form (Create) | ✅ Live LoV — deliverers from API; links to latest delivery for the deliverer | POST /expense-vouchers (delivery_id integer) | **DONE** |
 | Deliverer Payment List | ✅ Live — GET /payments + joins via /deliveries /deliverers /profiles | Search + status filter | **DONE** |
-| Deliverer Payment Form (Create) | ✅ Live LoV — deliverers + "Load Deliveries" fetches GET /deliveries per deliverer | POST /payments | **DONE** |
+| Deliverer Payment Form (Create) | ✅ Live LoV — deliverers + "Load Deliveries" fetches GET /deliveries per deliverer | POST /payments (delivery_id integer) | **DONE** |
 | Revenue Per Trip | ✅ Live — GET /deliveries → monthly avg fee computed client-side | View-only table + refresh | **DONE** |
 
 ---
@@ -62,14 +62,14 @@
 
 | Report | View Data | Filter | Status |
 |--------|-----------|--------|--------|
-| Delivered Orders | ✅ Live delivered orders | — | **DONE** |
-| Order Receipt | ✅ Live first delivered order items | — | **DONE** |
-| Store Products Catalog | ✅ Live store-products | By store | **DONE** |
-| Favorite Stores | ✅ Live favorite_store join | — | **DONE** |
-| Unapproved Vouchers | ✅ Live expense vouchers (PENDING status) | — | **DONE** |
-| Deliverer Ranking | ✅ Live deliveries aggregated | — | **DONE** |
-| Deliverer History | ✅ Live deliveries by deliverer | LOV picker | **DONE** |
-| Products by Category | ✅ Live store-products | By category | **DONE** |
+| Delivered Orders | ✅ Live — GET /orders + joins deliveries/deliverers/profiles | Date From/To + Generate button | **DONE** |
+| Order Receipt | ✅ Live — LoV from DELIVERED orders, loads full order + items + delivery on demand | Select order + Load Receipt | **DONE** |
+| Store Products Catalog | ✅ Live — GET /store-products + /stores | Store LoV, product name, status | **DONE** |
+| Favorite Stores | ✅ Live — GET /favorite-stores + joins /customers /profiles /stores | Customer LoV, Store LoV | **DONE** |
+| Unapproved Vouchers | ✅ Live — GET /expense-vouchers, filters DRAFT/SUBMITTED client-side | Date, min amount, status | **DONE** |
+| Deliverer Ranking | ✅ Live — GET /deliverers + /profiles, sorted by rating | Deliverer LoV, vehicle type, min rating | **DONE** |
+| Deliverer History | ✅ Live — GET /deliveries by deliverer_code + joins orders/stores/customers | Deliverer LoV, Date From/To, Search button | **DONE** |
+| Products by Category | ✅ Live — GET /store-products + /stores, categories from store.category | Store LoV, category dropdown | **DONE** |
 
 ---
 
@@ -77,16 +77,16 @@
 
 | Report | View Data | Status |
 |--------|-----------|--------|
-| Top 10 Products | ✅ Aggregated from live order_items | **DONE** |
-| Top 10 Deliverers | ✅ Aggregated from live deliveries | **DONE** |
-| Expense Summary Stats | ✅ Count / Sum / Avg from live vouchers | **DONE** |
-| Promotion Performance | ✅ Live promotions with item count | **DONE** |
+| Top N Products | ✅ Live — aggregated from GET /orders order_items by qty + revenue | Store LoV, Top N, Date range, Generate button | **DONE** |
+| Top N Deliverers | ✅ Live — aggregated from GET /deliveries + /payments earnings | Top N, Date range, Generate button | **DONE** |
+| Expense Summary Stats | ✅ Live — COUNT/SUM/AVG + status breakdown + top expense type from GET /expense-vouchers | Date range, Calculate button | **DONE** |
+| Promotion Performance | ✅ Live — promotions + orders aggregated per campaign (orders in promo period per store) | Store LoV, Date range, Generate button | **DONE** |
 
 ---
 
 ## API Endpoints (Backend)
 
-All 15 resource routes exist with full CRUD. Frontend currently uses only `GET` (list).
+All 15 resource routes exist with full CRUD.
 
 | Resource | GET list | POST create | PUT update | DELETE |
 |----------|----------|-------------|------------|--------|
@@ -108,26 +108,23 @@ All 15 resource routes exist with full CRUD. Frontend currently uses only `GET` 
 
 ---
 
-## Data Loading / Cache
+## Bug Fixes Applied (this session)
 
-| Task | Status | Notes |
-|------|--------|-------|
-| Centralized live-data facade | DONE | UI imports from `client/src/data/liveData.js` instead of the old mock-data path |
-| Shared startup data load | DONE | Real API data is loaded once and reused across pages |
-| Auto-refresh after create/update/delete | PENDING | Lists do not refresh automatically after mutations |
-| Per-page API fetch separation | PENDING | Possible and recommended for maintainability and smaller data scope per page |
-| Client-side cache for API responses | PENDING | Possible; recommended to use a query/cache layer or a small custom cache with TTL + invalidation |
-| Cache invalidation after mutation | PENDING | Required if caching is added, otherwise stale data will remain visible |
+| # | Bug | Fix |
+|---|-----|-----|
+| 1 | `payments.service.js` validated `delivery_code` but API spec + DB require `delivery_id` (integer) | Changed to `delivery_id` validation in service + model |
+| 2 | `expense-vouchers.service.js` same `delivery_code` mismatch | Changed to `delivery_id` in service + model |
+| 3 | `ExpenseFormView.jsx` sent `delivery_code: String(id)` instead of `delivery_id: integer` | Fixed field name and type |
+| 4 | `ExpenseFormView.jsx` had `PARKING` expense type (not in API spec; valid: FUEL/MAINTENANCE/TOLL/OTHER) | Removed PARKING |
+| 5 | `DelivererPaymentView.jsx` sent `delivery_code` instead of `delivery_id` | Fixed field name; added `payment_datetime` |
+| 6 | `DelivererDispatchView.jsx` filtered `status === 'PREPARED'` which doesn't exist in order status enum | Changed to `CONFIRMED` or `PREPARING` |
+| 7 | `PromotionFormView.jsx` used MOCK_STORES / MOCK_PRODUCTS for LoV instead of live API | Replaced with getJson('/stores') + getJson('/store-products') |
 
-### Recommended Direction
+---
 
-If we continue this work, the clean path is:
+## Data Loading Strategy
 
-1. Separate each page to fetch only the data it needs.
-2. Add a cache layer for GET requests.
-3. Invalidate or refresh affected cache entries after POST/PUT/DELETE.
-
-This is possible in the current project. The main tradeoff is implementation time versus keeping the current simple startup-load approach.
+All views (including Dashboard and all Reports) now use **per-view reactive loading** via `useEffect`. There is no shared boot-time mock snapshot. The `mockData.js` and `liveData.js` files are now unused by any view — they remain in the codebase but are no longer imported by any view component.
 
 ---
 
@@ -135,15 +132,8 @@ This is possible in the current project. The main tradeoff is implementation tim
 
 | # | Item | Priority | Status |
 |---|------|----------|--------|
-| 1 | Dashboard stat cards show hardcoded values (not from API) | Medium | Open |
-| 2 | ~~Master list tables not auto-refreshed after save~~ | ~~Medium~~ | **Fixed** |
-| 3 | ~~Master Data Add/Edit/Delete UI-only~~ | ~~High~~ | **Fixed** — all 4 master views fully wired |
-| 4 | ~~Operations/Finance forms still UI-ONLY~~ | ~~High~~ | **Fixed** — all 7 ops/finance views now use live API |
-| 5 | ~~Revenue Per Trip using boot-time mock data~~ | ~~Medium~~ | **Fixed** — now fetches GET /deliveries directly |
-| 6 | Expense Voucher save links to "latest delivery" for deliverer — no explicit delivery selector | Medium | Open |
-| 7 | Payment form: "Load Deliveries" shows all deliveries; no filter for already-paid ones | Medium | Open |
-| 8 | Promotion List/Form not wired to real API | Medium | Open |
-| 9 | Dashboard stat cards still hardcoded | Medium | Open |
-| 10 | JWT middleware only checks Bearer header format — does NOT verify signature | Medium | Open |
-| 11 | Reports still use boot-time snapshot from mockData.js (not per-view fetch) | Low | Open |
-| 12 | API response caching with invalidation not implemented | Low | Open |
+| 1 | Expense Voucher Form links to "latest delivery" for deliverer — no explicit delivery selector | Medium | Open |
+| 2 | Payment Form shows all deliveries; no filter to exclude already-paid ones | Medium | Open |
+| 3 | JWT middleware only checks Bearer header format — does NOT verify signature | Medium | Open |
+| 4 | API response caching with invalidation not implemented | Low | Open |
+| 5 | `mockData.js` / `liveData.js` still exist in codebase but are unused — can be deleted | Low | Open |

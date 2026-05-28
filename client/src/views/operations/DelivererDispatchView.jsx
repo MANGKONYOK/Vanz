@@ -40,9 +40,9 @@ export default function DelivererDispatchView({ showToast }) {
             const custMap    = new Map(customers.map(c => [c.customer_id, c]));
             const storeMap   = new Map(stores.map(s => [s.store_id, s]));
 
-            // Only show PREPARED orders in the queue
+            // Show CONFIRMED and PREPARING orders in the dispatch queue
             const prepared = orders
-                .filter(o => o.status === 'PREPARED')
+                .filter(o => o.status === 'CONFIRMED' || o.status === 'PREPARING')
                 .map(o => {
                     const cust  = custMap.get(o.customer_id) || {};
                     const prof  = profileMap.get(cust.profile_id) || {};

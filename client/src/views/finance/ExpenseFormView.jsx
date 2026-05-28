@@ -7,7 +7,7 @@ function extractCode(value) {
     return String(value || '').split(' – ')[0].trim();
 }
 
-const EXPENSE_TYPES = ['TOLL', 'FUEL', 'PARKING', 'MAINTENANCE', 'OTHER'];
+const EXPENSE_TYPES = ['FUEL', 'MAINTENANCE', 'TOLL', 'OTHER'];
 
 export default function ExpenseFormView({ onNavigateBack, showToast }) {
     const onBack = onNavigateBack || (() => {});
@@ -59,13 +59,14 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 return;
             }
             await postJson('/expense-vouchers', {
-                delivery_code: String(delivery.delivery_id),
-                voucher_date:  voucherDate,
-                total_amount:  totalAmount,
+                delivery_id:  delivery.delivery_id,
+                voucher_date: voucherDate,
+                total_amount: totalAmount,
                 expense_items: items.map(i => ({
-                    expense_type: i.type,
-                    description:  i.desc.trim(),
-                    amount:       Number(i.amount),
+                    expense_type:           i.type,
+                    description:            i.desc.trim(),
+                    amount:                 Number(i.amount),
+                    receipt_reference_code: i.receipt.trim() || undefined,
                 })),
             });
             showToast('Voucher saved successfully!');

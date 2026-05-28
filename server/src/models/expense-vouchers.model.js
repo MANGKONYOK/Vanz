@@ -67,9 +67,9 @@ exports.create = async (data) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const deliveryId = parseInt(data.delivery_code, 10);
+    const deliveryId = parseInt(data.delivery_id, 10);
     const { rows: [chk] } = await client.query('SELECT id FROM delivery WHERE id=$1', [deliveryId]);
-    if (!chk) throw Object.assign(new Error(`Delivery ${data.delivery_code} not found`), { name: 'NotFoundError' });
+    if (!chk) throw Object.assign(new Error(`Delivery ${data.delivery_id} not found`), { name: 'NotFoundError' });
 
     // expense_voucher.id is plain bigint NOT NULL (no GENERATED ALWAYS, no sequence)
     const { rows: [idRow] } = await client.query('SELECT COALESCE(MAX(id), 0) + 1 AS nxt FROM expense_voucher');
