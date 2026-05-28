@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Save, CreditCard, RefreshCw, Search } from 'lucide-react';
+import { ArrowLeft, Save, CreditCard, RefreshCw, Search, Check } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { MOCK_DELIVERERS, INITIAL_ORDERS } from '../../data/mockData';
 
@@ -14,9 +14,17 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState('PENDING');
 
+    const [paymentId, setPaymentId] = useState('');
+    const [autoId, setAutoId] = useState(true);
+
+    const displayPaymentId = autoId ? (paymentId || 'PAY-AUTO') : paymentId;
+
     const handleSave = () => {
+        if (!autoId && !paymentId.trim()) return showToast('Please enter a Payment ID', 'error');
         if (!deliverer) return showToast('Please select a deliverer', 'error');
         if (!paymentDate) return showToast('Please specify a payment date', 'error');
+        if (!startDate) return showToast('Please specify a period start date', 'error');
+        if (!endDate) return showToast('Please specify a period end date', 'error');
         if (startDate && endDate && new Date(endDate) < new Date(startDate)) return showToast('Period end cannot be before period start', 'error');
         if (selected.length === 0) return showToast('Please select at least one unpaid order', 'error');
         showToast('Payment confirmed successfully!'); setSelected([]); setDeliverer(''); onBack();
@@ -55,19 +63,43 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
             <Card className="p-5">
                 <h3 className="font-bold text-slate-900 mb-4">Payment Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField label="Payment ID">
-                        <Input readOnly defaultValue="PAY-2026-000456" className="bg-slate-50 font-mono text-slate-500" />
-                    </FormField>
+                    <div className="flex items-end gap-3">
+                        <div className="flex-1">
+                            <FormField label="Payment ID" required>
+                                <Input 
+                                    value={displayPaymentId} 
+                                    onChange={e => setPaymentId(e.target.value.toUpperCase())} 
+                                    placeholder="PAY-001" 
+                                    readOnly={autoId}
+                                    className={autoId ? 'bg-slate-50 text-slate-500 font-mono' : 'font-mono'}
+                                />
+                            </FormField>
+                        </div>
+                        <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
+                            <div className="relative">
+                                <input 
+                                    type="checkbox" 
+                                    checked={autoId} 
+                                    onChange={e => setAutoId(e.target.checked)}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-5 h-5 border-2 border-slate-200 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
+                                    <Check size={12} strokeWidth={4} className={autoId ? 'scale-100' : 'scale-0'} />
+                                </div>
+                            </div>
+                            <span className="text-sm font-bold text-slate-600 font-sans">Auto</span>
+                        </label>
+                    </div>
                     <FormField label="Deliverer" required>
                         <LovInput value={deliverer} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer..." />
                     </FormField>
                     <FormField label="Date" required>
                         <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
                     </FormField>
-                    <FormField label="Period Start">
+                    <FormField label="Period Start" required>
                         <Input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setSelected([]); }} />
                     </FormField>
-                    <FormField label="Period End">
+                    <FormField label="Period End" required>
                         <Input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setSelected([]); }} />
                     </FormField>
                     <FormField label="Status">
