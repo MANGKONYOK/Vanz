@@ -74,19 +74,17 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                     onSort={handleSort}
                     sortConfig={sort}
                     headers={[
-                        { label: 'Payment ID', key: 'id', sortable: true, width: '18%' },
-                        { label: 'Period', key: 'period', sortable: true, width: '14%' },
-                        { label: 'Date', key: 'date', sortable: true, width: '14%' },
-                        { label: 'Deliverer', key: 'delivererName', sortable: true, width: '22%' },
+                        { label: 'Payment ID', key: 'id', sortable: true, width: '24%' },
+                        { label: 'Date', key: 'date', sortable: true, width: '20%' },
+                        { label: 'Deliverer', key: 'delivererName', sortable: true, width: '16%' },
                         { label: 'Status', key: 'status', center: true, sortable: true, width: '12%' },
-                        { label: 'Amount', key: 'amount', right: true, sortable: true, width: '12%' },
-                        { label: 'Actions', right: true, width: '8%' }
+                        { label: 'Total Payment', key: 'amount', right: true, sortable: true, width: '14%' },
+                        { label: 'Actions', right: true, width: '14%' }
                     ]}
                 >
                     {paginated.map(p => (
                         <Tr key={p.id}>
                             <Td mono className="text-xs font-bold text-red-600">{p.id}</Td>
-                            <Td>{p.period}</Td>
                             <Td>{p.date}</Td>
                             <Td bold>{p.delivererName}</Td>
                             <Td center>
