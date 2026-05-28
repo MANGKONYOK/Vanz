@@ -55,13 +55,13 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
             <Card className="p-5">
                 <h3 className="font-bold text-slate-900 mb-4">Payment Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField label="Payment Code">
+                    <FormField label="Payment ID">
                         <Input readOnly defaultValue="PAY-2026-000456" className="bg-slate-50 font-mono text-slate-500" />
                     </FormField>
                     <FormField label="Deliverer" required>
                         <LovInput value={deliverer} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer..." />
                     </FormField>
-                    <FormField label="Payment Date" required>
+                    <FormField label="Date" required>
                         <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
                     </FormField>
                     <FormField label="Period Start">
