@@ -1,62 +1,88 @@
 import { useState } from 'react';
-import { Plus, Edit2, Trash2, ArrowLeft, Save } from 'lucide-react';
-import { PageHeader, Btn, Card, Table, Tr, Td, Badge, FormField, Input, Select } from '../../components/ui';
+import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
 import { MOCK_STORES } from '../../data/mockData';
-
-function StoreFormInline({ data, onBack, showToast }) {
-    const [name, setName] = useState(data.name || '');
-    const [category, setCategory] = useState(data.category || 'Thai Food');
-    const [phone, setPhone] = useState(data.phone || '');
-    const [open, setOpen] = useState(data.open || '');
-    const [address, setAddress] = useState(data.address || '');
-
-    const handleSave = () => {
-        if (!name.trim() || !category || !phone.trim() || !address.trim()) {
-            return showToast('Please fill all required fields', 'error');
-        }
-        showToast('Store saved!'); onBack();
-    };
-    return (
-        <div className="fade-in space-y-5">
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium"><ArrowLeft className="w-4 h-4" /> Back to Stores</button>
-            <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-4">{data.id ? `Edit: ${data.name}` : 'New Store'}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField label="Store Name" required><Input value={name} onChange={e => setName(e.target.value)} placeholder="Restaurant name" /></FormField>
-                    <FormField label="Category" required>
-                        <Select value={category} onChange={e => setCategory(e.target.value)}><option>Thai Food</option><option>Japanese</option><option>Cafe & Drinks</option><option>Fast Food</option><option>Other</option></Select>
-                    </FormField>
-                    <FormField label="Phone" required><Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="02-xxx-xxxx" /></FormField>
-                    <FormField label="Operating Hours"><Input value={open} onChange={e => setOpen(e.target.value)} placeholder="09:00-21:00" /></FormField>
-                    <div className="md:col-span-2"><FormField label="Address" required><Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Full address" /></FormField></div>
-                </div>
-                <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-slate-100">
-                    <Btn variant="secondary" onClick={onBack}>Cancel</Btn>
-                    <Btn onClick={handleSave}><Save className="w-4 h-4" /> Save</Btn>
-                </div>
-            </Card>
-        </div>
-    );
-}
+import StoreFormView from './StoreFormView';
 
 export default function StoreListView({ showToast }) {
     const [editing, setEditing] = useState(null);
-    if (editing) return <StoreFormInline data={editing} onBack={() => setEditing(null)} showToast={showToast} />;
+    const [search, setSearch] = useState('');
+    const [sort, setSort] = useState({ key: 'name', direction: 'asc' });
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    if (editing) return <StoreFormView data={editing} onBack={() => setEditing(null)} showToast={showToast} />;
+
+    // 1. Filter
+    const filtered = MOCK_STORES.filter(s =>
+        s.name.toLowerCase().includes(search.toLowerCase()) ||
+        s.id.toLowerCase().includes(search.toLowerCase()) ||
+        s.category.toLowerCase().includes(search.toLowerCase()) ||
+        s.address.toLowerCase().includes(search.toLowerCase())
+    );
+
+    // 2. Sort
+    const sorted = [...filtered].sort((a, b) => {
+        const valA = a[sort.key];
+        const valB = b[sort.key];
+        if (valA < valB) return sort.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sort.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    // 3. Paginate
+    const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
+    const start = filtered.length > 0 ? (page - 1) * pageSize + 1 : 0;
+    const end = Math.min(page * pageSize, filtered.length);
+
+    const handleSort = (key) => {
+        setSort(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+
     return (
-        <div className="fade-in">
+        <div className="fade-in space-y-5">
             <PageHeader title="Stores" subtitle="Manage restaurant & store listings"
                 action={<Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Add Store</Btn>} />
-            <Card>
-                <Table headers={[{ label: 'ID' }, { label: 'Store Name' }, { label: 'Category' }, { label: 'Address' }, { label: 'Phone' }, { label: 'Hours' }, { label: '', right: true }]}>
-                    {MOCK_STORES.map(s => (
+            <Card className="overflow-hidden">
+                <CardHeader 
+                    search={<Input icon={Search} placeholder="Search ID, name, category..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    filter={
+                        <div className="flex items-center gap-3">
+                            <span className="text-xs font-medium text-slate-400">
+                                {start}-{end} of {filtered.length} stores
+                            </span>
+                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 border-slate-200 bg-white shadow-sm w-24">
+                                {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
+                            </Select>
+                        </div>
+                    }
+                />
+                <Table 
+                    headers={[
+                        { label: 'ID', key: 'id', sortable: true, width: '10%' }, 
+                        { label: 'NAME', key: 'name', sortable: true, width: '20%' }, 
+                        { label: 'CATEGORY', key: 'category', sortable: true, width: '14%' }, 
+                        { label: 'PHONE', key: 'phone', width: '14%' }, 
+                        { label: 'ADDRESS', key: 'address', width: '24%' }, 
+                        { label: 'HOURS', key: 'open', width: '8%' }, 
+                        { label: 'Actions', right: true, width: '10%' }
+                    ]}
+                    onSort={handleSort}
+                    sortConfig={sort}
+                    minWidth="900px"
+                >
+                    {paginated.map(s => (
                         <Tr key={s.id}>
-                            <Td mono className="text-xs">{s.id}</Td>
-                            <Td bold>{s.name}</Td>
-                            <Td><Badge>{s.category}</Badge></Td>
-                            <Td>{s.address}</Td>
-                            <Td>{s.phone}</Td>
-                            <Td className="text-xs">{s.open}</Td>
-                            <td className="px-4 py-3 text-right">
+                            <Td mono className="text-xs text-slate-900 font-bold whitespace-nowrap">{s.id}</Td>
+                            <Td bold className="whitespace-nowrap">{s.name}</Td>
+                            <Td className="whitespace-nowrap"><Badge>{s.category}</Badge></Td>
+                            <Td mono className="text-xs whitespace-nowrap">{s.phone}</Td>
+                            <Td className="truncate max-w-[250px] whitespace-nowrap" title={s.address}>{s.address}</Td>
+                            <Td className="text-xs text-slate-500 whitespace-nowrap">{s.open}</Td>
+                            <td className="px-4 py-3 text-right whitespace-nowrap">
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => setEditing(s)}><Edit2 className="w-3 h-3" /> Edit</Btn>
                                     <Btn size="sm" variant="danger" onClick={() => showToast('Store deleted', 'error')}><Trash2 className="w-3 h-3" /> Delete</Btn>
@@ -65,7 +91,16 @@ export default function StoreListView({ showToast }) {
                         </Tr>
                     ))}
                 </Table>
+                <Pagination
+                    totalItems={filtered.length}
+                    itemsPerPage={pageSize}
+                    currentPage={page}
+                    onPageChange={setPage}
+                    showSummary={false}
+                    itemLabel="stores"
+                />
             </Card>
         </div>
     );
 }
+

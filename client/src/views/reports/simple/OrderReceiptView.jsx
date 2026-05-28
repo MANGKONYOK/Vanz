@@ -31,9 +31,9 @@ export default function OrderReceiptView() {
                         <p className="text-xs text-slate-400 mono">ORD-2026-008001 · 2026-03-21 14:32</p>
                     </div>
                     <div className="text-xs text-slate-500 mb-3">
-                        <p><span className="font-semibold">Customer:</span> Adisak M.</p>
+                        <p><span className="font-semibold">Customer:</span> Adisak Mongkolsuwan</p>
                         <p><span className="font-semibold">Store:</span> Somchai Kitchen</p>
-                        <p><span className="font-semibold">Deliverer:</span> Somchai J.</p>
+                        <p><span className="font-semibold">Deliverer:</span> Somchai Jaidee</p>
                     </div>
                     <div className="border-t border-dashed border-slate-200 pt-3 mb-3">
                         {MOCK_RECEIPT_ITEMS.map(i => (

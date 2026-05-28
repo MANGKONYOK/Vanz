@@ -1,4 +1,4 @@
-import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 
 export default function Table({ headers, children, minWidth = '500px', onSort, sortConfig }) {
     return (
@@ -9,22 +9,35 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                         {headers.map((h, i) => {
                             const isSortable = h.sortable && onSort;
                             const isSorted = sortConfig?.key === h.key;
+                            
+                            const textClass = isSorted 
+                                ? 'text-slate-900 font-extrabold' 
+                                : isSortable 
+                                    ? 'text-slate-500 hover:text-slate-900 transition-colors duration-200' 
+                                    : 'text-slate-500';
+
                             return (
                                 <th 
                                     key={i} 
                                     onClick={() => isSortable && onSort(h.key)}
-                                    className={`px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-slate-600 whitespace-nowrap 
+                                    style={{ width: h.width }}
+                                    className={`px-4 py-3 text-[11px] uppercase tracking-wide whitespace-nowrap group select-none
                                         ${h.right ? 'text-right' : ''} ${h.center ? 'text-center' : ''} 
-                                        ${isSortable ? 'cursor-pointer hover:bg-slate-200 transition-colors' : ''}`}
+                                        ${isSortable ? 'cursor-pointer hover:bg-slate-200/50 transition-colors' : ''}
+                                        ${textClass}`}
                                 >
-                                    <div className={`flex items-center gap-1.5 ${h.right ? 'justify-end' : h.center ? 'justify-center' : ''}`}>
-                                        {h.label}
+                                    <div className={`flex items-center gap-1 ${h.right ? 'justify-end' : h.center ? 'justify-center' : ''}`}>
+                                        <span>{h.label}</span>
                                         {isSortable && (
-                                            <span className="text-slate-400">
+                                            <span className="inline-flex items-center min-h-[14px]">
                                                 {isSorted ? (
-                                                    sortConfig.direction === 'asc' ? <ChevronUp size={12} className="text-red-500" /> : <ChevronDown size={12} className="text-red-500" />
+                                                    sortConfig.direction === 'asc' ? (
+                                                        <ArrowUp size={13} className="text-red-600 font-bold animate-bounce-subtle" />
+                                                    ) : (
+                                                        <ArrowDown size={13} className="text-red-600 font-bold animate-bounce-subtle" />
+                                                    )
                                                 ) : (
-                                                    <ChevronsUpDown size={12} className="opacity-30" />
+                                                    <ArrowUpDown size={13} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-slate-400" />
                                                 )}
                                             </span>
                                         )}

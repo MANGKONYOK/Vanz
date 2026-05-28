@@ -18,6 +18,7 @@ export default function App() {
     const [currentView, setCurrentView] = useState('dashboard');
     const [expandedNav, setExpandedNav] = useState({ simple: true, analytics: true });
     const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+    const [promotionEditData, setPromotionEditData] = useState(null);
 
     const showToast = (message, type = 'success') => {
         setToast({ visible: true, message, type });
@@ -51,14 +52,14 @@ export default function App() {
                         {currentView === 'dashboard' && <DashboardView onNavigate={setCurrentView} />}
 
                         {/* Operations */}
-                        {currentView === 'customer_order_list' && <CustomerOrderListView onNavigate={() => setCurrentView('customer_order_form')} />}
+                        {currentView === 'customer_order_list' && <CustomerOrderListView showToast={showToast} onNavigate={() => setCurrentView('customer_order_form')} />}
                         {currentView === 'customer_order_form' && <CustomerOrderFormView showToast={showToast} onNavigateBack={() => setCurrentView('customer_order_list')} />}
                         {currentView === 'dispatch_form' && <DelivererDispatchView showToast={showToast} />}
 
                         {/* Finance */}
-                        {currentView === 'expense_list' && <ExpenseListView onNavigate={() => setCurrentView('expense_form')} />}
+                        {currentView === 'expense_list' && <ExpenseListView showToast={showToast} onNavigate={() => setCurrentView('expense_form')} />}
                         {currentView === 'expense_form' && <ExpenseFormView onNavigateBack={() => setCurrentView('expense_list')} showToast={showToast} />}
-                        {currentView === 'payment_list' && <DelivererPaymentListView onNavigate={() => setCurrentView('payment_form')} />}
+                        {currentView === 'payment_list' && <DelivererPaymentListView showToast={showToast} onNavigate={() => setCurrentView('payment_form')} />}
                         {currentView === 'payment_form' && <DelivererPaymentView showToast={showToast} onNavigateBack={() => setCurrentView('payment_list')} />}
                         {currentView === 'revenue_trip' && <RevenueTripView showToast={showToast} />}
 
@@ -67,8 +68,8 @@ export default function App() {
                         {currentView === 'deliverer_list' && <DelivererListView showToast={showToast} />}
                         {currentView === 'store_list' && <StoreListView showToast={showToast} />}
                         {currentView === 'product_list' && <ProductListView showToast={showToast} />}
-                        {currentView === 'promotion_list' && <PromotionListView onNavigate={() => setCurrentView('promotion_form')} />}
-                        {currentView === 'promotion_form' && <PromotionFormView onNavigateBack={() => setCurrentView('promotion_list')} showToast={showToast} />}
+                        {currentView === 'promotion_list' && <PromotionListView showToast={showToast} onNavigate={(data) => { setPromotionEditData(data || null); setCurrentView('promotion_form'); }} />}
+                        {currentView === 'promotion_form' && <PromotionFormView data={promotionEditData} onNavigateBack={() => { setPromotionEditData(null); setCurrentView('promotion_list'); }} showToast={showToast} />}
 
                         {/* Simple Reports */}
                         {currentView === 'report_delivered_orders' && <DeliveredOrdersReportView />}
