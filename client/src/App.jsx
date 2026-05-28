@@ -18,6 +18,7 @@ export default function App() {
     const [currentView, setCurrentView] = useState('dashboard');
     const [expandedNav, setExpandedNav] = useState({ simple: true, analytics: true });
     const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+    const [promotionEditData, setPromotionEditData] = useState(null);
 
     const showToast = (message, type = 'success') => {
         setToast({ visible: true, message, type });
@@ -67,8 +68,8 @@ export default function App() {
                         {currentView === 'deliverer_list' && <DelivererListView showToast={showToast} />}
                         {currentView === 'store_list' && <StoreListView showToast={showToast} />}
                         {currentView === 'product_list' && <ProductListView showToast={showToast} />}
-                        {currentView === 'promotion_list' && <PromotionListView onNavigate={() => setCurrentView('promotion_form')} />}
-                        {currentView === 'promotion_form' && <PromotionFormView onNavigateBack={() => setCurrentView('promotion_list')} showToast={showToast} />}
+                        {currentView === 'promotion_list' && <PromotionListView showToast={showToast} onNavigate={(data) => { setPromotionEditData(data || null); setCurrentView('promotion_form'); }} />}
+                        {currentView === 'promotion_form' && <PromotionFormView data={promotionEditData} onNavigateBack={() => { setPromotionEditData(null); setCurrentView('promotion_list'); }} showToast={showToast} />}
 
                         {/* Simple Reports */}
                         {currentView === 'report_delivered_orders' && <DeliveredOrdersReportView />}

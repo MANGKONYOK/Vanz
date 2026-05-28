@@ -45,7 +45,7 @@ export const MOCK_PREPARED_ORDERS = [
 
 export const MOCK_PROMOTIONS = [
     { id: 'PROMO-2026-001', name: 'Summer Sale', store: 'Somchai Kitchen', storeId: 'ST-001', startDate: '2026-04-01', endDate: '2026-04-30', status: 'Active', discountType: 'PERCENTAGE', revenue: 12400, products: 3, orders: 142 },
-    { id: 'PROMO-2026-002', name: 'Weekend Special', store: 'BKK Cafe', storeId: 'ST-003', startDate: '2026-03-01', endDate: '2026-03-31', status: 'Active', discountType: 'FIXED_AMOUNT', revenue: 8200, products: 2, orders: 85 },
+    { id: 'PROMO-2026-002', name: 'Weekend Special', store: 'BKK Cafe', storeId: 'ST-003', startDate: '2026-03-01', endDate: '2026-03-31', status: 'Active', discountType: 'FIXED AMOUNT', revenue: 8200, products: 2, orders: 85 },
 ];
 
 export const MOCK_RECEIPT_ITEMS = [

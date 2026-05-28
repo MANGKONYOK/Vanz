@@ -1,18 +1,27 @@
 import { useState } from 'react';
-import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Check } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { MOCK_STORES, MOCK_PRODUCTS } from '../../data/mockData';
 
-export default function PromotionFormView({ onNavigateBack, showToast }) {
+export default function PromotionFormView({ data, onNavigateBack, showToast }) {
+    const isNew = !data;
+    const editData = data || {};
     const [items, setItems] = useState([{ id: 1, productId: '', productName: '', discount: 0 }]);
     const [isLovOpen, setIsLovOpen] = useState(false);
     const [lovIdx, setLovIdx] = useState(null);
-    const [store, setStore] = useState('');
+    const [store, setStore] = useState(editData.storeId ? `${editData.storeId} – ${editData.store}` : '');
     const [storeIsLov, setStoreIsLov] = useState(false);
-    const [name, setName] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [name, setName] = useState(editData.name || '');
+    const [startDate, setStartDate] = useState(editData.startDate || '');
+    const [endDate, setEndDate] = useState(editData.endDate || '');
+    const [discountType, setDiscountType] = useState(editData.discountType || 'PERCENTAGE');
+    const [promoCode, setPromoCode] = useState(editData.id || '');
+    const [autoCode, setAutoCode] = useState(isNew);
+
+    const displayCode = autoCode ? (promoCode || 'PROMO-AUTO') : promoCode;
+
     const handleSave = () => {
+        if (!autoCode && !promoCode.trim()) return showToast('Please enter a Campaign Code', 'error');
         if (!store) return showToast('Please select a target store', 'error');
         if (!name.trim()) return showToast('Campaign Name is required', 'error');
         if (!startDate || !endDate) return showToast('Please specify both Start and End Dates', 'error');
@@ -29,19 +38,43 @@ export default function PromotionFormView({ onNavigateBack, showToast }) {
             <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Product"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Product' }, { key: 'price', label: 'Price' }]}
                 data={MOCK_PRODUCTS} onSelect={r => { if (lovIdx !== null) { const n = [...items]; n[lovIdx].productName = r.name; n[lovIdx].productId = r.id; setItems(n); } setIsLovOpen(false); setLovIdx(null); }} />
-            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium"><ArrowLeft className="w-4 h-4" /> Back</button>
+            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium"><ArrowLeft className="w-4 h-4" /> Back to Promotions</button>
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-4">Campaign Details</h3>
+                <h3 className="font-bold text-slate-900 mb-4">{isNew ? 'New Campaign' : `Edit: ${editData.name}`}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField label="Campaign Code">
-                        <Input readOnly defaultValue="PROMO-2026-001" className="bg-slate-50 font-mono text-slate-500" />
-                    </FormField>
+                    <div className="flex items-end gap-3">
+                        <div className="flex-1">
+                            <FormField label="Promotion ID" required>
+                                <Input
+                                    value={displayCode}
+                                    onChange={e => setPromoCode(e.target.value.toUpperCase())}
+                                    placeholder="PROMO-001"
+                                    readOnly={autoCode}
+                                    className={autoCode ? 'bg-slate-50 text-slate-500 font-mono' : 'font-mono'}
+                                />
+                            </FormField>
+                        </div>
+                        <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
+                            <div className="relative">
+                                <input
+                                    type="checkbox"
+                                    checked={autoCode}
+                                    onChange={e => setAutoCode(e.target.checked)}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-5 h-5 border-2 border-slate-200 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
+                                    <Check size={12} strokeWidth={4} className={autoCode ? 'scale-100' : 'scale-0'} />
+                                </div>
+                            </div>
+                            <span className="text-sm font-bold text-slate-600 font-sans">Auto</span>
+                        </label>
+                    </div>
+                    <FormField label="Campaign Name" required><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Summer Sale" /></FormField>
                     <FormField label="Store" required>
                         <LovInput value={store} onLov={() => setStoreIsLov(true)} placeholder="Select store..." />
                     </FormField>
-                    <FormField label="Campaign Name" required><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Summer Sale" /></FormField>
                     <FormField label="Discount Type" required>
-                        <Select><option value="PERCENTAGE">Percentage</option><option value="FIXED_AMOUNT">Fixed Amount</option></Select>
+                        <Select value={discountType} onChange={e => setDiscountType(e.target.value)}><option value="PERCENTAGE">Percentage</option><option value="FIXED_AMOUNT">Fixed Amount</option></Select>
                     </FormField>
                     <FormField label="Start Date" required><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></FormField>
                     <FormField label="End Date" required><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></FormField>

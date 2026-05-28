@@ -69,11 +69,12 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                     sortConfig={sort}
                     headers={[
                         { label: 'Order ID', key: 'id', sortable: true, width: '16%' },
-                        { label: 'Date', key: 'date', sortable: true, width: '16%' },
-                        { label: 'Customer', key: 'customer', sortable: true, width: '20%' },
-                        { label: 'Store', key: 'store', sortable: true, width: '20%' },
-                        { label: 'Total Order', key: 'total', right: true, sortable: true, width: '14%' },
-                        { label: 'Actions', right: true, width: '14%' }
+                        { label: 'Date', key: 'date', sortable: true, width: '14%' },
+                        { label: 'Customer', key: 'customer', sortable: true, width: '18%' },
+                        { label: 'Store', key: 'store', sortable: true, width: '18%' },
+                        { label: 'Total Order', key: 'total', right: true, sortable: true, width: '12%' },
+                        { label: 'Status', key: 'status', center: true, sortable: true, width: '10%' },
+                        { label: 'Actions', right: true, width: '12%' }
                     ]}
                 >
                     {paginated.map(o => (
@@ -83,6 +84,7 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                             <Td bold>{o.customer}</Td>
                             <Td>{o.store}</Td>
                             <Td right bold>฿{o.total?.toLocaleString()}</Td>
+                            <Td center><Badge color={o.status === 'Paid' ? 'green' : o.status === 'Cancelled' ? 'red' : 'amber'}>{o.status}</Badge></Td>
                             <td className="px-4 py-3 text-right">
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(o)}><Edit2 className="w-3 h-3" /> Edit</Btn>

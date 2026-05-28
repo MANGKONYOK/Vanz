@@ -77,8 +77,8 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                         { label: 'Payment ID', key: 'id', sortable: true, width: '24%' },
                         { label: 'Date', key: 'date', sortable: true, width: '20%' },
                         { label: 'Deliverer', key: 'delivererName', sortable: true, width: '16%' },
-                        { label: 'Status', key: 'status', center: true, sortable: true, width: '12%' },
                         { label: 'Total Payment', key: 'amount', right: true, sortable: true, width: '14%' },
+                        { label: 'Status', key: 'status', center: true, sortable: true, width: '12%' },
                         { label: 'Actions', right: true, width: '14%' }
                     ]}
                 >
@@ -87,12 +87,12 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                             <Td mono className="text-xs font-bold text-red-600">{p.id}</Td>
                             <Td>{p.date}</Td>
                             <Td bold>{p.delivererName}</Td>
+                            <Td right bold>฿{p.amount?.toLocaleString()}</Td>
                             <Td center>
                                 <Badge color={p.status === 'PAID' ? 'green' : p.status === 'PENDING' ? 'amber' : 'red'}>
                                     {p.status}
                                 </Badge>
                             </Td>
-                            <Td right bold>฿{p.amount?.toLocaleString()}</Td>
                             <td className="px-4 py-3 text-right">
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(p)}><Edit2 className="w-3 h-3" /> Edit</Btn>
