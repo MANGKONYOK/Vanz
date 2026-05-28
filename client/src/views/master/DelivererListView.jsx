@@ -102,32 +102,33 @@ export default function DelivererListView({ showToast }) {
                 <Table 
                     onSort={handleSort}
                     sortConfig={sort}
+                    minWidth="900px"
                     headers={[
-                        { label: 'ID', key: 'id', sortable: true }, 
-                        { label: 'Name', key: 'name', sortable: true }, 
-                        { label: 'License Plate', key: 'license', sortable: true }, 
-                        { label: 'Vehicle', key: 'type', sortable: true }, 
-                        { label: 'Phone', key: 'phone' }, 
-                        { label: 'Status', center: true, key: 'status', sortable: true }, 
-                        { label: 'Rating', center: true, key: 'rating', sortable: true }, 
-                        { label: '', right: true }
+                        { label: 'ID', key: 'id', sortable: true, width: '10%' }, 
+                        { label: 'NAME', key: 'name', sortable: true, width: '20%' }, 
+                        { label: 'LICENSE PLATE', key: 'license', sortable: true, width: '16%' }, 
+                        { label: 'VEHICLE', key: 'type', sortable: true, width: '12%' }, 
+                        { label: 'PHONE', key: 'phone', width: '14%' }, 
+                        { label: 'STATUS', center: true, key: 'status', sortable: true, width: '10%' }, 
+                        { label: 'RATING', center: true, key: 'rating', sortable: true, width: '10%' }, 
+                        { label: 'Actions', right: true, width: '14%' }
                     ]}
                 >
                     {paginated.map(d => (
                         <Tr key={d.id}>
-                            <Td mono className="text-xs">{d.id}</Td>
-                            <Td bold>{d.name}</Td>
-                            <Td mono className="text-xs">{d.license}</Td>
-                            <Td>{d.type}</Td>
-                            <Td mono className="text-xs">{d.phone}</Td>
-                            <Td center><Badge color={d.status === 'Active' ? 'green' : 'gray'}>{d.status}</Badge></Td>
-                            <Td center><span className="flex items-center justify-center gap-1"><Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />{d.rating}</span></Td>
-                            <td className="px-4 py-3 text-right">
+                            <Td mono className="text-xs text-slate-500 font-bold whitespace-nowrap">{d.id}</Td>
+                            <Td bold className="whitespace-nowrap">{d.name}</Td>
+                            <Td mono className="text-xs whitespace-nowrap">{d.license}</Td>
+                            <Td className="whitespace-nowrap">{d.type}</Td>
+                            <Td mono className="text-xs whitespace-nowrap">{d.phone}</Td>
+                            <Td center className="whitespace-nowrap"><Badge color={d.status === 'Active' ? 'green' : 'gray'}>{d.status}</Badge></Td>
+                            <Td center className="whitespace-nowrap"><span className="flex items-center justify-center gap-1"><Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />{d.rating}</span></Td>
+                            <Td right className="whitespace-nowrap">
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => setEditing(d)}><Edit2 className="w-3 h-3" /> Edit</Btn>
                                     <Btn size="sm" variant="danger" onClick={() => showToast('Deliverer deleted', 'error')}><Trash2 className="w-3 h-3" /> Delete</Btn>
                                 </div>
-                            </td>
+                            </Td>
                         </Tr>
                     ))}
                 </Table>

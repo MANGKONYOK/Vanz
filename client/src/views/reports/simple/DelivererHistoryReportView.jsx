@@ -23,7 +23,7 @@ export default function DelivererHistoryReportView() {
                 <Btn><History className="w-4 h-4" /> Search</Btn>
             </FilterBar>
             <Card>
-                <CardHeader title="Somchai J. (D-001) — Delivery History" />
+                <CardHeader title="Somchai Jaidee (D-001) — Delivery History" />
                 <Table headers={[{ label: 'Order ID' }, { label: 'Date' }, { label: 'Time', center: true }, { label: 'Store' }, { label: 'Customer' }, { label: 'Fee', right: true }, { label: 'Status', center: true }]}>
                     {MOCK_DELIVERER_HISTORY.map(h => (
                         <Tr key={h.id}>

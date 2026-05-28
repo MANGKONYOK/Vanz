@@ -3,9 +3,9 @@ import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
 
 const INITIAL_PAYMENTS = [
-    { id: 'PAY-2026-000456', period: 'Mar 2026', date: '2026-03-24', delivererName: 'Somchai J.', status: 'PAID', amount: 2450 },
-    { id: 'PAY-2026-000457', period: 'Mar 2026', date: '2026-03-22', delivererName: 'Kittisak P.', status: 'PAID', amount: 1500 },
-    { id: 'PAY-2026-000458', period: 'Mar 2026', date: '2026-03-20', delivererName: 'Wanchai B.', status: 'PENDING', amount: 450 }
+    { id: 'PAY-2026-000456', period: 'Mar 2026', date: '2026-03-24', delivererName: 'Somchai Jaidee', status: 'PAID', amount: 2450 },
+    { id: 'PAY-2026-000457', period: 'Mar 2026', date: '2026-03-22', delivererName: 'Kittisak Phromsorn', status: 'PAID', amount: 1500 },
+    { id: 'PAY-2026-000458', period: 'Mar 2026', date: '2026-03-20', delivererName: 'Wanchai Boonmee', status: 'PENDING', amount: 450 }
 ];
 
 export default function DelivererPaymentListView({ onNavigate, showToast }) {

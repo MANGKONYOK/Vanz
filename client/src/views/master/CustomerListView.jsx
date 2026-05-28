@@ -63,28 +63,29 @@ export default function CustomerListView({ showToast }) {
                 <Table
                     headers={[
                         { label: 'ID', key: 'id', sortable: true, width: '12%' },
-                        { label: 'Name', key: 'name', sortable: true, width: '24%' },
-                        { label: 'Phone', key: 'phone', sortable: true, width: '18%' },
-                        { label: 'Address', key: 'address', width: '28%' },
-                        { label: 'Joined', key: 'created', sortable: true, width: '14%' },
+                        { label: 'NAME', key: 'name', sortable: true, width: '24%' },
+                        { label: 'PHONE', key: 'phone', sortable: true, width: '18%' },
+                        { label: 'ADDRESS', key: 'address', width: '28%' },
+                        { label: 'JOINED', key: 'created', sortable: true, width: '14%' },
                         { label: 'Actions', right: true, width: '14%' }
                     ]}
                     onSort={handleSort}
                     sortConfig={sort}
+                    minWidth="800px"
                 >
                     {paginated.map(c => (
                         <Tr key={c.id}>
-                            <Td mono className="text-xs text-slate-500 font-bold">{c.id}</Td>
-                            <Td bold>{c.name}</Td>
-                            <Td mono className="text-xs">{c.phone}</Td>
-                            <Td className="max-w-[200px] truncate">{c.address}</Td>
-                            <Td className="text-xs text-slate-500">{c.created}</Td>
-                            <td className="px-4 py-3 text-right">
+                            <Td mono className="text-xs text-slate-500 font-bold whitespace-nowrap">{c.id}</Td>
+                            <Td bold className="whitespace-nowrap">{c.name}</Td>
+                            <Td mono className="text-xs whitespace-nowrap">{c.phone}</Td>
+                            <Td className="max-w-[200px] truncate whitespace-nowrap" title={c.address}>{c.address}</Td>
+                            <Td className="text-xs text-slate-500 whitespace-nowrap">{c.created}</Td>
+                            <Td right className="whitespace-nowrap">
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => setEditing(c)}><Edit2 className="w-3 h-3" /> Edit</Btn>
                                     <Btn size="sm" variant="danger" onClick={() => showToast('Customer deleted', 'error')}><Trash2 className="w-3 h-3" /> Delete</Btn>
                                 </div>
-                            </td>
+                            </Td>
                         </Tr>
                     ))}
                 </Table>

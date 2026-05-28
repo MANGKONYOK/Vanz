@@ -3,15 +3,15 @@
 // ==========================================
 
 export const MOCK_CUSTOMERS = [
-    { id: 'C-101', name: 'Adisak M.', phone: '081-234-5678', address: '123 Sukhumvit', created: '2025-10-15' },
-    { id: 'C-102', name: 'Nattapong K.', phone: '089-876-5432', address: '456 Silom', created: '2025-11-20' },
-    { id: 'C-103', name: 'Siriporn L.', phone: '085-111-2222', address: '789 Rama IV', created: '2025-12-01' },
+    { id: 'C-101', name: 'Adisak Mongkolsuwan', phone: '081-234-5678', address: '123 Sukhumvit', created: '2025-10-15' },
+    { id: 'C-102', name: 'Nattapong Kaewkamphaeng', phone: '089-876-5432', address: '456 Silom', created: '2025-11-20' },
+    { id: 'C-103', name: 'Siriporn Lertwongsa', phone: '085-111-2222', address: '789 Rama IV', created: '2025-12-01' },
 ];
 
 export const MOCK_DELIVERERS = [
-    { id: 'D-001', name: 'Somchai J.', license: '1กข 1234', type: 'Motorcycle', phone: '081-111-2345', status: 'Active', rating: 4.8, deliveries: 342 },
-    { id: 'D-045', name: 'Kittisak P.', license: '2คต 5678', type: 'Truck', phone: '089-222-3456', status: 'Active', rating: 4.5, deliveries: 210 },
-    { id: 'D-022', name: 'Wanchai B.', license: '3มน 9012', type: 'Motorcycle', phone: '085-333-4567', status: 'Inactive', rating: 4.2, deliveries: 98 },
+    { id: 'D-001', name: 'Somchai Jaidee', license: '1กข 1234', type: 'Motorcycle', phone: '081-111-2345', status: 'Active', rating: 4.8, deliveries: 342 },
+    { id: 'D-045', name: 'Kittisak Phromsorn', license: '2คต 5678', type: 'Truck', phone: '089-222-3456', status: 'Active', rating: 4.5, deliveries: 210 },
+    { id: 'D-022', name: 'Wanchai Boonmee', license: '3มน 9012', type: 'Motorcycle', phone: '085-333-4567', status: 'Inactive', rating: 4.2, deliveries: 98 },
 ];
 
 export const MOCK_STORES = [
@@ -28,19 +28,19 @@ export const MOCK_PRODUCTS = [
 ];
 
 export const INITIAL_ORDERS = [
-    { id: 'ORD-2026-000123', date: '2026-03-22', store: 'Somchai Kitchen', total: 320, fee: 40, bonus: 0, adjustment: 0, status: 'Unpaid', customer: 'Adisak M.', deliverer: 'D-001' },
-    { id: 'ORD-2026-000124', date: '2026-03-21', store: 'BKK Cafe', total: 150, fee: 40, bonus: 0, adjustment: 0, status: 'Unpaid', customer: 'Nattapong K.', deliverer: 'D-001' },
+    { id: 'ORD-2026-000123', date: '2026-03-22', store: 'Somchai Kitchen', total: 320, fee: 40, bonus: 0, adjustment: 0, status: 'Unpaid', customer: 'Adisak Mongkolsuwan', deliverer: 'D-001' },
+    { id: 'ORD-2026-000124', date: '2026-03-21', store: 'BKK Cafe', total: 150, fee: 40, bonus: 0, adjustment: 0, status: 'Unpaid', customer: 'Nattapong Kaewkamphaeng', deliverer: 'D-001' },
 ];
 
 export const INITIAL_EXPENSE_VOUCHERS = [
-    { id: 'EXP-2026-000789', delivererId: 'D-001', delivererName: 'Somchai J.', date: '2026-03-20', status: 'SUBMITTED', total: 150, items: 'Toll' },
-    { id: 'EXP-2026-000790', delivererId: 'D-045', delivererName: 'Kittisak P.', date: '2026-03-18', status: 'APPROVED', total: 45, items: 'Parking' },
-    { id: 'EXP-2026-000791', delivererId: 'D-022', delivererName: 'Wanchai B.', date: '2026-03-15', status: 'SUBMITTED', total: 320, items: 'Fuel, Toll' },
+    { id: 'EXP-2026-000789', delivererId: 'D-001', delivererName: 'Somchai Jaidee', date: '2026-03-20', status: 'SUBMITTED', total: 150, items: 'Toll' },
+    { id: 'EXP-2026-000790', delivererId: 'D-045', delivererName: 'Kittisak Phromsorn', date: '2026-03-18', status: 'APPROVED', total: 45, items: 'Parking' },
+    { id: 'EXP-2026-000791', delivererId: 'D-022', delivererName: 'Wanchai Boonmee', date: '2026-03-15', status: 'SUBMITTED', total: 320, items: 'Fuel, Toll' },
 ];
 
 export const MOCK_PREPARED_ORDERS = [
-    { id: 'ORD-2026-009101', customer: 'Adisak M.', store: 'Krapow Station', time: '10 mins ago', status: 'Prepared' },
-    { id: 'ORD-2026-009102', customer: 'Nattapong K.', store: 'BKK Cafe', time: '5 mins ago', status: 'Prepared' },
+    { id: 'ORD-2026-009101', customer: 'Adisak Mongkolsuwan', store: 'Krapow Station', time: '10 mins ago', status: 'Prepared' },
+    { id: 'ORD-2026-009102', customer: 'Nattapong Kaewkamphaeng', store: 'BKK Cafe', time: '5 mins ago', status: 'Prepared' },
 ];
 
 export const MOCK_PROMOTIONS = [
@@ -62,21 +62,21 @@ export const MOCK_TOP_PRODUCTS = [
 export const MOCK_EXPENSE_SUMMARY_STATS = { count: 124, sum: 15600, avg: 125.80 };
 
 export const MOCK_DELIVERED_ORDERS = [
-    { id: 'ORD-2026-008001', date: '2026-03-21', customer: 'Adisak M.', store: 'Somchai Kitchen', total: 320, deliverer: 'Somchai J.', duration: '35 mins' },
-    { id: 'ORD-2026-008002', date: '2026-03-20', customer: 'Nattapong K.', store: 'BKK Cafe', total: 150, deliverer: 'Kittisak P.', duration: '42 mins' },
-    { id: 'ORD-2026-008003', date: '2026-03-20', customer: 'Siriporn L.', store: 'Krapow Station', total: 90, deliverer: 'Somchai J.', duration: '28 mins' },
+    { id: 'ORD-2026-008001', date: '2026-03-21', customer: 'Adisak Mongkolsuwan', store: 'Somchai Kitchen', total: 320, deliverer: 'Somchai Jaidee', duration: '35 mins' },
+    { id: 'ORD-2026-008002', date: '2026-03-20', customer: 'Nattapong Kaewkamphaeng', store: 'BKK Cafe', total: 150, deliverer: 'Kittisak Phromsorn', duration: '42 mins' },
+    { id: 'ORD-2026-008003', date: '2026-03-20', customer: 'Siriporn Lertwongsa', store: 'Krapow Station', total: 90, deliverer: 'Somchai Jaidee', duration: '28 mins' },
 ];
 
 export const MOCK_FAV_STORES = [
-    { customer: 'Adisak M.', store: 'Somchai Kitchen', orders: 24 },
-    { customer: 'Nattapong K.', store: 'BKK Cafe', orders: 18 },
-    { customer: 'Siriporn L.', store: 'Krapow Station', orders: 12 },
+    { customer: 'Adisak Mongkolsuwan', store: 'Somchai Kitchen', orders: 24 },
+    { customer: 'Nattapong Kaewkamphaeng', store: 'BKK Cafe', orders: 18 },
+    { customer: 'Siriporn Lertwongsa', store: 'Krapow Station', orders: 12 },
 ];
 
 export const MOCK_TOP_DELIVERERS = [
-    { rank: 1, id: 'D-001', name: 'Somchai J.', type: 'Motorcycle', deliveries: 342, earnings: 15390, rating: 4.8 },
-    { rank: 2, id: 'D-045', name: 'Kittisak P.', type: 'Truck', deliveries: 210, earnings: 9450, rating: 4.5 },
-    { rank: 3, id: 'D-022', name: 'Wanchai B.', type: 'Motorcycle', deliveries: 98, earnings: 4410, rating: 4.2 },
+    { rank: 1, id: 'D-001', name: 'Somchai Jaidee', type: 'Motorcycle', deliveries: 342, earnings: 15390, rating: 4.8 },
+    { rank: 2, id: 'D-045', name: 'Kittisak Phromsorn', type: 'Truck', deliveries: 210, earnings: 9450, rating: 4.5 },
+    { rank: 3, id: 'D-022', name: 'Wanchai Boonmee', type: 'Motorcycle', deliveries: 98, earnings: 4410, rating: 4.2 },
 ];
 
 export const MOCK_REVENUE_PER_TRIP = [
@@ -85,7 +85,7 @@ export const MOCK_REVENUE_PER_TRIP = [
 ];
 
 export const MOCK_DELIVERER_HISTORY = [
-    { id: 'ORD-2026-008001', date: '2026-03-21', store: 'Somchai Kitchen', customer: 'Adisak M.', time: '14:35', fee: 45, status: 'Delivered' },
-    { id: 'ORD-2026-008003', date: '2026-03-20', store: 'Krapow Station', customer: 'Siriporn L.', time: '14:35', fee: 45, status: 'Delivered' },
-    { id: 'ORD-2026-007921', date: '2026-03-18', store: 'BKK Cafe', customer: 'Nattapong K.', time: '14:35', fee: 45, status: 'Delivered' },
+    { id: 'ORD-2026-008001', date: '2026-03-21', store: 'Somchai Kitchen', customer: 'Adisak Mongkolsuwan', time: '14:35', fee: 45, status: 'Delivered' },
+    { id: 'ORD-2026-008003', date: '2026-03-20', store: 'Krapow Station', customer: 'Siriporn Lertwongsa', time: '14:35', fee: 45, status: 'Delivered' },
+    { id: 'ORD-2026-007921', date: '2026-03-18', store: 'BKK Cafe', customer: 'Nattapong Kaewkamphaeng', time: '14:35', fee: 45, status: 'Delivered' },
 ];
