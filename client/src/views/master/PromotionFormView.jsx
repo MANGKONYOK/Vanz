@@ -1,126 +1,83 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Save, Plus, Trash2, Check } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
-import { getJson, postJson, getApiErrorMessage } from '../../api/http';
+import { MOCK_STORES, MOCK_PRODUCTS } from '../../data/mockData';
 
-function extractCode(value) {
-    return String(value || '').split(' – ')[0].trim();
-}
-
-export default function PromotionFormView({ onNavigateBack, showToast }) {
-    const [items, setItems]           = useState([{ id: 1, productId: '', productName: '', discount: 0 }]);
-    const [isLovOpen, setIsLovOpen]   = useState(false);
-    const [lovIdx, setLovIdx]         = useState(null);
-    const [store, setStore]           = useState('');
-    const [selectedStoreId, setSelectedStoreId] = useState(null);
+export default function PromotionFormView({ data, onNavigateBack, showToast }) {
+    const isNew = !data;
+    const editData = data || {};
+    const [items, setItems] = useState([{ id: 1, productId: '', productName: '', discount: 0 }]);
+    const [isLovOpen, setIsLovOpen] = useState(false);
+    const [lovIdx, setLovIdx] = useState(null);
+    const [store, setStore] = useState(editData.storeId ? `${editData.storeId} – ${editData.store}` : '');
     const [storeIsLov, setStoreIsLov] = useState(false);
-    const [name, setName]             = useState('');
-    const [discountType, setDiscountType] = useState('PERCENTAGE');
-    const [startDate, setStartDate]   = useState('');
-    const [endDate, setEndDate]       = useState('');
+    const [name, setName] = useState(editData.name || '');
+    const [startDate, setStartDate] = useState(editData.startDate || '');
+    const [endDate, setEndDate] = useState(editData.endDate || '');
+    const [discountType, setDiscountType] = useState(editData.discountType || 'PERCENTAGE');
+    const [promoCode, setPromoCode] = useState(editData.id || '');
+    const [autoCode, setAutoCode] = useState(isNew);
 
-    // Live LoV data
-    const [stores,   setStores]   = useState([]);
-    const [products, setProducts] = useState([]);
+    const displayCode = autoCode ? (promoCode || 'PROMO-AUTO') : promoCode;
 
-    useEffect(() => {
-        Promise.all([
-            getJson('/stores').catch(() => []),
-            getJson('/store-products').catch(() => []),
-        ]).then(([storeList, productList]) => {
-            setStores(storeList.map(s => ({
-                id: s.store_code, storeId: s.store_id,
-                name: s.name,
-                category: s.category || '-',
-            })));
-            setProducts(productList.map(p => ({
-                id: String(p.product_id),
-                name: p.name,
-                price: Number(p.unit_price || 0),
-                storeId: p.store_id,
-            })));
-        }).catch(() => {});
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Filter products to selected store
-    const filteredProducts = selectedStoreId
-        ? products.filter(p => p.storeId === selectedStoreId)
-        : products;
-
-    const handleSave = async () => {
+    const handleSave = () => {
+        if (!autoCode && !promoCode.trim()) return showToast('Please enter a Campaign Code', 'error');
         if (!store) return showToast('Please select a target store', 'error');
         if (!name.trim()) return showToast('Campaign Name is required', 'error');
         if (!startDate || !endDate) return showToast('Please specify both Start and End Dates', 'error');
         if (new Date(endDate) < new Date(startDate)) return showToast('End Date cannot be before Start Date', 'error');
         if (items.length === 0) return showToast('Must include at least one product in the campaign', 'error');
-        if (items.some(i => !i.productId || i.discount <= 0)) return showToast('All products must have valid positive discounts', 'error');
-        try {
-            await postJson('/promotions', {
-                store_code: extractCode(store),
-                name: name.trim(),
-                start_date: startDate,
-                end_date: endDate,
-                discount_type: discountType,
-                promotion_items: items.map((item) => ({
-                    product_id:    Number(item.productId),
-                    discount_value: Number(item.discount),
-                })),
-            });
-            showToast('Promotion Campaign saved successfully!');
-            onNavigateBack();
-        } catch (error) {
-            showToast(getApiErrorMessage(error, 'Unable to save promotion'), 'error');
-        }
+        if (items.some(i => !i.productName || i.discount <= 0)) return showToast('All products must have valid positive discounts', 'error');
+        showToast('Promotion Campaign saved successfully!'); onNavigateBack();
     };
-
     return (
         <div className="fade-in space-y-5">
             <LovModal isOpen={storeIsLov} onClose={() => setStoreIsLov(false)} title="Store"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Store' }, { key: 'category', label: 'Category' }]}
-                data={stores}
-                onSelect={r => {
-                    setStore(`${r.id} – ${r.name}`);
-                    setSelectedStoreId(r.storeId);
-                    setItems([{ id: Date.now(), productId: '', productName: '', discount: 0 }]);
-                    setStoreIsLov(false);
-                }} />
+                data={MOCK_STORES} onSelect={r => { setStore(`${r.id} – ${r.name}`); setStoreIsLov(false); }} />
             <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Product"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Product' }, { key: 'price', label: 'Price' }]}
-                data={filteredProducts}
-                onSelect={r => {
-                    if (lovIdx !== null) {
-                        const n = [...items];
-                        n[lovIdx].productName = r.name;
-                        n[lovIdx].productId   = r.id;
-                        setItems(n);
-                    }
-                    setIsLovOpen(false);
-                    setLovIdx(null);
-                }} />
-            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium">
-                <ArrowLeft className="w-4 h-4" /> Back
-            </button>
+                data={MOCK_PRODUCTS} onSelect={r => { if (lovIdx !== null) { const n = [...items]; n[lovIdx].productName = r.name; n[lovIdx].productId = r.id; setItems(n); } setIsLovOpen(false); setLovIdx(null); }} />
+            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium"><ArrowLeft className="w-4 h-4" /> Back to Promotions</button>
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-4">Campaign Details</h3>
+                <h3 className="font-bold text-slate-900 mb-4">{isNew ? 'New Campaign' : `Edit: ${editData.name}`}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-end gap-3">
+                        <div className="flex-1">
+                            <FormField label="Promotion ID" required>
+                                <Input
+                                    value={displayCode}
+                                    onChange={e => setPromoCode(e.target.value.toUpperCase())}
+                                    placeholder="PROMO-001"
+                                    readOnly={autoCode}
+                                    className={autoCode ? 'bg-slate-50 text-slate-500 font-mono' : 'font-mono'}
+                                />
+                            </FormField>
+                        </div>
+                        <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
+                            <div className="relative">
+                                <input
+                                    type="checkbox"
+                                    checked={autoCode}
+                                    onChange={e => setAutoCode(e.target.checked)}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-5 h-5 border-2 border-slate-200 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
+                                    <Check size={12} strokeWidth={4} className={autoCode ? 'scale-100' : 'scale-0'} />
+                                </div>
+                            </div>
+                            <span className="text-sm font-bold text-slate-600 font-sans">Auto</span>
+                        </label>
+                    </div>
+                    <FormField label="Campaign Name" required><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Summer Sale" /></FormField>
                     <FormField label="Store" required>
                         <LovInput value={store} onLov={() => setStoreIsLov(true)} placeholder="Select store..." />
                     </FormField>
-                    <FormField label="Campaign Name" required>
-                        <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Summer Sale" />
-                    </FormField>
                     <FormField label="Discount Type" required>
-                        <Select value={discountType} onChange={e => setDiscountType(e.target.value)}>
-                            <option value="PERCENTAGE">Percentage</option>
-                            <option value="FIXED_AMOUNT">Fixed Amount</option>
-                        </Select>
+                        <Select value={discountType} onChange={e => setDiscountType(e.target.value)}><option value="PERCENTAGE">Percentage</option><option value="FIXED_AMOUNT">Fixed Amount</option></Select>
                     </FormField>
-                    <FormField label="Start Date" required>
-                        <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-                    </FormField>
-                    <FormField label="End Date" required>
-                        <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-                    </FormField>
+                    <FormField label="Start Date" required><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></FormField>
+                    <FormField label="End Date" required><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></FormField>
                 </div>
             </Card>
             <Card className="overflow-hidden">
@@ -133,29 +90,13 @@ export default function PromotionFormView({ onNavigateBack, showToast }) {
                     {items.map((it, i) => (
                         <tr key={it.id} className="hover:bg-slate-50">
                             <td className="px-4 py-3">
-                                <LovInput
-                                    value={it.productName ? `${it.productId} – ${it.productName}` : ''}
-                                    onLov={() => {
-                                        if (!store) return showToast('Please select a store first', 'error');
-                                        setLovIdx(i);
-                                        setIsLovOpen(true);
-                                    }}
-                                    placeholder={store ? 'Select product…' : 'Select store first'}
-                                />
+                                <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-red-400">
+                                    <input readOnly value={it.productName} placeholder="Select product..." className="flex-1 min-w-0 px-3 py-1.5 text-sm outline-none bg-white" />
+                                    <button onClick={() => { setLovIdx(i); setIsLovOpen(true); }} className="shrink-0 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-colors border-l border-slate-700">LoV</button>
+                                </div>
                             </td>
-                            <td className="px-4 py-3 text-right">
-                                <input
-                                    type="number" value={it.discount}
-                                    onChange={e => { const n = [...items]; n[i].discount = Number(e.target.value); setItems(n); }}
-                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 text-right w-24"
-                                />
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                                <button onClick={() => setItems(items.filter(x => x.id !== it.id))}
-                                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </td>
+                            <td className="px-4 py-3 text-right"><input type="number" value={it.discount} onChange={e => { const n = [...items]; n[i].discount = Number(e.target.value); setItems(n); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 text-right w-24" /></td>
+                            <td className="px-4 py-3 text-center"><button onClick={() => setItems(items.filter(x => x.id !== it.id))} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button></td>
                         </tr>
                     ))}
                 </Table>
