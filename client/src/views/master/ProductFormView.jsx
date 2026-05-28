@@ -67,7 +67,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
                         <FormField label="Product Name" required>
                             <Input value={name} onChange={e => setName(e.target.value)} placeholder="Menu item name" />
                         </FormField>
-                        <FormField label="Unit Price (฿)" required>
+                        <FormField label="Unit Price" required>
                             <Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" />
                         </FormField>
                     </div>

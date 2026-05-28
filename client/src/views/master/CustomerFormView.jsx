@@ -9,6 +9,7 @@ export default function CustomerFormView({ data, onBack, showToast }) {
     const [name, setName] = useState(data.name || '');
     const [phone, setPhone] = useState(data.phone || '');
     const [address, setAddress] = useState(data.address || '');
+    const [description, setDescription] = useState(data.description || '');
 
     const handleSave = () => {
         if (!name.trim() || !phone.trim()) return showToast('Please fill all required fields', 'error');
@@ -57,17 +58,23 @@ export default function CustomerFormView({ data, onBack, showToast }) {
                                 <span className="text-sm font-bold text-slate-600">Auto</span>
                             </label>
                         </div>
-                        <FormField label="Full Name" required>
-                            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Customer name" />
+                        <FormField label="Address">
+                            <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Delivery address" />
                         </FormField>
                     </div>
 
                     <div className="space-y-4">
+                        <FormField label="Full Name" required>
+                            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Customer name" />
+                        </FormField>
                         <FormField label="Phone Number" required>
                             <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="0xx-xxx-xxxx" type="tel" />
                         </FormField>
-                        <FormField label="Address">
-                            <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Delivery address" />
+                    </div>
+
+                    <div className="md:col-span-2 mt-2">
+                        <FormField label="Description">
+                            <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter details or notes about the customer..." />
                         </FormField>
                     </div>
                 </div>
@@ -80,3 +87,4 @@ export default function CustomerFormView({ data, onBack, showToast }) {
         </div>
     );
 }
+

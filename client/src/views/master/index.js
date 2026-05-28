@@ -1,6 +1,7 @@
 export { default as CustomerListView } from './CustomerListView';
 export { default as CustomerFormView } from './CustomerFormView';
 export { default as DelivererListView } from './DelivererListView';
+export { default as DelivererFormView } from './DelivererFormView';
 export { default as StoreListView } from './StoreListView';
 export { default as StoreFormView } from './StoreFormView';
 export { default as ProductListView } from './ProductListView';
