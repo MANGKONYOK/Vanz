@@ -53,7 +53,7 @@ export default function ExpenseListView({ onNavigate, showToast }) {
 
             <Card className="overflow-hidden">
                 <CardHeader
-                    search={<Input icon={Search} placeholder="Search ID, deliverer, items..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    search={<Input icon={Search} placeholder="Search ID, deliverer, status..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="bg-white border-slate-200 h-10 shadow-sm" />}
                     filter={
                         <div className="flex items-center gap-3">
                             <span className="text-xs font-medium text-slate-400">
@@ -69,12 +69,12 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                     onSort={handleSort}
                     sortConfig={sort}
                     headers={[
-                        { label: 'Voucher ID', key: 'id', sortable: true, width: '18%' },
-                        { label: 'Date', key: 'date', sortable: true, width: '16%' },
-                        { label: 'Deliverer', key: 'delivererName', sortable: true, width: '24%' },
-                        { label: 'Status', key: 'status', center: true, sortable: true, width: '16%' },
-                        { label: 'Amount', key: 'total', right: true, sortable: true, width: '16%' },
-                        { label: 'Actions', right: true, width: '10%' }
+                        { label: 'Voucher ID', key: 'id', sortable: true, width: '24%' },
+                        { label: 'Date', key: 'date', sortable: true, width: '20%' },
+                        { label: 'Deliverer', key: 'delivererName', sortable: true, width: '16%' },
+                        { label: 'Status', key: 'status', center: true, sortable: true, width: '12%' },
+                        { label: 'Total Expense', key: 'total', right: true, sortable: true, width: '14%' },
+                        { label: 'Actions', right: true, width: '14%' }
                     ]}
                 >
                     {paginated.map(v => (

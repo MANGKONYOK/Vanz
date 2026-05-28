@@ -117,7 +117,19 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                     search={<Input icon={Search} placeholder="Search Order ID..." value={search} onChange={e => setSearch(e.target.value)} className="bg-white border-slate-200 h-10 shadow-sm" />}
                     action={<Btn size="sm" variant="secondary" onClick={handleLoadOrders}><RefreshCw className="w-3.5 h-3.5" /> Load Orders</Btn>} 
                 />
-                <Table headers={[{ label: '', center: true }, { label: 'Order ID' }, { label: 'Date' }, { label: 'Status', center: true }, { label: 'Fee', right: true }, { label: 'Bonus', right: true }, { label: 'Adjustment', right: true }, { label: 'Extended Price', right: true }]} minWidth="700px">
+                <Table 
+                    headers={[
+                        { label: '', center: true, width: '6%' }, 
+                        { label: 'Order ID', width: '16%' }, 
+                        { label: 'Date', width: '14%' }, 
+                        { label: 'Status', center: true, width: '12%' }, 
+                        { label: 'Fee', right: true, width: '12%' }, 
+                        { label: 'Bonus', right: true, width: '12%' }, 
+                        { label: 'Adjustment', right: true, width: '12%' }, 
+                        { label: 'Extended Price', right: true, width: '16%' }
+                    ]} 
+                    minWidth="700px"
+                >
                     {filteredOrders.length === 0 ? (
                         <tr>
                             <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-400 font-medium">
