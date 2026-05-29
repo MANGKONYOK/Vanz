@@ -63,13 +63,3 @@ body, html {
     background-color: #0f172a;
     background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
 }
-
-/* Date Picker Icon & Text Adjustments in Dark Mode */
-.dark input {
-    color-scheme: dark;
-}
-
-.dark input::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    cursor: pointer;
-}
