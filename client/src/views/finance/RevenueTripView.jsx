@@ -1,114 +1,162 @@
-import { useState, useEffect } from 'react';
-import { RefreshCw, DollarSign, TrendingUp } from 'lucide-react';
-import { PageHeader, Btn, Card, Table, Tr, Td, StatCard } from '../../components/ui';
-import { getJson, getApiErrorMessage } from '../../api/http';
-
-function computeMonthlyAverages(deliveries) {
-    const byMonth = new Map();
-    for (const d of deliveries) {
-        const raw = d.delivery_time || d.pickup_time;
-        if (!raw) continue;
-        const month = String(raw).slice(0, 7); // "YYYY-MM"
-        const fee = Number(d.delivery_fee || 0);
-        const cur = byMonth.get(month) || { total: 0, count: 0 };
-        cur.total += fee;
-        cur.count += 1;
-        byMonth.set(month, cur);
-    }
-    return [...byMonth.entries()]
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([month, agg]) => ({
-            month,
-            avgFee:  agg.count ? Number((agg.total / agg.count).toFixed(2)) : 0,
-            count:   agg.count,
-            total:   Number(agg.total.toFixed(2)),
-        }));
-}
+import { useState } from 'react';
+import { Plus, Save, Trash2, DollarSign, History, Search } from 'lucide-react';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, StatCard, Input } from '../../components/ui';
+import { MOCK_REVENUE_PER_TRIP } from '../../data/mockData';
 
 export default function RevenueTripView({ showToast }) {
-    const [rates,   setRates]   = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [tick,    setTick]    = useState(0);
+    const [rates, setRates] = useState(MOCK_REVENUE_PER_TRIP);
+    const [search, setSearch] = useState('');
 
-    const refresh = () => setTick(t => t + 1);
+    const handleUpdateRate = (id, field, value) => {
+        setRates(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+    };
 
-    useEffect(() => {
-        let cancelled = false;
-        setLoading(true);
-        getJson('/deliveries').then(deliveries => {
-            if (cancelled) return;
-            setRates(computeMonthlyAverages(Array.isArray(deliveries) ? deliveries : []));
-        }).catch(e => {
-            if (!cancelled) showToast?.(getApiErrorMessage(e, 'Failed to load delivery data'), 'error');
-        }).finally(() => {
-            if (!cancelled) setLoading(false);
-        });
-        return () => { cancelled = true; };
-    }, [tick]); // eslint-disable-line react-hooks/exhaustive-deps
+    const handleAddRate = () => {
+        const today = new Date().toISOString().split('T')[0];
+        const newRate = {
+            id: Date.now(),
+            date: today,
+            revenue: 0,
+            notes: ''
+        };
+        setRates([newRate, ...rates]);
+        showToast('New rate row added!', 'success');
+    };
 
-    const latestRate  = rates[rates.length - 1]?.avgFee ?? 0;
-    const overallAvg  = rates.length
-        ? Number((rates.reduce((s, r) => s + r.avgFee, 0) / rates.length).toFixed(2))
-        : 0;
+    const handleDeleteRate = (id) => {
+        setRates(prev => prev.filter(r => r.id !== id));
+        showToast('Rate record deleted.', 'info');
+    };
+
+    const handleSaveRate = (rate) => {
+        if (!rate.date) {
+            return showToast('Please select a valid date', 'error');
+        }
+        if (rate.revenue < 0) {
+            return showToast('Rate cannot be negative', 'error');
+        }
+        showToast(`Rate of ฿${rate.revenue} saved successfully!`, 'success');
+    };
+
+    // Filter rates
+    const filteredRates = rates.filter(r => 
+        r.date.includes(search) || 
+        r.notes.toLowerCase().includes(search.toLowerCase())
+    );
+
+    // Calculate current rate by sorting chronologically
+    const sortedRates = [...rates].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const currentRate = sortedRates[sortedRates.length - 1];
+
+    // Sort rates for display in descending order (most recent first)
+    const displayRates = [...filteredRates].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return (
         <div className="fade-in space-y-5">
-            <PageHeader
-                title="Revenue Per Trip"
-                subtitle="Monthly average delivery fee computed from completed deliveries"
+            <PageHeader 
+                title="Revenue Per Trip" 
+                subtitle="Track delivery fee rate changes over time"
                 action={
-                    <Btn variant="secondary" onClick={refresh} disabled={loading}>
-                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+                    <Btn onClick={handleAddRate}>
+                        <Plus className="w-4 h-4" /> Add Rate
                     </Btn>
-                }
+                } 
             />
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatCard
-                    label="Latest Month Avg"
-                    value={`฿${latestRate.toLocaleString()}`}
-                    icon={<DollarSign size={18} />}
-                    sub={rates[rates.length - 1]?.month || '—'}
-                    color="green"
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
+                <StatCard 
+                    label="Current Rate" 
+                    value={currentRate ? `฿${currentRate.revenue}` : '฿0'} 
+                    icon={<DollarSign size={18} />} 
+                    sub={currentRate ? `Effective ${currentRate.date}` : 'No effective rate'} 
+                    color="green" 
                 />
-                <StatCard
-                    label="Overall Avg Fee"
-                    value={`฿${overallAvg.toLocaleString()}`}
-                    icon={<TrendingUp size={18} />}
-                    sub="All months"
-                    color="blue"
-                />
-                <StatCard
-                    label="Months Recorded"
-                    value={rates.length}
-                    icon={<RefreshCw size={18} />}
-                    sub="Active months"
-                    color="amber"
+                <StatCard 
+                    label="Rate Changes" 
+                    value={rates.length} 
+                    icon={<History size={18} />} 
+                    sub="Total adjustments" 
+                    color="blue" 
                 />
             </div>
 
-            <Card>
-                {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Loading delivery data…</div>
-                ) : (
-                    <Table headers={[
-                        { label: 'Month' },
-                        { label: 'Deliveries', center: true },
-                        { label: 'Total Fee', right: true },
-                        { label: 'Avg Fee / Trip', right: true },
-                    ]}>
-                        {rates.length === 0 ? (
-                            <tr><td colSpan={4} className="py-10 text-center text-slate-400 text-sm">No delivery data available</td></tr>
-                        ) : [...rates].reverse().map(r => (
-                            <Tr key={r.month}>
-                                <Td mono className="font-semibold text-slate-700">{r.month}</Td>
-                                <Td center className="text-slate-600">{r.count}</Td>
-                                <Td right className="mono text-slate-600">฿{r.total.toLocaleString()}</Td>
-                                <Td right bold className="mono text-slate-900">฿{r.avgFee.toLocaleString()}</Td>
-                            </Tr>
-                        ))}
-                    </Table>
-                )}
+            <Card className="overflow-hidden">
+                <CardHeader 
+                    search={
+                        <Input 
+                            icon={Search} 
+                            placeholder="Search date, notes..." 
+                            value={search} 
+                            onChange={e => setSearch(e.target.value)} 
+                            className="h-10 shadow-sm" 
+                        />
+                    }
+                />
+                <Table 
+                    headers={[
+                        { label: <>Effective Date <span className="text-red-500 ml-0.5">*</span></>, width: '25%' }, 
+                        { label: <>Rate Per Trip <span className="text-red-500 ml-0.5">*</span></>, right: true, width: '25%' }, 
+                        { label: 'Notes', width: '35%' }, 
+                        { label: 'Actions', center: true, width: '15%' }
+                    ]}
+                    minWidth="600px"
+                >
+                    {displayRates.map((r) => (
+                        <Tr key={r.id}>
+                            <Td>
+                                <Input 
+                                    type="date" 
+                                    value={r.date} 
+                                    onChange={e => handleUpdateRate(r.id, 'date', e.target.value)}
+                                    className="font-mono" 
+                                />
+                            </Td>
+                            <Td right>
+                                <Input 
+                                    type="number" 
+                                    value={r.revenue} 
+                                    onChange={e => handleUpdateRate(r.id, 'revenue', Number(e.target.value))}
+                                    className="text-right font-bold" 
+                                    placeholder="0"
+                                />
+                            </Td>
+                            <Td>
+                                <Input 
+                                    value={r.notes} 
+                                    onChange={e => handleUpdateRate(r.id, 'notes', e.target.value)}
+                                    placeholder="write..." 
+                                />
+                            </Td>
+                            <Td center>
+                                <div className="flex items-center justify-center gap-1.5">
+                                    <Btn 
+                                        size="sm" 
+                                        variant="secondary" 
+                                        onClick={() => handleSaveRate(r)}
+                                        className="hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                        title="Save Rate"
+                                    >
+                                        <Save className="w-3.5 h-3.5" />
+                                    </Btn>
+                                    <button 
+                                        onClick={() => handleDeleteRate(r.id)} 
+                                        className="p-1.5 text-slate-300 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-all duration-200"
+                                        title="Delete Rate"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </Td>
+                        </Tr>
+                    ))}
+                    {displayRates.length === 0 && (
+                        <Tr>
+                            <td colSpan={4} className="px-4 py-8 text-center text-current/50 font-medium">
+                                No rate records found.
+                            </td>
+                        </Tr>
+                    )}
+                </Table>
             </Card>
         </div>
     );

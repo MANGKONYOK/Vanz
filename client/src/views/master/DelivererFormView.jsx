@@ -1,178 +1,135 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Save } from 'lucide-react';
+import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowLeft, Save, Check } from 'lucide-react';
 import { FormField, Input, Card, Btn, Select } from '../../components/ui';
-import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
-import { nextCode } from '../../api/codeGen';
+import { delivererSchema } from '../../schemas/master';
 
-const VEHICLE_OPTIONS = ['Motorcycle', 'Car', 'Bicycle', 'Scooter', 'Van', 'Truck'];
-const STATUS_OPTIONS  = [
-    { value: 'available', label: 'Active'   },
-    { value: 'busy',      label: 'Busy'     },
-    { value: 'offline',   label: 'Inactive' },
-];
+export default function DelivererFormView({ data, onBack, showToast }) {
+    const isNew = !data.id;
+    const [id, setId] = useState(data.id || '');
+    const [autoId, setAutoId] = useState(isNew);
 
-export default function DelivererFormView({ data = {}, onBack, onSaved, showToast }) {
-    const isNew = !data.delivererCode;
-
-    const [name,          setName]          = useState(data.name          || '');
-    const [phone,         setPhone]         = useState(data.phone         || '');
-    const [email,         setEmail]         = useState(data.email         || '');
-    const [license,       setLicense]       = useState(data.license       || '');
-    const [vehicleType,   setVehicleType]   = useState(data.type          || 'Motorcycle');
-    const [currentStatus, setCurrentStatus] = useState(data.currentStatus || 'available');
-    const [previewCode,   setPreviewCode]   = useState(data.delivererCode  || '…');
-    const [saving,        setSaving]        = useState(false);
-
-    useEffect(() => {
-        if (!isNew) return;
-        getJson('/deliverers')
-            .then(deliverers => {
-                const codes = deliverers.map(d => d.deliverer_code);
-                setPreviewCode(nextCode(codes, 'DLV-', 4));
-            })
-            .catch(() => setPreviewCode('DLV-????'));
-    }, [isNew]);
-
-    const validate = () => {
-        if (!name.trim())    return 'Full Name is required';
-        if (!phone.trim())   return 'Phone Number is required';
-        if (!license.trim()) return 'License Plate is required';
-        if (!vehicleType)    return 'Vehicle Type is required';
-        return null;
-    };
-
-    const handleSave = async () => {
-        const err = validate();
-        if (err) return showToast(err, 'error');
-
-        setSaving(true);
-        try {
-            if (isNew) {
-                // 1. Create profile
-                const profile = await postJson('/profiles', {
-                    full_name: name.trim(),
-                    phone:     phone.trim(),
-                    email:     email.trim() || undefined,
-                });
-                // 2. Create deliverer
-                await postJson('/deliverers', {
-                    profile_id:     profile.profile_id,
-                    vehicle_type:   vehicleType,
-                    license_plate:  license.trim().toUpperCase(),
-                    current_status: currentStatus,
-                });
-                showToast('Deliverer created successfully!');
-            } else {
-                await Promise.all([
-                    putJson(`/profiles/${data.profileId}`, {
-                        full_name: name.trim(),
-                        phone:     phone.trim(),
-                        email:     email.trim() || undefined,
-                    }),
-                    putJson(`/deliverers/${data.delivererCode}`, {
-                        vehicle_type:   vehicleType,
-                        license_plate:  license.trim().toUpperCase(),
-                        current_status: currentStatus,
-                    }),
-                ]);
-                showToast('Deliverer updated successfully!');
-            }
-            onSaved();
-        } catch (err) {
-            showToast(getApiErrorMessage(err, 'Save failed'), 'error');
-        } finally {
-            setSaving(false);
+    const { register, handleSubmit, formState: { errors }, control, watch, setValue } = useForm({
+        resolver: zodResolver(delivererSchema),
+        defaultValues: {
+            name: data.name || '',
+            license: data.license || '',
+            phone: data.phone || '',
+            type: data.type || 'Motorcycle',
+            status: data.status || 'Active',
         }
+    });
+
+    const status = watch('status');
+
+    const onSubmit = (formData) => {
+        if (!autoId && !id.trim()) return showToast('Please enter a Deliverer ID', 'error');
+        showToast('Deliverer saved!'); onBack();
     };
+
+    const displayId = autoId ? (id || 'D-AUTO') : id;
 
     return (
         <div className="fade-in space-y-5">
-            <button
-                onClick={onBack}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium transition-colors"
-            >
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors">
                 <ArrowLeft className="w-4 h-4" /> Back to Deliverers
             </button>
-
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 text-lg mb-6">
-                    {isNew ? 'New Deliverer' : `Edit: ${data.name}`}
-                </h3>
-
+                <h3 className="font-bold text-current mb-6 text-lg">{isNew ? 'New Deliverer' : `Edit: ${data.name}`}</h3>
+                
                 <div className="space-y-5">
-                    {/* Row 1: Code preview | Status */}
+                    {/* Row 1: Deliverer ID | Full Name */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label="Deliverer Code">
-                            <Input
-                                value={previewCode}
-                                readOnly
-                                className="bg-slate-50 text-slate-500 font-mono"
-                                title="Code is assigned by server on save"
-                            />
-                        </FormField>
-                        <FormField label="Status">
-                            <div className="bg-slate-100 p-1 rounded-xl flex w-full max-w-[280px] border border-slate-200/50 mt-1">
-                                {STATUS_OPTIONS.map(opt => (
-                                    <button
-                                        key={opt.value}
-                                        type="button"
-                                        onClick={() => setCurrentStatus(opt.value)}
-                                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
-                                            currentStatus === opt.value
-                                                ? 'bg-red-500 text-white shadow-sm'
-                                                : 'text-slate-500 hover:text-slate-800'
-                                        }`}
-                                    >
-                                        {opt.label}
-                                    </button>
-                                ))}
+                        <div className="flex items-end gap-3">
+                            <div className="flex-1">
+                                <FormField label="Deliverer ID" required>
+                                    <Input
+                                        value={displayId}
+                                        onChange={e => setId(e.target.value.toUpperCase())}
+                                        placeholder="D-001"
+                                        readOnly={autoId}
+                                        className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
+                                    />
+                                </FormField>
                             </div>
+                            <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        checked={autoId}
+                                        onChange={e => setAutoId(e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-5 h-5 border-2 border-slate-300 dark:border-white bg-transparent rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
+                                        <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
+                                    </div>
+                                </div>
+                                <span className="text-sm font-bold text-current/75">Auto</span>
+                            </label>
+                        </div>
+                        <FormField label="Full Name" required error={errors.name?.message}>
+                            <Input {...register('name')} placeholder="Deliverer name" />
                         </FormField>
                     </div>
 
-                    {/* Row 2: Full Name | Phone */}
+                    {/* Row 2: License Plate | Phone Number */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label="Full Name" required>
-                            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Deliverer full name" />
+                        <FormField label="License Plate" required error={errors.license?.message}>
+                            <Input {...register('license')} placeholder="e.g. 1กข 1234" />
                         </FormField>
-                        <FormField label="Phone Number" required>
-                            <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="08x-xxx-xxxx" type="tel" />
+                        <FormField label="Phone Number" required error={errors.phone?.message}>
+                            <Input {...register('phone')} placeholder="08x-xxx-xxxx" />
                         </FormField>
                     </div>
 
-                    {/* Row 3: License Plate | Vehicle Type */}
+                    {/* Row 3: Vehicle Type | Status Switch */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label="License Plate" required>
-                            <Input
-                                value={license}
-                                onChange={e => setLicense(e.target.value)}
-                                placeholder="e.g. 1กข 1234"
-                                className="font-mono"
+                        <FormField label="Vehicle Type" required error={errors.type?.message}>
+                            <Controller
+                                name="type"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select value={field.value} onChange={field.onChange}>
+                                        <option>Motorcycle</option>
+                                        <option>Car</option>
+                                        <option>Truck</option>
+                                    </Select>
+                                )}
                             />
                         </FormField>
-                        <FormField label="Vehicle Type" required>
-                            <Select value={vehicleType} onChange={e => setVehicleType(e.target.value)}>
-                                {VEHICLE_OPTIONS.map(v => (
-                                    <option key={v} value={v}>{v}</option>
-                                ))}
-                            </Select>
-                        </FormField>
-                    </div>
-
-                    {/* Row 4: Email (optional) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label="Email">
-                            <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="deliverer@email.com" type="email" />
+                        <FormField label="Status" error={errors.status?.message}>
+                            <div className="bg-slate-100 dark:bg-black/20 p-1 rounded-xl flex w-full max-w-[240px] border border-slate-200/50 dark:border-red-900/30 mt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setValue('status', 'Active')}
+                                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
+                                        status === 'Active'
+                                            ? 'bg-red-500 text-white shadow-sm font-extrabold'
+                                            : 'text-current/60 hover:text-current'
+                                    }`}
+                                >
+                                    Active
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setValue('status', 'Inactive')}
+                                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
+                                        status === 'Inactive'
+                                            ? 'bg-slate-400 dark:bg-slate-600 text-white shadow-sm font-extrabold'
+                                            : 'text-current/60 hover:text-current'
+                                    }`}
+                                >
+                                    Inactive
+                                </button>
+                            </div>
                         </FormField>
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-                    <Btn variant="secondary" onClick={onBack} disabled={saving}>Cancel</Btn>
-                    <Btn onClick={handleSave} disabled={saving}>
-                        <Save className="w-4 h-4" />
-                        {saving ? 'Saving…' : 'Save Deliverer'}
-                    </Btn>
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-current/10">
+                    <Btn variant="secondary" onClick={onBack}>Cancel</Btn>
+                    <Btn onClick={handleSubmit(onSubmit)}><Save className="w-4 h-4" /> Save Deliverer</Btn>
                 </div>
             </Card>
         </div>

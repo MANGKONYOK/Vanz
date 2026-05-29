@@ -106,14 +106,14 @@ export default function PromoPerfReportView({ showToast }) {
             )}
             <Card>
                 {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Calculating promotion performance…</div>
+                    <div className="py-12 text-center text-current/60 text-sm">Calculating promotion performance…</div>
                 ) : (
                     <Table headers={[
                         { label: 'Campaign' }, { label: 'Store' }, { label: 'Period' }, { label: 'Discount Type' },
                         { label: 'Orders Applied', right: true }, { label: 'Unique Products', right: true }, { label: 'Revenue Generated', right: true },
                     ]}>
                         {rows.length === 0 ? (
-                            <tr><td colSpan={7} className="py-10 text-center text-slate-400 text-sm">
+                            <tr><td colSpan={7} className="py-10 text-center text-current/50 text-sm">
                                 {generated ? 'No promotions found' : 'Set filters and click Generate'}
                             </td></tr>
                         ) : rows.map(p => (
@@ -122,9 +122,9 @@ export default function PromoPerfReportView({ showToast }) {
                                 <Td>{p.store}</Td>
                                 <Td className="text-xs">{p.startDate} → {p.endDate}</Td>
                                 <Td>{p.discountType}</Td>
-                                <Td right bold className="text-emerald-600">{p.orders}</Td>
+                                <Td right bold className="text-emerald-600 dark:text-emerald-400">{p.orders}</Td>
                                 <Td right bold>{p.products}</Td>
-                                <Td right bold className="text-emerald-700">฿{p.revenue.toLocaleString()}</Td>
+                                <Td right bold className="text-emerald-700 dark:text-emerald-400">฿{p.revenue.toLocaleString()}</Td>
                             </Tr>
                         ))}
                     </Table>

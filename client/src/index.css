@@ -4,3 +4,40 @@ body {
   margin: 0;
   padding: 0;
 }
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 1.5s ease-in-out infinite;
+}
+
+/* Always White Date Picker Calendar Icon */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input::-webkit-calendar-picker-indicator,
+::-webkit-calendar-picker-indicator {
+    filter: invert(1) !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+}
+
+/* Prevent inverting back to black in dark mode since color-scheme: dark already makes it white */
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input::-webkit-calendar-picker-indicator,
+.dark ::-webkit-calendar-picker-indicator {
+    filter: invert(0) !important;
+}
+
+/* Dark mode browser control rendering support */
+.dark input,
+.dark select,
+.dark textarea {
+    color-scheme: dark !important;
+}
+

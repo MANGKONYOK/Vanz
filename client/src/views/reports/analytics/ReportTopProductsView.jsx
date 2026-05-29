@@ -60,11 +60,12 @@ export default function ReportTopProductsView({ showToast }) {
                     const s   = storeMap.get(p.store_id)   || {};
                     const storeCodeMatch = storeCode ? (s.store_code === storeCode) : true;
                     return storeCodeMatch ? {
-                        pid:     Number(pid),
-                        store:   s.name     || '-',
-                        name:    p.name     || `Product#${pid}`,
-                        qty:     agg.qty,
-                        revenue: agg.revenue,
+                        pid:      Number(pid),
+                        store:    s.name     || '-',
+                        name:     p.name     || `Product#${pid}`,
+                        category: s.category || '-',
+                        qty:      agg.qty,
+                        revenue:  agg.revenue,
                     } : null;
                 })
                 .filter(Boolean)
@@ -106,14 +107,14 @@ export default function ReportTopProductsView({ showToast }) {
             </FilterBar>
             <Card>
                 {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Calculating top products…</div>
+                    <div className="py-12 text-center text-current/60 text-sm">Calculating top products…</div>
                 ) : (
                     <Table headers={[
                         { label: 'Rank', center: true }, { label: 'Store' }, { label: 'Product' },
-                        { label: 'Qty Sold', right: true }, { label: 'Revenue', right: true },
+                        { label: 'Category' }, { label: 'Qty Sold', right: true }, { label: 'Revenue', right: true },
                     ]}>
                         {rows.length === 0 ? (
-                            <tr><td colSpan={5} className="py-10 text-center text-slate-400 text-sm">
+                            <tr><td colSpan={6} className="py-10 text-center text-current/50 text-sm">
                                 {generated ? 'No sales data found' : 'Set filters and click Generate'}
                             </td></tr>
                         ) : rows.map(p => (
@@ -121,8 +122,9 @@ export default function ReportTopProductsView({ showToast }) {
                                 <Td center><RankBadge rank={p.rank} /></Td>
                                 <Td>{p.store}</Td>
                                 <Td bold>{p.name}</Td>
+                                <Td>{p.category}</Td>
                                 <Td right bold>{p.qty.toLocaleString()}</Td>
-                                <Td right bold className="text-emerald-700">฿{p.revenue.toLocaleString()}</Td>
+                                <Td right bold className="text-emerald-700 dark:text-emerald-400">฿{p.revenue.toLocaleString()}</Td>
                             </Tr>
                         ))}
                     </Table>

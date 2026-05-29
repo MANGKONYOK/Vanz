@@ -78,14 +78,14 @@ export default function CategoryProductsReportView({ showToast }) {
             </FilterBar>
             <Card>
                 {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Loading products…</div>
+                    <div className="py-12 text-center text-current/60 text-sm">Loading products…</div>
                 ) : (
                     <Table headers={[
                         { label: 'Store' }, { label: 'Category' }, { label: 'Product Name' },
                         { label: 'Price', right: true }, { label: 'Status', center: true },
                     ]}>
                         {filtered.length === 0 ? (
-                            <tr><td colSpan={5} className="py-10 text-center text-slate-400 text-sm">No products found</td></tr>
+                            <tr><td colSpan={5} className="py-10 text-center text-current/50 text-sm">No products found</td></tr>
                         ) : filtered.map(p => (
                             <Tr key={p.id}>
                                 <Td>{p.store}</Td>

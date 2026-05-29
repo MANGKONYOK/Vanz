@@ -1,18 +1,34 @@
 'use strict';
-const LEVEL_MAP = { error: 0, warn: 1, info: 2, debug: 3 };
-const current = LEVEL_MAP[process.env.LOG_LEVEL] ?? 2;
+const winston = require('winston');
 
-function log(level, ...args) {
-  if (LEVEL_MAP[level] <= current) {
-    const ts = new Date().toISOString();
-    const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
-    fn(`[${ts}] [${level.toUpperCase()}]`, ...args);
-  }
-}
+const { combine, timestamp, printf, colorize } = winston.format;
+
+const myFormat = printf(({ level, message, timestamp }) => {
+  return `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+});
+
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: combine(
+    timestamp(),
+    myFormat
+  ),
+  transports: [
+    new winston.transports.Console({
+      format: combine(
+        colorize(),
+        timestamp(),
+        myFormat
+      )
+    }),
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' })
+  ],
+});
 
 module.exports = {
-  error: (...a) => log('error', ...a),
-  warn:  (...a) => log('warn',  ...a),
-  info:  (...a) => log('info',  ...a),
-  debug: (...a) => log('debug', ...a),
+  error: (...args) => logger.error(args.join(' ')),
+  warn: (...args) => logger.warn(args.join(' ')),
+  info: (...args) => logger.info(args.join(' ')),
+  debug: (...args) => logger.debug(args.join(' ')),
 };

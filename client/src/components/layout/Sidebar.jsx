@@ -44,14 +44,14 @@ function NavGroup({ icon, label, isOpen, onToggle, children }) {
 
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, currentView, setCurrentView, expandedNav, setExpandedNav }) {
     return (
-        <aside className={`shrink-0 bg-red-800 border-r border-red-900 transition-all duration-300 ease-in-out flex flex-col h-full relative z-20 overflow-hidden ${isSidebarOpen ? 'w-[240px]' : 'w-0'}`}>
-            <div className="h-16 flex items-center justify-between px-4 border-b border-red-900/50 shrink-0 w-[240px] bg-red-900/50 overflow-hidden">
+        <aside className={`shrink-0 bg-gradient-to-b from-red-900 to-red-950 border-r border-red-950 transition-all duration-300 ease-in-out flex flex-col h-full relative z-20 overflow-hidden ${isSidebarOpen ? 'w-[240px]' : 'w-0'}`}>
+            <div className="h-16 flex items-center justify-between px-4 border-b border-white/10 shrink-0 w-[240px] bg-white/5 overflow-hidden">
                 <div className="flex items-center gap-2.5 text-white ml-1">
                     <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                        <ShoppingBag className="w-4 h-4 text-white fill-current" />
+                        <img src="/favicon.svg?v=4" className="w-5 h-5" alt="logo" />
                     </div>
                     <span className="text-xl font-black tracking-tight text-white">Vanz</span>
-                    <span className="text-[10px] font-bold text-white/70 bg-white/20 text-white px-1.5 py-0.5 rounded mt-0.5">ADMIN</span>
+                    <span className="text-[10px] font-bold text-white/70 bg-white/20 text-white px-1.5 py-0.5 rounded mt-0.5">ERP</span>
                 </div>
                 <button onClick={() => setIsSidebarOpen(false)} className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors">
                     <ChevronLeft className="w-4 h-4" />
@@ -97,9 +97,9 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, currentView, 
                 </NavGroup>
             </nav>
 
-            <div className="px-3 py-3 border-t border-red-900/50 w-[240px] shrink-0 bg-red-900/30">
+            <div className="px-3 py-3 border-t border-white/10 w-[240px] shrink-0 bg-black/20">
                 <div className="flex items-center gap-2.5 px-2 py-2">
-                    <div className="w-7 h-7 rounded-full bg-red-600 flex items-center justify-center text-[11px] font-bold text-white shrink-0">AD</div>
+                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[11px] font-bold text-red-900 shrink-0">AD</div>
                     <div className="min-w-0"><p className="text-xs font-semibold text-white truncate">Admin User</p><p className="text-[10px] text-white/60 truncate">admin@vanz.com</p></div>
                 </div>
             </div>

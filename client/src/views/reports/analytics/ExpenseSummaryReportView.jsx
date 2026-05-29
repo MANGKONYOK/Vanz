@@ -66,14 +66,14 @@ export default function ExpenseSummaryReportView({ showToast }) {
                 <StatCard label="Average Value (AVG)" value={`฿${avg.toFixed(2)}`} icon={<BarChart3 size={18} />} sub="Per voucher" color="green" />
             </div>
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-3">Breakdown by Status</h3>
+                <h3 className="font-bold text-current mb-3 text-lg">Breakdown by Status</h3>
                 <div className="flex flex-col sm:flex-row gap-4">
                     {['draft', 'submitted', 'approved', 'rejected'].map(status => {
                         const colors = {
-                            DRAFT:     { bg: 'bg-slate-50',   border: 'border-slate-200',  text: 'text-slate-600',  val: 'text-slate-800' },
-                            SUBMITTED: { bg: 'bg-amber-50',   border: 'border-amber-100',  text: 'text-amber-600',  val: 'text-amber-700' },
-                            APPROVED:  { bg: 'bg-emerald-50', border: 'border-emerald-100',text: 'text-emerald-600',val: 'text-emerald-700' },
-                            REJECTED:  { bg: 'bg-red-50',     border: 'border-red-100',    text: 'text-red-600',    val: 'text-red-700' },
+                            DRAFT:     { bg: 'bg-slate-50 dark:bg-slate-800/40',   border: 'border-slate-200 dark:border-slate-700',  text: 'text-current/70 dark:text-current/60',  val: 'text-current' },
+                            SUBMITTED: { bg: 'bg-amber-50 dark:bg-amber-950/20',   border: 'border-amber-100 dark:border-amber-900/30',  text: 'text-amber-600 dark:text-amber-400',  val: 'text-amber-700 dark:text-amber-300' },
+                            APPROVED:  { bg: 'bg-emerald-50 dark:bg-emerald-950/20', border: 'border-emerald-100 dark:border-emerald-900/30',text: 'text-emerald-600 dark:text-emerald-400',val: 'text-emerald-700 dark:text-emerald-300' },
+                            REJECTED:  { bg: 'bg-red-50 dark:bg-red-950/20',     border: 'border-red-100 dark:border-red-900/30',    text: 'text-red-600 dark:text-red-400',    val: 'text-red-700 dark:text-red-300' },
                         };
                         const c = colors[status];
                         const cnt = vouchers.filter(v => v.status === status).length;
@@ -88,10 +88,10 @@ export default function ExpenseSummaryReportView({ showToast }) {
                     })}
                 </div>
                 {topType && (
-                    <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
-                        <p className="text-xs font-bold text-slate-600 uppercase">Top Expense Type</p>
-                        <p className="text-2xl font-black text-slate-800 mt-1">{topType[0]}</p>
-                        <p className="text-xs text-slate-500">
+                    <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                        <p className="text-xs font-bold text-current/75 uppercase">Top Expense Type</p>
+                        <p className="text-2xl font-black text-current mt-1">{topType[0]}</p>
+                        <p className="text-xs text-current/60">
                             ฿{topType[1].toLocaleString()} ({sum > 0 ? ((topType[1] / sum) * 100).toFixed(0) : 0}% of total)
                         </p>
                     </div>
