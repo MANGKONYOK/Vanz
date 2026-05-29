@@ -48,7 +48,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
             <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Product"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Product' }, { key: 'price', label: 'Price' }]}
                 data={MOCK_PRODUCTS} onSelect={r => { if (lovIdx !== null) { const n = [...items]; n[lovIdx].productName = r.name; n[lovIdx].productId = r.id; setItems(n); } setIsLovOpen(false); setLovIdx(null); }} />
-            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Promotions</button>
+            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Promotions</button>
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-4 text-lg">{isNew ? 'New Campaign' : `Edit: ${editData.name}`}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -60,7 +60,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                                     onChange={e => setPromoCode(e.target.value.toUpperCase())}
                                     placeholder="PROMO-001"
                                     readOnly={autoCode}
-                                    className={autoCode ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
+                                    className={autoCode ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
                                 />
                             </FormField>
                         </div>
@@ -76,7 +76,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                                     <Check size={12} strokeWidth={4} color="white" className={autoCode ? 'scale-100' : 'scale-0'} />
                                 </div>
                             </div>
-                            <span className="text-sm font-bold text-current/75 font-sans">Auto</span>
+                            <span className="text-sm font-bold text-slate-700 dark:text-gray-200 font-sans">Auto</span>
                         </label>
                     </div>
                     <FormField label="Campaign Name" required error={errors.name?.message}><Input {...register('name')} placeholder="e.g. Summer Sale" /></FormField>

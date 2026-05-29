@@ -56,7 +56,7 @@ export default function ProductListView({ showToast }) {
                     search={<Input icon={Search} placeholder="Search ID, name, store..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="h-10 shadow-sm" />}
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-current/50">
+                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}-{end} of {filtered.length} products
                             </span>
                             <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-24">

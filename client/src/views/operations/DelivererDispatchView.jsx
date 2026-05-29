@@ -160,9 +160,9 @@ export default function DelivererDispatchView({ showToast }) {
                     title={`Prepared Orders Queue (${queue.length})`}
                     action={
                         loadingQ ? (
-                            <span className="text-xs text-current/50">Loading…</span>
+                            <span className="text-xs text-slate-500 dark:text-gray-300">Loading…</span>
                         ) : (
-                            <span className="text-xs text-current/50">{queue.length} order(s) awaiting dispatch</span>
+                            <span className="text-xs text-slate-500 dark:text-gray-300">{queue.length} order(s) awaiting dispatch</span>
                         )
                     }
                 />
@@ -175,7 +175,7 @@ export default function DelivererDispatchView({ showToast }) {
                 ]}>
                     {queue.length === 0 ? (
                         <tr>
-                            <td colSpan={5} className="py-10 text-center text-current/50 text-sm">
+                            <td colSpan={5} className="py-10 text-center text-slate-500 dark:text-gray-300 text-sm">
                                 {loadingQ ? 'Loading prepared orders…' : 'No prepared orders — all caught up!'}
                             </td>
                         </tr>

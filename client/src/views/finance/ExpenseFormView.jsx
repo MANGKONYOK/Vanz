@@ -47,7 +47,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 )}
             />
             
-            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors">
+            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors">
                 <ArrowLeft className="w-4 h-4" /> Back to Vouchers
             </button>
             
@@ -62,7 +62,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                                     onChange={e => setVoucherId(e.target.value.toUpperCase())} 
                                     placeholder="EXP-001" 
                                     readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
+                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
                                 />
                             </FormField>
                         </div>
@@ -78,7 +78,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                                     <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
                                 </div>
                             </div>
-                            <span className="text-sm font-bold text-current/75 font-sans">Auto</span>
+                            <span className="text-sm font-bold text-slate-700 dark:text-gray-200 font-sans">Auto</span>
                         </label>
                     </div>
                     <FormField label="Deliverer" required error={errors.delivererId?.message}>
@@ -184,7 +184,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 </Table>
                 <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex flex-col sm:flex-row justify-end items-center gap-4">
                     <div className="text-right">
-                        <p className="text-xs text-current/60 font-bold uppercase tracking-wide">Total Expense</p>
+                        <p className="text-xs text-slate-500 dark:text-gray-300 font-bold uppercase tracking-wide">Total Expense</p>
                         <p className="text-3xl font-black text-current font-bold mono">฿{totalAmount}</p>
                     </div>
                     <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> Save Voucher</Btn>

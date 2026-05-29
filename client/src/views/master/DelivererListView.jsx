@@ -47,7 +47,7 @@ export default function DelivererListView({ showToast }) {
                     search={<Input icon={Search} placeholder="Search ID, name, license..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="h-10 shadow-sm" />}
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-current/50">
+                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}-{end} of {filtered.length} deliverers
                             </span>
                             <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-24">
@@ -73,7 +73,7 @@ export default function DelivererListView({ showToast }) {
                 >
                     {paginated.map(d => (
                         <Tr key={d.id}>
-                            <Td mono className="text-xs text-current/60 font-bold whitespace-nowrap">{d.id}</Td>
+                            <Td mono className="text-xs text-slate-500 dark:text-gray-300 font-bold whitespace-nowrap">{d.id}</Td>
                             <Td bold className="whitespace-nowrap">{d.name}</Td>
                             <Td mono className="text-xs whitespace-nowrap">{d.license}</Td>
                             <Td className="whitespace-nowrap">{d.type}</Td>

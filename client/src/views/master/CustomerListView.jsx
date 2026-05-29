@@ -51,7 +51,7 @@ export default function CustomerListView({ showToast }) {
                     search={<Input icon={Search} placeholder="Search ID, name, phone..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="h-10 shadow-sm" />}
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-current/50">
+                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}-{end} of {filtered.length} customers
                             </span>
                             <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-24">
@@ -75,11 +75,11 @@ export default function CustomerListView({ showToast }) {
                 >
                     {paginated.map(c => (
                         <Tr key={c.id}>
-                            <Td mono className="text-xs text-current/60 font-bold whitespace-nowrap">{c.id}</Td>
+                            <Td mono className="text-xs text-slate-500 dark:text-gray-300 font-bold whitespace-nowrap">{c.id}</Td>
                             <Td bold className="whitespace-nowrap">{c.name}</Td>
                             <Td mono className="text-xs whitespace-nowrap">{c.phone}</Td>
                             <Td className="max-w-[200px] truncate whitespace-nowrap" title={c.address}>{c.address}</Td>
-                            <Td className="text-xs text-current/60 whitespace-nowrap">{c.created}</Td>
+                            <Td className="text-xs text-slate-500 dark:text-gray-300 whitespace-nowrap">{c.created}</Td>
                             <Td right className="whitespace-nowrap">
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => setEditing(c)}><Edit2 className="w-3 h-3" /> Edit</Btn>

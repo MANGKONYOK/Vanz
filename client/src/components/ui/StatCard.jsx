@@ -10,11 +10,11 @@ export default function StatCard({ label, value, icon, sub, color = 'red' }) {
     return (
         <Card className="p-5 stat-card">
             <div className="flex items-start justify-between mb-3">
-                <p className="text-xs font-bold text-current/60 uppercase tracking-wide">{label}</p>
+                <p className="text-xs font-bold text-slate-500 dark:text-gray-300 uppercase tracking-wide">{label}</p>
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${colors[color]}`}>{icon}</div>
             </div>
-            <p className="text-3xl font-black text-current tracking-tight">{value}</p>
-            {sub && <p className="text-xs text-current/50 mt-1">{sub}</p>}
+            <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{value}</p>
+            {sub && <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">{sub}</p>}
         </Card>
     );
 }

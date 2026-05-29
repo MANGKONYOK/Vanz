@@ -58,7 +58,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                     />
                 )}
             />
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors mb-2"><ArrowLeft className="w-4 h-4" /> Back to Orders</button>
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors mb-2"><ArrowLeft className="w-4 h-4" /> Back to Orders</button>
             <PageHeader title="Customer Order" subtitle="Create a new order for a customer from a specific store" />
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-4">Order Header</h3>
@@ -71,7 +71,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                                     onChange={e => setOrderId(e.target.value.toUpperCase())} 
                                     placeholder="ORD-001" 
                                     readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
+                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
                                 />
                             </FormField>
                         </div>
@@ -87,7 +87,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                                     <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
                                 </div>
                             </div>
-                            <span className="text-sm font-bold text-current/75 font-sans">Auto</span>
+                            <span className="text-sm font-bold text-slate-700 dark:text-gray-200 font-sans">Auto</span>
                         </label>
                     </div>
                     <FormField label="Customer" required error={errors.customer?.message}>
@@ -112,7 +112,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                         <Input {...register('deliveryAddress')} placeholder="123 Sukhumvit Road" />
                     </FormField>
                     <FormField label="Delivery Address Snapshot">
-                        <textarea readOnly defaultValue="123 Sukhumvit Road" className="w-full min-w-0 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800/50 text-current/60 outline-none resize-none h-10" />
+                        <textarea readOnly defaultValue="123 Sukhumvit Road" className="w-full min-w-0 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 outline-none resize-none h-10" />
                     </FormField>
                     <FormField label="Payment Method" required>
                         <Select><option>Cash</option><option>PromptPay</option><option>Credit Card</option></Select>
@@ -149,7 +149,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                 </Table>
                 <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex flex-col sm:flex-row justify-end items-center gap-4">
                     <div className="text-right">
-                        <p className="text-xs text-current/60 font-bold uppercase tracking-wide">Total Order</p>
+                        <p className="text-xs text-slate-500 dark:text-gray-300 font-bold uppercase tracking-wide">Total Order</p>
                         <p className="text-3xl font-black text-current font-bold mono">฿{total}</p>
                     </div>
                     <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> Place Order</Btn>

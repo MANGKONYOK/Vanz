@@ -90,14 +90,14 @@ export default function TopDeliverersReportView({ showToast }) {
             </FilterBar>
             <Card>
                 {loading ? (
-                    <div className="py-12 text-center text-current/60 text-sm">Calculating top deliverers…</div>
+                    <div className="py-12 text-center text-slate-500 dark:text-gray-300 text-sm">Calculating top deliverers…</div>
                 ) : (
                     <Table headers={[
                         { label: 'Rank', center: true }, { label: 'Deliverer' }, { label: 'Vehicle' },
                         { label: 'Deliveries', right: true }, { label: 'Total Earnings', right: true }, { label: 'Rating', right: true },
                     ]}>
                         {rows.length === 0 ? (
-                            <tr><td colSpan={6} className="py-10 text-center text-current/50 text-sm">
+                            <tr><td colSpan={6} className="py-10 text-center text-slate-500 dark:text-gray-300 text-sm">
                                 {generated ? 'No delivery data found' : 'Set filters and click Generate'}
                             </td></tr>
                         ) : rows.map(d => (

@@ -151,7 +151,7 @@ export default function RevenueTripView({ showToast }) {
                     ))}
                     {displayRates.length === 0 && (
                         <Tr>
-                            <td colSpan={4} className="px-4 py-8 text-center text-current/50 font-medium">
+                            <td colSpan={4} className="px-4 py-8 text-center text-slate-500 dark:text-gray-300 font-medium">
                                 No rate records found.
                             </td>
                         </Tr>

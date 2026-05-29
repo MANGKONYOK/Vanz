@@ -90,11 +90,11 @@ export default function FavStoresReportView({ showToast }) {
             </FilterBar>
             <Card>
                 {loading ? (
-                    <div className="py-12 text-center text-current/60 text-sm">Loading favorite stores…</div>
+                    <div className="py-12 text-center text-slate-500 dark:text-gray-300 text-sm">Loading favorite stores…</div>
                 ) : (
                     <Table headers={[{ label: 'Customer Name' }, { label: 'Favorite Store' }]}>
                         {filtered.length === 0 ? (
-                            <tr><td colSpan={2} className="py-10 text-center text-current/50 text-sm">No favorite store records found</td></tr>
+                            <tr><td colSpan={2} className="py-10 text-center text-slate-500 dark:text-gray-300 text-sm">No favorite store records found</td></tr>
                         ) : filtered.map((f, i) => (
                             <Tr key={i}>
                                 <Td bold>{f.customer}</Td>

@@ -29,7 +29,7 @@ export default function CustomerFormView({ data, onBack, showToast }) {
 
     return (
         <div className="fade-in space-y-5">
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors">
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors">
                 <ArrowLeft className="w-4 h-4" /> Back to Customers
             </button>
             <Card className="p-5">
@@ -47,7 +47,7 @@ export default function CustomerFormView({ data, onBack, showToast }) {
                                         onChange={e => setId(e.target.value.toUpperCase())}
                                         placeholder="C-001"
                                         readOnly={autoId}
-                                        className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
+                                        className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
                                     />
                                 </FormField>
                             </div>
@@ -63,7 +63,7 @@ export default function CustomerFormView({ data, onBack, showToast }) {
                                         <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
                                     </div>
                                 </div>
-                                <span className="text-sm font-bold text-current/75">Auto</span>
+                                <span className="text-sm font-bold text-slate-700 dark:text-gray-200">Auto</span>
                             </label>
                         </div>
                         <FormField label="Address" error={errors.address?.message}>

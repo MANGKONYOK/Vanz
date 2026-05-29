@@ -61,7 +61,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                         data={MOCK_DELIVERERS} onSelect={r => { field.onChange(`${r.id} – ${r.name}`); setSelected([]); setIsLovOpen(false); }} />
                 )}
             />
-                   <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors mb-2">
+                   <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors mb-2">
                 <ArrowLeft className="w-4 h-4" /> Back to Payments
             </button>
             
@@ -78,7 +78,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                                     onChange={e => setPaymentId(e.target.value.toUpperCase())} 
                                     placeholder="PAY-001" 
                                     readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
+                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
                                 />
                             </FormField>
                         </div>
@@ -94,7 +94,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                                     <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
                                 </div>
                             </div>
-                            <span className="text-sm font-bold text-current/75 font-sans">Auto</span>
+                            <span className="text-sm font-bold text-slate-700 dark:text-gray-200 font-sans">Auto</span>
                         </label>
                     </div>
                     <FormField label="Deliverer" required error={errors.deliverer?.message}>
@@ -151,7 +151,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                 >
                     {filteredOrders.length === 0 ? (
                         <tr>
-                            <td colSpan={8} className="px-4 py-8 text-center text-sm text-current/50 font-medium bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                            <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500 dark:text-gray-300 font-medium bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                                 No unpaid orders found for the selected criteria.
                             </td>
                         </tr>
@@ -178,10 +178,10 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                     )}
                 </Table>
                 <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <p className="text-sm text-current/60 font-medium">{selected.length} order(s) selected</p>
+                    <p className="text-sm text-slate-500 dark:text-gray-300 font-medium">{selected.length} order(s) selected</p>
                     <div className="flex items-center gap-6">
                         <div className="text-right">
-                            <p className="text-xs text-current/60 font-bold uppercase tracking-wide">Total Payment</p>
+                            <p className="text-xs text-slate-500 dark:text-gray-300 font-bold uppercase tracking-wide">Total Payment</p>
                             <p className="text-3xl font-black text-current font-bold mono">฿{total}</p>
                         </div>
                         <Btn onClick={handleSubmit(onSubmit)} size="lg">

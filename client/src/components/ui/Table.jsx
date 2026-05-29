@@ -11,10 +11,10 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                             const isSorted = h.key && sortConfig?.key === h.key;
                             
                             const textClass = isSorted 
-                                ? 'text-current font-bold' 
+                                ? 'text-slate-800 dark:text-white font-bold' 
                                 : isSortable 
-                                    ? 'text-current/60 hover:text-current/90 transition-colors duration-200' 
-                                    : 'text-current/60';
+                                    ? 'text-slate-500 dark:text-gray-300 hover:text-slate-800 dark:hover:text-white transition-colors duration-200' 
+                                    : 'text-slate-500 dark:text-gray-300';
 
                             return (
                                 <th 
@@ -35,12 +35,12 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                                                 <span className="inline-flex items-center min-h-[14px]">
                                                     {isSorted ? (
                                                         sortConfig.direction === 'asc' ? (
-                                                            <ChevronUp size={14} className="text-current/70" />
+                                                            <ChevronUp size={14} className="text-slate-500 dark:text-gray-300" />
                                                         ) : (
-                                                            <ChevronDown size={14} className="text-current/70" />
+                                                            <ChevronDown size={14} className="text-slate-500 dark:text-gray-300" />
                                                         )
                                                     ) : (
-                                                        <ArrowUpDown size={14} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-current/50" />
+                                                        <ArrowUpDown size={14} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-slate-400 dark:text-gray-400" />
                                                     )}
                                                 </span>
                                             )}
@@ -62,5 +62,5 @@ export function Tr({ children, onClick }) {
 }
 
 export function Td({ children, right, center, bold, mono, className = '' }) {
-    return <td className={`px-4 py-3 text-current/90 ${right ? 'text-right' : ''} ${center ? 'text-center' : ''} ${bold ? 'font-bold text-current' : ''} ${mono ? 'mono text-xs' : ''} ${className}`}>{children}</td>;
+    return <td className={`px-4 py-3 text-slate-700 dark:text-gray-200 ${right ? 'text-right' : ''} ${center ? 'text-center' : ''} ${bold ? 'font-bold text-slate-900 dark:text-white' : ''} ${mono ? 'mono text-xs' : ''} ${className}`}>{children}</td>;
 }

@@ -39,7 +39,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
             <LovModal isOpen={storeIsLov} onClose={() => setStoreIsLov(false)} title="Store"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Store Name' }, { key: 'category', label: 'Category' }]} data={MOCK_STORES}
                 onSelect={r => { setValue('store', `${r.id} – ${r.name}`); setStoreIsLov(false); }} />
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Products</button>
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Products</button>
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-6 text-lg">{data.id ? `Edit: ${data.name}` : 'New Product'}</h3>
                 
@@ -54,7 +54,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
                                         onChange={e => setId(e.target.value.toUpperCase())}
                                         placeholder="PRD-001"
                                         readOnly={autoId}
-                                        className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
+                                        className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
                                     />
                                 </FormField>
                             </div>
@@ -70,7 +70,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
                                         <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
                                     </div>
                                 </div>
-                                <span className="text-sm font-bold text-current/75 font-sans">Auto</span>
+                                <span className="text-sm font-bold text-slate-700 dark:text-gray-200 font-sans">Auto</span>
                             </label>
                         </div>
                         <FormField label="Product Name" required error={errors.name?.message}>
@@ -98,7 +98,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
                                             className={`px-4 py-2 text-xs font-bold rounded-xl transition-all border ${
                                                 isSelected
                                                     ? 'bg-red-500 border-red-500 text-white shadow-sm font-extrabold'
-                                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-current/75 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-650'
+                                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-650'
                                             }`}
                                         >
                                             {cat}
@@ -119,7 +119,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
                                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
                                         active
                                             ? 'bg-red-500 text-white shadow-sm font-extrabold'
-                                            : 'text-current/60 hover:text-current'
+                                            : 'text-slate-500 dark:text-gray-300 hover:text-slate-800 dark:hover:text-white'
                                     }`}
                                 >
                                     Active
@@ -130,7 +130,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
                                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
                                         !active
                                             ? 'bg-slate-400 dark:bg-slate-600 text-white shadow-sm font-extrabold'
-                                            : 'text-current/60 hover:text-current'
+                                            : 'text-slate-500 dark:text-gray-300 hover:text-slate-800 dark:hover:text-white'
                                     }`}
                                 >
                                     Inactive

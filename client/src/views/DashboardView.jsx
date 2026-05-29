@@ -59,7 +59,7 @@ function DashStatCard({ label, value, icon, trend, trendLabel, gradient, loading
                         <span className="inline-block w-16 h-8 rounded-lg bg-red-200/50 dark:bg-red-800/30 animate-pulse" />
                     ) : value}
                 </p>
-                <p className="text-xs font-medium text-red-800/60 dark:text-red-200/60 uppercase tracking-wider mt-2">{label}</p>
+                <p className="text-xs font-medium text-slate-500 dark:text-gray-300 uppercase tracking-wider mt-2">{label}</p>
             </div>
         </div>
     );
@@ -209,8 +209,8 @@ export default function DashboardView({ onNavigate }) {
                 <div>
                     <h2 className="text-2xl font-black text-red-600 dark:text-red-400 tracking-tight">Dashboard</h2>
                     <div className="flex items-center gap-2 mt-1">
-                        <Clock size={13} className="text-red-600/60 dark:text-red-400/60" />
-                        <p className="text-sm text-red-600/75 dark:text-red-400/75 font-medium">{today} · {timeNow}</p>
+                        <Clock size={13} className="text-red-600 dark:text-red-400" />
+                        <p className="text-sm text-red-700 dark:text-red-400 font-semibold">{today} · {timeNow}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -270,10 +270,10 @@ export default function DashboardView({ onNavigate }) {
                             </div>
                             <div>
                                 <h3 className="font-bold text-red-950 dark:text-red-50 text-sm">Dispatch Queue</h3>
-                                <p className="text-xs text-red-800/60 dark:text-red-200/60">{pendingOrders.length} pending</p>
+                                <p className="text-xs text-slate-500 dark:text-gray-300">{pendingOrders.length} pending</p>
                             </div>
                         </div>
-                        <button onClick={() => onNavigate('dispatch_form')} className="text-xs font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 flex items-center gap-1 transition-colors">
+                        <button onClick={() => onNavigate('dispatch_form')} className="text-xs font-semibold text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors">
                             Open <ArrowRight size={12} />
                         </button>
                     </div>
@@ -287,10 +287,10 @@ export default function DashboardView({ onNavigate }) {
                         ) : pendingOrders.length === 0 ? (
                             <div className="text-center py-8">
                                 <div className="w-12 h-12 rounded-2xl bg-red-100/50 dark:bg-red-800/20 flex items-center justify-center mx-auto mb-3">
-                                    <CheckCircle2 size={20} className="text-red-300 dark:text-red-700" />
+                                    <CheckCircle2 size={20} className="text-red-500 dark:text-red-300" />
                                 </div>
-                                <p className="text-sm font-medium text-red-800/60 dark:text-red-200/60">All clear!</p>
-                                <p className="text-xs text-red-700/40 dark:text-red-300/40 mt-0.5">No orders awaiting dispatch</p>
+                                <p className="text-sm font-medium text-red-800/60 dark:text-red-200/80">All clear!</p>
+                                <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">No orders awaiting dispatch</p>
                             </div>
                         ) : pendingOrders.map((o, i) => (
                             <div key={o.id} className="flex items-center gap-3 p-3 rounded-xl bg-red-100/30 dark:bg-red-900/20 border border-red-200/40 dark:border-red-800/30 hover:border-red-300/60 dark:hover:border-red-700/40 transition-all duration-200 group"
@@ -304,11 +304,11 @@ export default function DashboardView({ onNavigate }) {
                                         <p className="text-sm font-bold text-red-950 dark:text-red-50">{o.id}</p>
                                         <Badge color={o.status === 'CONFIRMED' ? 'blue' : 'amber'}>{o.status}</Badge>
                                     </div>
-                                    <p className="text-xs text-red-800/60 dark:text-red-200/60 truncate mt-0.5">{o.store} · {o.customer}</p>
+                                    <p className="text-xs text-slate-500 dark:text-gray-300 truncate mt-0.5">{o.store} · {o.customer}</p>
                                 </div>
                                 <div className="text-right shrink-0">
                                     <p className="text-sm font-bold text-red-950 dark:text-red-100 mono">฿{o.total.toLocaleString()}</p>
-                                    <p className="text-[10px] text-red-700/50 dark:text-red-300/50 font-medium">{o.time}</p>
+                                    <p className="text-[10px] text-slate-500 dark:text-gray-400 font-medium">{o.time}</p>
                                 </div>
                             </div>
                         ))}
@@ -324,10 +324,10 @@ export default function DashboardView({ onNavigate }) {
                             </div>
                             <div>
                                 <h3 className="font-bold text-red-950 dark:text-red-50 text-sm">Recent Vouchers</h3>
-                                <p className="text-xs text-red-800/60 dark:text-red-200/60">{stats.pendingVouchers} awaiting approval</p>
+                                <p className="text-xs text-slate-500 dark:text-gray-300">{stats.pendingVouchers} awaiting approval</p>
                             </div>
                         </div>
-                        <button onClick={() => onNavigate('expense_list')} className="text-xs font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 flex items-center gap-1 transition-colors">
+                        <button onClick={() => onNavigate('expense_list')} className="text-xs font-semibold text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors">
                             View All <ArrowRight size={12} />
                         </button>
                     </div>
@@ -341,10 +341,10 @@ export default function DashboardView({ onNavigate }) {
                         ) : recentVouchers.length === 0 ? (
                             <div className="text-center py-8">
                                 <div className="w-12 h-12 rounded-2xl bg-red-100/50 dark:bg-red-800/20 flex items-center justify-center mx-auto mb-3">
-                                    <Receipt size={20} className="text-red-300 dark:text-red-700" />
+                                    <Receipt size={20} className="text-red-500 dark:text-red-300" />
                                 </div>
                                 <p className="text-sm font-medium text-red-800/60 dark:text-red-200/60">No vouchers yet</p>
-                                <p className="text-xs text-red-700/40 dark:text-red-300/40 mt-0.5">Create your first expense voucher</p>
+                                <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Create your first expense voucher</p>
                             </div>
                         ) : recentVouchers.map((v, i) => (
                             <div key={v.id} className="flex items-center gap-3 p-3 rounded-xl bg-red-100/30 dark:bg-red-900/20 border border-red-200/40 dark:border-red-800/30 hover:border-red-300/60 dark:hover:border-red-700/40 transition-all duration-200"
@@ -356,7 +356,7 @@ export default function DashboardView({ onNavigate }) {
                                         <p className="text-sm font-bold text-red-950 dark:text-red-50">{v.id}</p>
                                         <Badge color={v.status === 'APPROVED' ? 'green' : v.status === 'REJECTED' ? 'red' : 'amber'}>{v.status}</Badge>
                                     </div>
-                                    <p className="text-xs text-red-800/60 dark:text-red-200/60 truncate mt-0.5">{v.delivererName} · {v.date}</p>
+                                    <p className="text-xs text-slate-500 dark:text-gray-300 truncate mt-0.5">{v.delivererName} · {v.date}</p>
                                 </div>
                                 <span className="text-sm font-bold text-red-950 dark:text-red-100 shrink-0 mono">฿{v.total.toLocaleString()}</span>
                             </div>
@@ -375,7 +375,7 @@ export default function DashboardView({ onNavigate }) {
                         </div>
                         <div>
                             <h3 className="font-bold text-red-950 dark:text-red-50 text-sm">Recent Activity</h3>
-                            <p className="text-xs text-red-800/60 dark:text-red-200/60">Latest order updates</p>
+                            <p className="text-xs text-slate-500 dark:text-gray-300">Latest order updates</p>
                         </div>
                     </div>
                     <div className="p-5">
@@ -393,7 +393,7 @@ export default function DashboardView({ onNavigate }) {
                             </div>
                         ) : recentActivity.length === 0 ? (
                             <div className="text-center py-8">
-                                <p className="text-sm font-medium text-red-800/60 dark:text-red-200/60">No recent activity</p>
+                                <p className="text-sm font-medium text-red-800/60 dark:text-red-200/80">No recent activity</p>
                             </div>
                         ) : (
                             <div className="space-y-1">
@@ -409,9 +409,9 @@ export default function DashboardView({ onNavigate }) {
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm text-red-950 dark:text-red-100">
                                                 <span className="font-bold">{a.action}</span>
-                                                <span className="text-red-800/60 dark:text-red-200/60"> · {a.name}</span>
+                                                <span className="text-slate-500 dark:text-gray-300"> · {a.name}</span>
                                             </p>
-                                            <p className="text-xs text-red-700/50 dark:text-red-300/50 mt-0.5">{a.id} · {a.time}</p>
+                                            <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{a.id} · {a.time}</p>
                                         </div>
                                         <Badge color={a.status === 'DELIVERED' ? 'green' : a.status === 'CONFIRMED' ? 'blue' : 'amber'}>{a.status}</Badge>
                                     </div>
@@ -429,7 +429,7 @@ export default function DashboardView({ onNavigate }) {
                         </div>
                         <div>
                             <h3 className="font-bold text-red-950 dark:text-red-50 text-sm">Platform Overview</h3>
-                            <p className="text-xs text-red-800/60 dark:text-red-200/60">All-time statistics</p>
+                            <p className="text-xs text-slate-500 dark:text-gray-300">All-time statistics</p>
                         </div>
                     </div>
                     <div className="p-5 space-y-4">
@@ -443,7 +443,7 @@ export default function DashboardView({ onNavigate }) {
                                     {item.icon}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-red-800/60 dark:text-red-200/60 font-medium">{item.label}</p>
+                                    <p className="text-xs text-slate-500 dark:text-gray-300 font-medium">{item.label}</p>
                                     <p className="text-lg font-black text-red-950 dark:text-red-50 leading-tight">
                                         {loading ? '…' : <AnimatedNumber value={item.value} />}
                                     </p>

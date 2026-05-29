@@ -70,7 +70,7 @@ export default function ExpenseSummaryReportView({ showToast }) {
                 <div className="flex flex-col sm:flex-row gap-4">
                     {['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].map(status => {
                         const colors = {
-                            DRAFT:     { bg: 'bg-slate-50 dark:bg-slate-800/40',   border: 'border-slate-200 dark:border-slate-700',  text: 'text-current/70 dark:text-current/60',  val: 'text-current' },
+                            DRAFT:     { bg: 'bg-slate-50 dark:bg-slate-800/40',   border: 'border-slate-200 dark:border-slate-700',  text: 'text-slate-600 dark:text-gray-300', val: 'text-slate-900 dark:text-white' },
                             SUBMITTED: { bg: 'bg-amber-50 dark:bg-amber-950/20',   border: 'border-amber-100 dark:border-amber-900/30',  text: 'text-amber-600 dark:text-amber-400',  val: 'text-amber-700 dark:text-amber-300' },
                             APPROVED:  { bg: 'bg-emerald-50 dark:bg-emerald-950/20', border: 'border-emerald-100 dark:border-emerald-900/30',text: 'text-emerald-600 dark:text-emerald-400',val: 'text-emerald-700 dark:text-emerald-300' },
                             REJECTED:  { bg: 'bg-red-50 dark:bg-red-950/20',     border: 'border-red-100 dark:border-red-900/30',    text: 'text-red-600 dark:text-red-400',    val: 'text-red-700 dark:text-red-300' },
@@ -89,9 +89,9 @@ export default function ExpenseSummaryReportView({ showToast }) {
                 </div>
                 {topType && (
                     <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
-                        <p className="text-xs font-bold text-current/75 uppercase">Top Expense Type</p>
+                        <p className="text-xs font-bold text-slate-700 dark:text-gray-200 uppercase">Top Expense Type</p>
                         <p className="text-2xl font-black text-current mt-1">{topType[0]}</p>
-                        <p className="text-xs text-current/60">
+                        <p className="text-xs text-slate-500 dark:text-gray-300">
                             ฿{topType[1].toLocaleString()} ({sum > 0 ? ((topType[1] / sum) * 100).toFixed(0) : 0}% of total)
                         </p>
                     </div>
