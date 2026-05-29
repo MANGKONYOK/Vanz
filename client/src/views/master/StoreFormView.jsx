@@ -1,89 +1,143 @@
 import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Save, Check } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { FormField, Input, Card, Btn, Select } from '../../components/ui';
-import { storeSchema } from '../../schemas/master';
+import { postJson, putJson, getApiErrorMessage } from '../../api/http';
 
-export default function StoreFormView({ data, onBack, showToast }) {
+const CATEGORY_OPTIONS = [
+    { value: 'THAI_FOOD',   label: 'Thai Food'    },
+    { value: 'JAPANESE',    label: 'Japanese'     },
+    { value: 'CHINESE',     label: 'Chinese'      },
+    { value: 'WESTERN',     label: 'Western'      },
+    { value: 'CAFE_DRINKS', label: 'Cafe & Drinks'},
+    { value: 'FAST_FOOD',   label: 'Fast Food'    },
+    { value: 'BAKERY',      label: 'Bakery'       },
+    { value: 'GROCERY',     label: 'Grocery'      },
+    { value: 'OTHER',       label: 'Other'        },
+];
+
+const STATUS_OPTIONS = ['active', 'inactive', 'suspended'];
+
+export default function StoreFormView({ data = {}, onBack, onSaved, showToast }) {
     const isNew = !data.id;
-    const [id, setId] = useState(data.id || '');
-    const [autoId, setAutoId] = useState(isNew);
 
-    const { register, handleSubmit, formState: { errors }, control } = useForm({
-        resolver: zodResolver(storeSchema),
-        defaultValues: {
-            name: data.name || '',
-            category: data.category || 'Thai Food',
-            phone: data.phone || '',
-            address: data.address || '',
-            open: data.open || '',
-            description: data.description || '',
-        }
-    });
+    const [name,     setName]     = useState(data.name     || '');
+    const [category, setCategory] = useState(data.category || 'THAI_FOOD');
+    const [status,   setStatus]   = useState(data.status   || 'active');
+    const [address,  setAddress]  = useState(data.address  || '');
+    const [address2, setAddress2] = useState(data.address2 || '');
+    const [city,     setCity]     = useState(data.city     || '');
+    const [province, setProvince] = useState(data.province || '');
+    const [saving,   setSaving]   = useState(false);
 
-    const onSubmit = (formData) => {
-        if (!autoId && !id.trim()) return showToast('Please enter a Store ID', 'error');
-        showToast('Store saved!'); onBack();
+    const validate = () => {
+        if (!name.trim())     return 'Store Name is required';
+        if (!address.trim())  return 'Address Line 1 is required';
+        if (!city.trim())     return 'City is required';
+        if (!province.trim()) return 'Province is required';
+        return null;
     };
 
-    const displayId = autoId ? (id || 'ST-AUTO') : id;
+    const handleSave = async () => {
+        const err = validate();
+        if (err) return showToast(err, 'error');
+        setSaving(true);
+        try {
+            if (isNew) {
+                const addr = await postJson('/addresses', {
+                    address_name:   name.trim(),
+                    address_type:   'STORE',
+                    address_line_1: address.trim(),
+                    address_line_2: address2.trim(),
+                    city:           city.trim(),
+                    province:       province.trim(),
+                    country_code:   'TH',
+                });
+                await postJson('/stores', {
+                    name:       name.trim(),
+                    address_id: addr.address_id,
+                    category:   category,
+                    status:     status,
+                });
+                showToast('Store created successfully!');
+            } else {
+                await Promise.all([
+                    putJson(`/addresses/${data.addressId}`, {
+                        address_line_1: address.trim(),
+                        address_line_2: address2.trim(),
+                        city:           city.trim(),
+                        province:       province.trim(),
+                    }),
+                    putJson(`/stores/${data.storeCode}`, {
+                        name:     name.trim(),
+                        category: category,
+                        status:   status,
+                    }),
+                ]);
+                showToast('Store updated successfully!');
+            }
+            onSaved();
+        } catch (err) {
+            showToast(getApiErrorMessage(err, 'Save failed'), 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <div className="fade-in space-y-5">
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Stores</button>
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors">
+                <ArrowLeft className="w-4 h-4" /> Back to Stores
+            </button>
             <Card className="p-5">
-                <h3 className="font-bold text-current mb-6 text-lg">{data.id ? `Edit: ${data.name}` : 'New Store'}</h3>
+                <h3 className="font-bold text-current mb-6 text-lg">{isNew ? 'New Store' : `Edit: ${data.name}`}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-end gap-3">
-                        <div className="flex-1">
-                            <FormField label="Store ID" required>
-                                <Input
-                                    value={displayId}
-                                    onChange={e => setId(e.target.value.toUpperCase())}
-                                    placeholder="ST-001"
-                                    readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
-                                />
-                            </FormField>
-                        </div>
-                        <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
-                            <div className="relative">
-                                <input
-                                    type="checkbox"
-                                    checked={autoId}
-                                    onChange={e => setAutoId(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-5 h-5 border-2 border-slate-300 dark:border-white bg-transparent rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
-                                    <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
-                                </div>
-                            </div>
-                            <span className="text-sm font-bold text-current/75">Auto</span>
-                        </label>
-                    </div>
-                    <FormField label="Store Name" required error={errors.name?.message}><Input {...register('name')} placeholder="Restaurant name" /></FormField>
-                    <FormField label="Category" required error={errors.category?.message}>
-                        <Controller
-                            name="category"
-                            control={control}
-                            render={({ field }) => (
-                                <Select value={field.value} onChange={field.onChange}><option>Thai Food</option><option>Japanese</option><option>Cafe & Drinks</option><option>Fast Food</option><option>Other</option></Select>
-                            )}
-                        />
+                    <FormField label="Store Code">
+                        <Input value={isNew ? '(assigned on save)' : data.storeCode} readOnly
+                            className="bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono" />
                     </FormField>
-                    <FormField label="Phone Number" required error={errors.phone?.message}><Input {...register('phone')} placeholder="02-xxx-xxxx" /></FormField>
-                    <FormField label="Address" required error={errors.address?.message}><Input {...register('address')} placeholder="Full address" /></FormField>
-                    <FormField label="Operating Hours" error={errors.open?.message}><Input {...register('open')} placeholder="09:00-21:00" /></FormField>
-                    <div className="md:col-span-2 mt-2">
-                        <FormField label="Description" error={errors.description?.message}>
-                            <Input {...register('description')} placeholder="Enter details or notes about the store..." />
+
+                    <FormField label="Status" required>
+                        <Select value={status} onChange={e => setStatus(e.target.value)}>
+                            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                        </Select>
+                    </FormField>
+
+                    <FormField label="Store Name" required>
+                        <Input value={name} onChange={e => setName(e.target.value)} placeholder="Restaurant name" />
+                    </FormField>
+
+                    <FormField label="Category" required>
+                        <Select value={category} onChange={e => setCategory(e.target.value)}>
+                            {CATEGORY_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        </Select>
+                    </FormField>
+
+                    <FormField label="City" required>
+                        <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Bangkok" />
+                    </FormField>
+
+                    <FormField label="Province" required>
+                        <Input value={province} onChange={e => setProvince(e.target.value)} placeholder="Bangkok" />
+                    </FormField>
+
+                    <div className="md:col-span-2">
+                        <FormField label="Address Line 1" required>
+                            <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="House no., street, road" />
+                        </FormField>
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <FormField label="Address Line 2">
+                            <Input value={address2} onChange={e => setAddress2(e.target.value)} placeholder="Unit, floor, building (optional)" />
                         </FormField>
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-current/10">
-                    <Btn variant="secondary" onClick={onBack}>Cancel</Btn>
-                    <Btn onClick={handleSubmit(onSubmit)}><Save className="w-4 h-4" /> Save Store</Btn>
+                    <Btn variant="secondary" onClick={onBack} disabled={saving}>Cancel</Btn>
+                    <Btn onClick={handleSave} disabled={saving}>
+                        <Save className="w-4 h-4" />
+                        {saving ? 'Saving…' : 'Save Store'}
+                    </Btn>
                 </div>
             </Card>
         </div>

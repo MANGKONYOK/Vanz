@@ -1,195 +1,312 @@
-import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Save, CreditCard, RefreshCw, Search, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Save, RefreshCw, Search } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
-import { MOCK_DELIVERERS, INITIAL_ORDERS } from '../../data/mockData';
-import { paymentHeaderSchema } from '../../schemas/finance';
+import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 
-export default function DelivererPaymentView({ showToast, onNavigateBack }) {
-    const onBack = onNavigateBack || (() => {});
-    const [selected, setSelected] = useState([]);
-    const [isLovOpen, setIsLovOpen] = useState(false);
-    const [search, setSearch] = useState('');
-    const [paymentId, setPaymentId] = useState('');
-    const [autoId, setAutoId] = useState(true);
+const ORDER_STATUS_COLOR = { pending: 'amber', confirmed: 'blue', preparing: 'blue', picked_up: 'blue', delivering: 'blue', delivered: 'green', cancelled: 'red' };
 
-    const { control, register, handleSubmit, watch, reset, setValue, formState: { errors } } = useForm({
-        resolver: zodResolver(paymentHeaderSchema),
-        defaultValues: { deliverer: '', paymentDate: '2026-03-23', startDate: '2026-03-01', endDate: '2026-03-31', status: 'PENDING' },
-    });
+export default function DelivererPaymentView({ data = {}, onBack, onSaved, showToast }) {
+    const isNew = !data.id;
 
-    const displayPaymentId = autoId ? (paymentId || 'PAY-AUTO') : paymentId;
+    // ── Header state ──────────────────────────────────────────────────────────
+    const [deliverer,     setDeliverer]     = useState('');           // "DLV-0001 – Name"
+    const [delivererObj,  setDelivererObj]  = useState(null);         // raw deliverer row
+    const [paymentDate,   setPaymentDate]   = useState(() =>
+        isNew ? new Date().toISOString().slice(0, 10)
+              : (data.paymentDate ? new Date(data.paymentDate).toISOString().slice(0, 10) : '')
+    );
+    const [startDate,  setStartDate]  = useState(data.periodStart || '');
+    const [endDate,    setEndDate]    = useState(data.periodEnd   || '');
+    const [editStatus, setEditStatus] = useState(data.status      || 'pending');
 
-    const watchedDeliverer = watch('deliverer');
-    const watchedStartDate = watch('startDate');
-    const watchedEndDate = watch('endDate');
+    // ── Delivery rows (create mode) ───────────────────────────────────────────
+    const [deliveryRows, setDeliveryRows] = useState([]);
+    const [loadingRows,  setLoadingRows]  = useState(false);
+    const [selected,     setSelected]     = useState([]);
+    const [rowSearch,    setRowSearch]    = useState('');
 
-    const onSubmit = (headerData) => {
-        if (!autoId && !paymentId.trim()) return showToast('Please enter a Payment ID', 'error');
-        if (headerData.startDate && headerData.endDate && new Date(headerData.endDate) < new Date(headerData.startDate)) return showToast('Period end cannot be before period start', 'error');
-        if (selected.length === 0) return showToast('Please select at least one unpaid order', 'error');
-        showToast('Payment confirmed successfully!'); setSelected([]); reset(); onBack();
+    // ── LoV ───────────────────────────────────────────────────────────────────
+    const [deliverers,  setDeliverers]  = useState([]);
+    const [lovOpen,     setLovOpen]     = useState(false);
+    const [saving,      setSaving]      = useState(false);
+
+    // Load deliverers list once
+    useEffect(() => {
+        Promise.all([getJson('/deliverers'), getJson('/profiles')])
+            .then(([dels, profs]) => {
+                const profMap = new Map(profs.map(p => [p.profile_id, p]));
+                setDeliverers(dels.map(d => ({
+                    ...d,
+                    full_name: profMap.get(d.profile_id)?.full_name || '—',
+                })));
+            }).catch(() => {});
+    }, []);
+
+    // ── Load deliveries for selected deliverer ────────────────────────────────
+    const loadDeliveries = async () => {
+        if (!delivererObj) return;
+        setLoadingRows(true);
+        try {
+            const [deliveries, orders, stores] = await Promise.all([
+                getJson('/deliveries'),
+                getJson('/orders'),
+                getJson('/stores'),
+            ]);
+            const storeMap = new Map(stores.map(s => [s.store_id, s]));
+            const orderMap = new Map(orders.map(o => [o.order_id, o]));
+
+            // Filter deliveries for this deliverer
+            const myDeliveries = deliveries.filter(d => d.deliverer_id === delivererObj.deliverer_id);
+
+            setDeliveryRows(myDeliveries.map(d => {
+                const order = orderMap.get(d.order_id) || {};
+                const store = storeMap.get(order.store_id) || {};
+                return {
+                    deliveryId: d.delivery_id,
+                    orderId:    d.order_id,
+                    orderCode:  order.order_code || `#${d.order_id}`,
+                    storeName:  store.name || '—',
+                    orderDate:  order.order_date ? new Date(order.order_date).toLocaleDateString() : '—',
+                    status:     order.status || '—',
+                    fee:        Number(d.delivery_fee || 0),
+                    bonus:      0,
+                    adjustment: 0,
+                };
+            }));
+            setSelected([]);
+        } catch (e) {
+            showToast(getApiErrorMessage(e, 'Failed to load deliveries'), 'error');
+        } finally {
+            setLoadingRows(false);
+        }
     };
 
-    const handleLoadOrders = () => {
-        showToast('Orders reloaded successfully!');
+    const toggleSelect = (deliveryId) => {
+        setSelected(prev => prev.includes(deliveryId) ? prev.filter(x => x !== deliveryId) : [...prev, deliveryId]);
     };
 
-    // Extract deliverer ID (e.g. 'D-001' from 'D-001 – Somchai J.')
-    const delivererId = watchedDeliverer ? watchedDeliverer.split(' – ')[0] : '';
+    const updateRow = (deliveryId, field, value) => {
+        setDeliveryRows(rows => rows.map(r => r.deliveryId === deliveryId ? { ...r, [field]: value } : r));
+    };
 
-    const filteredOrders = INITIAL_ORDERS.filter(o => {
-        const matchesSearch = o.id.toLowerCase().includes(search.toLowerCase()) || o.date.includes(search);
-        const matchesDeliverer = !delivererId || o.deliverer === delivererId;
-        const matchesStartDate = !watchedStartDate || o.date >= watchedStartDate;
-        const matchesEndDate = !watchedEndDate || o.date <= watchedEndDate;
-        return matchesSearch && matchesDeliverer && matchesStartDate && matchesEndDate;
-    });
+    const selectedRows = deliveryRows.filter(r => selected.includes(r.deliveryId));
+    const total        = selectedRows.reduce((s, r) => s + r.fee + r.bonus + r.adjustment, 0);
 
-    const selectedOrders = INITIAL_ORDERS.filter(o => selected.includes(o.id));
-    const total = selectedOrders.reduce((s, o) => s + o.fee + o.bonus + o.adjustment, 0);
+    const filteredRows = deliveryRows.filter(r =>
+        r.orderCode.toLowerCase().includes(rowSearch.toLowerCase()) ||
+        r.storeName.toLowerCase().includes(rowSearch.toLowerCase())
+    );
+
+    // ── Save ──────────────────────────────────────────────────────────────────
+    const handleSave = async () => {
+        if (!isNew) {
+            // Edit mode — update status/dates only
+            if (!paymentDate) return showToast('Payment Date is required', 'error');
+            if (!startDate)   return showToast('Period Start is required', 'error');
+            if (!endDate)     return showToast('Period End is required', 'error');
+            if (new Date(endDate) < new Date(startDate))
+                return showToast('Period end cannot be before period start', 'error');
+            setSaving(true);
+            try {
+                await putJson(`/payments/${data.paymentCode}`, {
+                    status:               editStatus,
+                    payment_period_start: startDate,
+                    payment_period_end:   endDate,
+                    payment_datetime:     `${paymentDate}T00:00:00.000Z`,
+                });
+                showToast('Payment updated successfully!');
+                (onSaved || onBack)();
+            } catch (e) {
+                showToast(getApiErrorMessage(e, 'Update failed'), 'error');
+            } finally {
+                setSaving(false);
+            }
+            return;
+        }
+
+        // Create mode validation
+        if (!deliverer)            return showToast('Please select a deliverer', 'error');
+        if (!paymentDate)          return showToast('Payment Date is required', 'error');
+        if (!startDate)            return showToast('Period Start is required', 'error');
+        if (!endDate)              return showToast('Period End is required', 'error');
+        if (selected.length === 0) return showToast('Please select at least one delivery', 'error');
+        if (new Date(endDate) < new Date(startDate))
+            return showToast('Period end cannot be before period start', 'error');
+
+        setSaving(true);
+        try {
+            await postJson('/payments', {
+                delivery_id:          selectedRows[0].deliveryId,
+                payment_period_start: startDate,
+                payment_period_end:   endDate,
+                payment_datetime:     `${paymentDate}T00:00:00.000Z`,
+                total_payment:        total,
+                payment_items:        selectedRows.map(r => ({
+                    order_code:        r.orderCode,
+                    delivery_fee:      r.fee,
+                    bonus:             r.bonus,
+                    adjustment_amount: r.adjustment,
+                })),
+            });
+            showToast('Payment confirmed successfully!');
+            onBack();
+        } catch (e) {
+            showToast(getApiErrorMessage(e, 'Create failed'), 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <div className="fade-in space-y-5">
-            <Controller
-                name="deliverer"
-                control={control}
-                render={({ field }) => (
-                    <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
-                        columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Vehicle' }]}
-                        data={MOCK_DELIVERERS} onSelect={r => { field.onChange(`${r.id} – ${r.name}`); setSelected([]); setIsLovOpen(false); }} />
-                )}
-            />
-                   <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors mb-2">
+            <LovModal isOpen={lovOpen} onClose={() => setLovOpen(false)} title="Deliverer"
+                columns={[{ key: 'deliverer_code', label: 'Code' }, { key: 'full_name', label: 'Name' }, { key: 'vehicle_type', label: 'Vehicle' }]}
+                data={deliverers}
+                onSelect={r => {
+                    setDeliverer(`${r.deliverer_code} – ${r.full_name}`);
+                    setDelivererObj(r);
+                    setDeliveryRows([]);
+                    setSelected([]);
+                    setLovOpen(false);
+                }} />
+
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors mb-2">
                 <ArrowLeft className="w-4 h-4" /> Back to Payments
             </button>
-            
-            <PageHeader title="Deliverer Payment" subtitle="Process payments for completed deliverer trips" />
-            
+
+            <PageHeader
+                title={isNew ? 'Deliverer Payment' : `Payment: ${data.paymentCode}`}
+                subtitle={isNew ? 'Process payments for completed deliverer trips' : `Deliverer: ${data.delivererName}`}
+            />
+
+            {/* ── Payment Header ──────────────────────────────────────────── */}
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-4">Payment Header</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-end gap-3">
-                        <div className="flex-1">
-                            <FormField label="Payment ID" required>
-                                <Input 
-                                    value={displayPaymentId} 
-                                    onChange={e => setPaymentId(e.target.value.toUpperCase())} 
-                                    placeholder="PAY-001" 
-                                    readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
-                                />
-                            </FormField>
-                        </div>
-                        <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
-                            <div className="relative">
-                                <input 
-                                    type="checkbox" 
-                                    checked={autoId} 
-                                    onChange={e => setAutoId(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-5 h-5 border-2 border-slate-300 dark:border-white bg-transparent rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
-                                    <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
-                                </div>
-                            </div>
-                            <span className="text-sm font-bold text-current/75 font-sans">Auto</span>
-                        </label>
-                    </div>
-                    <FormField label="Deliverer" required error={errors.deliverer?.message}>
-                        <Controller
-                            name="deliverer"
-                            control={control}
-                            render={({ field }) => (
-                                <LovInput value={field.value} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer..." />
-                            )}
-                        />
-                    </FormField>
-                    <FormField label="Date" required error={errors.paymentDate?.message}>
-                        <Input type="date" {...register('paymentDate')} />
-                    </FormField>
-                    <FormField label="Period Start" required error={errors.startDate?.message}>
-                        <Input type="date" {...register('startDate', { onChange: () => setSelected([]) })} />
-                    </FormField>
-                    <FormField label="Period End" required error={errors.endDate?.message}>
-                        <Input type="date" {...register('endDate', { onChange: () => setSelected([]) })} />
-                    </FormField>
-                    <FormField label="Status" error={errors.status?.message}>
-                        <Controller
-                            name="status"
-                            control={control}
-                            render={({ field }) => (
-                                <Select value={field.value} onChange={e => field.onChange(e.target.value)}>
-                                    <option value="PENDING">PENDING</option>
-                                    <option value="PAID">PAID</option>
-                                    <option value="CANCELLED">CANCELLED</option>
-                                </Select>
-                            )}
-                        />
-                    </FormField>
-                </div>
-            </Card>
-            
-            <Card className="overflow-hidden">
-                <CardHeader 
-                    search={<Input icon={Search} placeholder="Search Order ID..." value={search} onChange={e => setSearch(e.target.value)} className="h-10 shadow-sm" />}
-                    action={<Btn size="sm" variant="secondary" onClick={handleLoadOrders}><RefreshCw className="w-3.5 h-3.5" /> Load Orders</Btn>} 
-                />
-                <Table 
-                    headers={[
-                        { label: '', center: true, width: '6%' }, 
-                        { label: 'Order ID', width: '16%' }, 
-                        { label: 'Date', width: '14%' }, 
-                        { label: 'Status', center: true, width: '12%' }, 
-                        { label: 'Fee', right: true, width: '12%' }, 
-                        { label: 'Bonus', right: true, width: '12%' }, 
-                        { label: 'Adjustment', right: true, width: '12%' }, 
-                        { label: 'Extended Price', right: true, width: '16%' }
-                    ]} 
-                    minWidth="700px"
-                >
-                    {filteredOrders.length === 0 ? (
-                        <tr>
-                            <td colSpan={8} className="px-4 py-8 text-center text-sm text-current/50 font-medium bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-                                No unpaid orders found for the selected criteria.
-                            </td>
-                        </tr>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {isNew ? (
+                        <FormField label="Deliverer" required>
+                            <LovInput value={deliverer} onLov={() => setLovOpen(true)} placeholder="Select deliverer…" />
+                        </FormField>
                     ) : (
-                        filteredOrders.map(o => (
-                            <Tr key={o.id}>
-                                <Td center>
-                                    <input 
-                                        type="checkbox" 
-                                        className="rounded accent-red-650 cursor-pointer" 
-                                        checked={selected.includes(o.id)} 
-                                        onChange={() => setSelected(p => p.includes(o.id) ? p.filter(x => x !== o.id) : [...p, o.id])} 
-                                    />
-                                </Td>
-                                <Td bold mono>{o.id}</Td>
-                                <Td>{o.date}</Td>
-                                <Td center><Badge color="amber">{o.status}</Badge></Td>
-                                <Td right>฿{o.fee}</Td>
-                                <Td right>฿{o.bonus}</Td>
-                                <Td right>฿{o.adjustment}</Td>
-                                <Td right bold>฿{o.fee + o.bonus + o.adjustment}</Td>
-                            </Tr>
-                        ))
+                        <>
+                            <FormField label="Payment Code">
+                                <Input value={data.paymentCode} readOnly
+                                    className="bg-slate-50 dark:bg-slate-800/50 font-mono text-xs font-bold text-current/60" />
+                            </FormField>
+                            <FormField label="Status">
+                                <Select value={editStatus} onChange={e => setEditStatus(e.target.value)}>
+                                    <option value="pending">pending</option>
+                                    <option value="paid">paid</option>
+                                    <option value="cancelled">cancelled</option>
+                                </Select>
+                            </FormField>
+                        </>
                     )}
-                </Table>
-                <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <p className="text-sm text-current/60 font-medium">{selected.length} order(s) selected</p>
-                    <div className="flex items-center gap-6">
-                        <div className="text-right">
-                            <p className="text-xs text-current/60 font-bold uppercase tracking-wide">Total Payment</p>
-                            <p className="text-3xl font-black text-current font-bold mono">฿{total}</p>
-                        </div>
-                        <Btn onClick={handleSubmit(onSubmit)} size="lg">
-                            <CreditCard className="w-4 h-4" /> Confirm Payment
-                        </Btn>
-                    </div>
+
+                    <FormField label="Payment Date" required>
+                        <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
+                    </FormField>
+
+                    <FormField label="Period Start" required>
+                        <Input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setSelected([]); }} />
+                    </FormField>
+
+                    <FormField label="Period End" required>
+                        <Input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setSelected([]); }} />
+                    </FormField>
                 </div>
             </Card>
+
+            {/* ── Delivery Selection (create mode only) ──────────────────── */}
+            {isNew && (
+                <Card className="overflow-hidden">
+                    <CardHeader
+                        search={<Input icon={Search} placeholder="Search Order ID, Store…" value={rowSearch} onChange={e => setRowSearch(e.target.value)} className="h-10 shadow-sm" />}
+                        action={
+                            <Btn size="sm" variant="secondary" onClick={loadDeliveries} disabled={!deliverer || loadingRows}>
+                                <RefreshCw className={`w-3.5 h-3.5 ${loadingRows ? 'animate-spin' : ''}`} />
+                                {loadingRows ? 'Loading…' : 'Load Deliveries'}
+                            </Btn>
+                        }
+                    />
+                    <Table
+                        headers={[
+                            { label: '', center: true, width: '5%' },
+                            { label: 'Order ID',   width: '18%' },
+                            { label: 'Date',       width: '12%' },
+                            { label: 'Store',      width: '16%' },
+                            { label: 'Status', center: true, width: '12%' },
+                            { label: 'Fee',    right: true, width: '10%' },
+                            { label: 'Bonus',  right: true, width: '10%' },
+                            { label: 'Adj.',   right: true, width: '10%' },
+                            { label: 'Total',  right: true, width: '12%' },
+                        ]}
+                        minWidth="760px"
+                    >
+                        {filteredRows.length === 0 ? (
+                            <Tr><Td colSpan={9} className="text-center text-current/40 py-8">
+                                {deliverer ? 'Click "Load Deliveries" to fetch deliveries' : 'Select a deliverer first'}
+                            </Td></Tr>
+                        ) : filteredRows.map(r => (
+                            <Tr key={r.deliveryId}>
+                                <Td center>
+                                    <input type="checkbox" className="rounded accent-red-500 cursor-pointer"
+                                        checked={selected.includes(r.deliveryId)}
+                                        onChange={() => toggleSelect(r.deliveryId)} />
+                                </Td>
+                                <Td mono bold className="text-xs whitespace-nowrap">{r.orderCode}</Td>
+                                <Td className="text-xs whitespace-nowrap">{r.orderDate}</Td>
+                                <Td className="text-xs whitespace-nowrap">{r.storeName}</Td>
+                                <Td center className="whitespace-nowrap">
+                                    <Badge color={ORDER_STATUS_COLOR[r.status] || 'gray'}>{r.status}</Badge>
+                                </Td>
+                                <Td right className="text-sm whitespace-nowrap">฿{r.fee}</Td>
+                                <Td right>
+                                    <input type="number" min="0" value={r.bonus}
+                                        onChange={e => updateRow(r.deliveryId, 'bonus', Number(e.target.value))}
+                                        className="w-16 text-right border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded px-1 py-0.5 text-sm outline-none focus:border-red-400 dark:focus:border-red-500" />
+                                </Td>
+                                <Td right>
+                                    <input type="number" value={r.adjustment}
+                                        onChange={e => updateRow(r.deliveryId, 'adjustment', Number(e.target.value))}
+                                        className="w-16 text-right border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded px-1 py-0.5 text-sm outline-none focus:border-red-400 dark:focus:border-red-500" />
+                                </Td>
+                                <Td right bold className="whitespace-nowrap">
+                                    ฿{(r.fee + r.bonus + r.adjustment).toLocaleString()}
+                                </Td>
+                            </Tr>
+                        ))}
+                    </Table>
+
+                    {/* Total + Save */}
+                    <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <p className="text-sm text-current/60 font-medium">
+                            {selected.length} of {deliveryRows.length} deliveries selected
+                        </p>
+                        <div className="flex items-center gap-6">
+                            <div className="text-right">
+                                <p className="text-xs text-current/60 font-bold uppercase tracking-wide">Total Payment</p>
+                                <p className="text-3xl font-black text-current mono">฿{total.toLocaleString()}</p>
+                            </div>
+                            <Btn onClick={handleSave} disabled={saving} size="lg">
+                                <Save className="w-4 h-4" />
+                                {saving ? 'Saving…' : 'Confirm Payment'}
+                            </Btn>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
+            {/* Edit mode save footer */}
+            {!isNew && (
+                <div className="flex justify-end gap-3">
+                    <Btn variant="secondary" onClick={onBack} disabled={saving}>Cancel</Btn>
+                    <Btn onClick={handleSave} disabled={saving}>
+                        <Save className="w-4 h-4" />
+                        {saving ? 'Saving…' : 'Save Payment'}
+                    </Btn>
+                </div>
+            )}
         </div>
     );
 }

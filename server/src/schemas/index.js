@@ -133,7 +133,7 @@ const dispatchAssignmentCreate = z.object({
 }).passthrough();
 
 const dispatchAssignmentUpdate = z.object({
-  status: z.enum(DISPATCH_STATUS, { required_error: 'required', errorMap: () => ({ message: `must be one of ${DISPATCH_STATUS.join(', ')}` }) }),
+  status: z.enum(DISPATCH_STATUS, { errorMap: () => ({ message: `must be one of ${DISPATCH_STATUS.join(', ')}` }) }),
 }).passthrough();
 
 // ── Expense Items ────────────────────────────────────────────
