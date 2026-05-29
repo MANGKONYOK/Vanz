@@ -128,7 +128,7 @@ export default function CustomerListView({ showToast }) {
                     }
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-slate-400">
+                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}–{end} of {filtered.length} customers
                             </span>
                             <Select
@@ -161,7 +161,7 @@ export default function CustomerListView({ showToast }) {
                         <Tr><Td colSpan={7} className="text-center text-slate-400 py-8">No customers found</Td></Tr>
                     ) : paginated.map(c => (
                         <Tr key={c.customerCode}>
-                            <Td mono className="text-xs text-slate-500 font-bold whitespace-nowrap">{c.customerCode}</Td>
+                            <Td mono className="text-xs text-slate-500 dark:text-gray-300 font-bold whitespace-nowrap">{c.customerCode}</Td>
                             <Td bold className="whitespace-nowrap">{c.name}</Td>
                             <Td mono className="text-xs whitespace-nowrap">{c.phone}</Td>
                             <Td className="max-w-[180px] truncate whitespace-nowrap" title={c.address}>{c.address}</Td>
@@ -170,7 +170,7 @@ export default function CustomerListView({ showToast }) {
                                     {c.membership}
                                 </Badge>
                             </Td>
-                            <Td className="text-xs text-slate-500 whitespace-nowrap">{c.created}</Td>
+                            <Td className="text-xs text-slate-500 dark:text-gray-300 whitespace-nowrap">{c.created}</Td>
                             <Td right className="whitespace-nowrap">
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => setEditing(c)}>

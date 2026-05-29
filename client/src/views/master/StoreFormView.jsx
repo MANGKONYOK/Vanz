@@ -97,13 +97,13 @@ export default function StoreFormView({ data = {}, onBack, onSaved, showToast })
         <div className="fade-in space-y-5">
             <button
                 onClick={onBack}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"
             >
                 <ArrowLeft className="w-4 h-4" /> Back to Stores
             </button>
 
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 text-lg mb-6">
+                <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-6">
                     {isNew ? 'New Store' : `Edit: ${data.name}`}
                 </h3>
 
@@ -113,7 +113,7 @@ export default function StoreFormView({ data = {}, onBack, onSaved, showToast })
                         <Input
                             value={previewCode}
                             readOnly
-                            className="bg-slate-50 text-slate-500 font-mono"
+                            className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
                             title="Code is assigned by server on save"
                         />
                     </FormField>

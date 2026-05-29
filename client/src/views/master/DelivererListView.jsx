@@ -122,7 +122,7 @@ export default function DelivererListView({ showToast }) {
                     }
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-slate-400">
+                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}–{end} of {filtered.length} deliverers
                             </span>
                             <Select
@@ -157,7 +157,7 @@ export default function DelivererListView({ showToast }) {
                         <Tr><Td colSpan={8} className="text-center text-slate-400 py-8">No deliverers found</Td></Tr>
                     ) : paginated.map(d => (
                         <Tr key={d.delivererCode}>
-                            <Td mono className="text-xs text-slate-500 font-bold whitespace-nowrap">{d.delivererCode}</Td>
+                            <Td mono className="text-xs text-slate-500 dark:text-gray-300 font-bold whitespace-nowrap">{d.delivererCode}</Td>
                             <Td bold className="whitespace-nowrap">{d.name}</Td>
                             <Td mono className="text-xs whitespace-nowrap">{d.license}</Td>
                             <Td className="whitespace-nowrap">{d.type}</Td>
