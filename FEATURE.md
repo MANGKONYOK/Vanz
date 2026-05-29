@@ -2,7 +2,7 @@
 
 > Legend: **DONE** = working end-to-end (live data + real API mutations) · **UI-ONLY** = page renders but mutations are not wired to backend (toast only) · **PENDING** = not yet implemented or broken
 
-> Updated: 28 May 2026
+> Updated: 29 May 2026
 
 ---
 
@@ -19,14 +19,15 @@
 
 ## Master Data
 
-> All list pages use per-view reactive loading (`useEffect([tick])`) — independent fetches, no shared startup snapshot. Add / Edit / Delete all call real API endpoints and refresh the list on completion.
+> All list pages use per-view reactive loading (`useEffect([tick])`) — independent fetches, no shared startup snapshot. Add / Edit / Delete all call real API endpoints and refresh the list on completion.  
+> Add forms display a **predicted next code** via `codeGen.nextCode()` in a read-only field. The real code is generated server-side on insert.
 
 | Page | View Data | Add | Edit | Delete | Overall |
 |------|-----------|-----|------|--------|---------|
-| Customer List | ✅ Live | ✅ Real API | ✅ Real API | ✅ Real API | **DONE** |
-| Deliverer List | ✅ Live | ✅ Real API | ✅ Real API | ✅ Real API | **DONE** |
-| Store List | ✅ Live | ✅ Real API | ✅ Real API | ✅ Real API | **DONE** |
-| Product List | ✅ Live | ✅ Real API | ✅ Real API | ✅ Real API | **DONE** |
+| Customer List | ✅ Live — GET /customers + /profiles + /addresses | ✅ Real API (POST profiles → addresses → customers) + code preview | ✅ Real API (PUT profiles + addresses + customers in parallel) | ✅ Real API (DELETE /customers/{code}) | **DONE** |
+| Deliverer List | ✅ Live — GET /deliverers + /profiles | ✅ Real API (POST profiles → deliverers) + code preview | ✅ Real API (PUT profiles + deliverers in parallel) | ✅ Real API (DELETE /deliverers/{code}) | **DONE** |
+| Store List | ✅ Live — GET /stores + /addresses | ✅ Real API (POST addresses → stores) + code preview | ✅ Real API (PUT addresses + stores in parallel) | ✅ Real API (DELETE /stores/{code}) | **DONE** |
+| Product List | ✅ Live — GET /store-products + /stores | ✅ Real API (POST /store-products); store selector via live LoV | ✅ Real API (PUT /store-products/{id}); store read-only on edit | ✅ Real API (DELETE /store-products/{id}) | **DONE** |
 | Promotion List | ✅ Live | → Promotion Form | — | ✅ Real API (DELETE) | **DONE** |
 | Promotion Form (Create) | ✅ Live LoV (stores + products filtered by store) | ✅ Real API | — | — | **DONE** |
 
@@ -108,7 +109,7 @@ All 15 resource routes exist with full CRUD.
 
 ---
 
-## Bug Fixes Applied (this session)
+## Bug Fixes Applied
 
 | # | Bug | Fix |
 |---|-----|-----|
@@ -119,12 +120,28 @@ All 15 resource routes exist with full CRUD.
 | 5 | `DelivererPaymentView.jsx` sent `delivery_code` instead of `delivery_id` | Fixed field name; added `payment_datetime` |
 | 6 | `DelivererDispatchView.jsx` filtered `status === 'PREPARED'` which doesn't exist in order status enum | Changed to `CONFIRMED` or `PREPARING` |
 | 7 | `PromotionFormView.jsx` used MOCK_STORES / MOCK_PRODUCTS for LoV instead of live API | Replaced with getJson('/stores') + getJson('/store-products') |
+| 8 | `CustomerListView` / `DelivererListView` / `StoreListView` / `ProductListView` used `MOCK_*` data — no live API | Rewritten with `useEffect([tick])` + parallel live API fetches + real CRUD mutations |
+| 9 | `CustomerFormView` / `DelivererFormView` / `StoreFormView` showed toast only (no API call) | Rewritten to POST/PUT real endpoints; `StoreFormView` removed `phone`/`operating_hours` not in DB |
+| 10 | `ProductFormView` used `MOCK_STORES` for LoV | Replaced with live store list passed from `ProductListView` (fetched once, shared) |
 
 ---
 
 ## Data Loading Strategy
 
 All views (including Dashboard and all Reports) now use **per-view reactive loading** via `useEffect`. There is no shared boot-time mock snapshot. The `mockData.js` and `liveData.js` files are now unused by any view — they remain in the codebase but are no longer imported by any view component.
+
+---
+
+## Code Generator (`src/api/codeGen.js`)
+
+Utility that computes the next business code from a list of existing codes. Used by Add forms to display a predicted code before save. The server always generates the authoritative code.
+
+| Function | Usage |
+|----------|-------|
+| `nextCode(codes, prefix, padLen)` | Fixed-prefix codes: `CUST-`, `DLV-`, `STR-`, `PROMO-` |
+| `nextYearCode(codes, shortPrefix, year, padLen)` | Year-scoped codes: `ORD-YYYY-`, `PAY-YYYY-`, `EXP-YYYY-` |
+
+**Algorithm:** filter codes by prefix → extract numeric suffix → `Math.max` → `+1` → `padStart`.
 
 ---
 
@@ -137,3 +154,4 @@ All views (including Dashboard and all Reports) now use **per-view reactive load
 | 3 | JWT middleware only checks Bearer header format — does NOT verify signature | Medium | Open |
 | 4 | API response caching with invalidation not implemented | Low | Open |
 | 5 | `mockData.js` / `liveData.js` still exist in codebase but are unused — can be deleted | Low | Open |
+| 6 | Customer / Store forms always use `country_code: 'TH'` — no UI selector for international addresses | Low | Open |

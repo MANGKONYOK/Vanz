@@ -1,214 +1,200 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, ArrowLeft, Save } from 'lucide-react';
-import { PageHeader, Btn, Card, Table, Tr, Td, Badge, FormField, Input, LovInput, LovModal } from '../../components/ui';
-import { getJson, postJson, putJson, deleteJson, getApiErrorMessage } from '../../api/http';
+import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
+import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
+import ProductFormView from './ProductFormView';
 
-function extractCode(value) {
-    return String(value || '').split(' – ')[0].trim();
-}
+const STATUS_COLOR = {
+    AVAILABLE:    'green',
+    OUT_OF_STOCK: 'amber',
+    DISCONTINUED: 'red',
+    UNAVAILABLE:  'gray',
+};
 
-const STATUS_BADGE = { AVAILABLE: 'green', OUT_OF_STOCK: 'yellow', DISCONTINUED: 'red', UNAVAILABLE: 'gray' };
-
-// ── Form ──────────────────────────────────────────────────────────────────────
-function ProductFormInline({ data, storeOptions, onBack, onSaved, showToast }) {
-    const isNew = !data.id;
-    const [storeLov, setStoreLov] = useState(false);
-    const [store,  setStore]  = useState(
-        data.storeCode ? `${data.storeCode} – ${data.storeName}` : ''
-    );
-    const [name,   setName]   = useState(data.name    || '');
-    const [price,  setPrice]  = useState(data.price   !== undefined ? String(data.price) : '');
-    const [active, setActive] = useState(data.active  !== false);
-    const [saving, setSaving] = useState(false);
-
-    const handleSave = async () => {
-        if (!name.trim() || price === '') return showToast('Name and price are required', 'error');
-        if (!isNew && !store)             return showToast('Please select a store', 'error');
-        if (Number(price) < 0)           return showToast('Price cannot be negative', 'error');
-        setSaving(true);
-        try {
-            const payload = {
-                name:       name.trim(),
-                unit_price: Number(price),
-                status:     active ? 'AVAILABLE' : 'UNAVAILABLE',
-            };
-            if (isNew) {
-                if (!store) return showToast('Please select a store', 'error');
-                const created = await postJson('/store-products', {
-                    ...payload,
-                    store_code: extractCode(store),
-                });
-                showToast(`Product #${created.product_id} created!`);
-            } else {
-                await putJson(`/store-products/${data.productId}`, payload);
-                showToast('Product saved!');
-            }
-            onSaved();
-        } catch (e) {
-            showToast(getApiErrorMessage(e, 'Unable to save product'), 'error');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    // LOV columns for the store picker — live data from parent
-    const lovRows = storeOptions.map(s => ({
-        id: s.id, name: s.name, category: s.category,
-    }));
-
-    return (
-        <div className="fade-in space-y-5">
-            <LovModal isOpen={storeLov} onClose={() => setStoreLov(false)} title="Store"
-                columns={[{ key: 'id', label: 'Code' }, { key: 'name', label: 'Store Name' }, { key: 'category', label: 'Category' }]}
-                data={lovRows}
-                onSelect={r => { setStore(`${r.id} – ${r.name}`); setStoreLov(false); }} />
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium">
-                <ArrowLeft className="w-4 h-4" /> Back to Products
-            </button>
-            <Card className="p-5">
-                <h3 className="font-bold text-slate-900 text-lg mb-4">{isNew ? 'New Product' : `Edit: ${data.name}`}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField label="Store" required>
-                        {isNew ? (
-                            <LovInput value={store} onLov={() => setStoreLov(true)} placeholder="Select store…" />
-                        ) : (
-                            <Input value={data.storeName || data.storeCode || '-'} readOnly className="bg-slate-50 text-slate-500" />
-                        )}
-                    </FormField>
-                    <FormField label="Product Name" required>
-                        <Input value={name} onChange={e => setName(e.target.value)} placeholder="Menu item name" />
-                    </FormField>
-                    <FormField label="Unit Price (฿)" required>
-                        <Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" min="0" />
-                    </FormField>
-                    <FormField label="Status">
-                        <div className="flex items-center gap-3 mt-1">
-                            <button
-                                type="button"
-                                onClick={() => setActive(v => !v)}
-                                className="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                                style={{ background: active ? '#dc2626' : '#cbd5e1' }}
-                            >
-                                <span className="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all"
-                                    style={{ left: active ? 'calc(100% - 20px)' : '4px' }} />
-                            </button>
-                            <span className="text-sm font-semibold" style={{ color: active ? '#16a34a' : '#94a3b8' }}>
-                                {active ? 'Available' : 'Unavailable'}
-                            </span>
-                        </div>
-                    </FormField>
-                </div>
-                <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-slate-100">
-                    <Btn variant="secondary" onClick={onBack} disabled={saving}>Cancel</Btn>
-                    <Btn onClick={handleSave} disabled={saving}>
-                        <Save className="w-4 h-4" /> {saving ? 'Saving…' : 'Save'}
-                    </Btn>
-                </div>
-            </Card>
-        </div>
-    );
-}
-
-// ── List ──────────────────────────────────────────────────────────────────────
 export default function ProductListView({ showToast }) {
     const [editing, setEditing] = useState(null);
-    const [rows, setRows]       = useState([]);
-    const [stores, setStores]   = useState([]);  // for LovModal
-    const [loading, setLoading] = useState(false);
-    const [tick, setTick]       = useState(0);
+    const [rows, setRows] = useState([]);
+    const [stores, setStores] = useState([]);   // passed down to form's LoV
+    const [loading, setLoading] = useState(true);
+    const [tick, setTick] = useState(0);
+    const [search, setSearch] = useState('');
+    const [sort, setSort] = useState({ key: 'name', direction: 'asc' });
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
     const refresh = () => setTick(t => t + 1);
 
     useEffect(() => {
         let cancelled = false;
         setLoading(true);
         Promise.all([
-            getJson('/store-products').catch(() => []),
-            getJson('/stores').catch(() => []),
+            getJson('/store-products'),
+            getJson('/stores'),
         ]).then(([products, storeList]) => {
             if (cancelled) return;
             const storeMap = new Map(storeList.map(s => [s.store_id, s]));
-            const capitalize = str => str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase().replace(/_/g, ' ') : '-';
-            // Store options for LovModal
+
+            // Store list for LoV in form: {id: store_code, storeId, name, category}
             setStores(storeList.map(s => ({
-                id: s.store_code, name: s.name, category: capitalize(s.category),
+                id:       s.store_code,
+                storeId:  s.store_id,
+                name:     s.name,
+                category: s.category,
             })));
-            setRows(products.map(p => {
+
+            const joined = products.map(p => {
                 const store = storeMap.get(p.store_id) || {};
                 return {
-                    id:        String(p.product_id),
-                    productId: p.product_id,
-                    storeId:   p.store_id,
-                    storeCode: store.store_code || String(p.store_id),
-                    storeName: store.name        || `Store #${p.store_id}`,
-                    name:      p.name,
-                    price:     Number(p.unit_price ?? 0),
-                    active:    String(p.status || '').toUpperCase() === 'AVAILABLE',
-                    status:    String(p.status || '').toUpperCase(),
+                    productId:  p.product_id,
+                    storeId:    p.store_id,
+                    storeCode:  store.store_code || '—',
+                    storeName:  store.name       || '—',
+                    name:       p.name,
+                    price:      p.unit_price,
+                    status:     p.status || 'AVAILABLE',
+                    updatedAt:  p.updated_at ? new Date(p.updated_at).toLocaleDateString() : '—',
                 };
-            }));
-        }).catch(e => {
-            if (cancelled) return;
-            showToast(getApiErrorMessage(e, 'Failed to load products'), 'error');
-        }).finally(() => { if (!cancelled) setLoading(false); });
+            });
+            setRows(joined);
+        }).catch(err => {
+            if (!cancelled) showToast(getApiErrorMessage(err, 'Failed to load products'), 'error');
+        }).finally(() => {
+            if (!cancelled) setLoading(false);
+        });
         return () => { cancelled = true; };
-    }, [tick]);  // eslint-disable-line react-hooks/exhaustive-deps
+    }, [tick]);
 
-    if (editing) return (
-        <ProductFormInline
-            data={editing}
-            storeOptions={stores}
-            onBack={() => setEditing(null)}
-            onSaved={() => { setEditing(null); refresh(); }}
-            showToast={showToast}
-        />
+    const handleDelete = async (p) => {
+        if (!window.confirm(`Delete product "${p.name}"?`)) return;
+        try {
+            await deleteJson(`/store-products/${p.productId}`);
+            showToast(`Product "${p.name}" deleted`);
+            refresh();
+        } catch (err) {
+            showToast(getApiErrorMessage(err, 'Delete failed'), 'error');
+        }
+    };
+
+    if (editing !== null) {
+        return (
+            <ProductFormView
+                data={editing}
+                stores={stores}
+                onBack={() => setEditing(null)}
+                onSaved={() => { setEditing(null); refresh(); }}
+                showToast={showToast}
+            />
+        );
+    }
+
+    const filtered = rows.filter(p =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.storeName.toLowerCase().includes(search.toLowerCase()) ||
+        String(p.productId).includes(search)
     );
 
-    const handleDelete = async (row) => {
-        if (!window.confirm(`Delete product #${row.id} — ${row.name}?`)) return;
-        try {
-            await deleteJson(`/store-products/${row.productId}`);
-            showToast(`Product ${row.name} deleted`);
-            refresh();
-        } catch (e) {
-            showToast(getApiErrorMessage(e, 'Delete failed'), 'error');
-        }
+    const sorted = [...filtered].sort((a, b) => {
+        const valA = a[sort.key] ?? '';
+        const valB = b[sort.key] ?? '';
+        if (valA < valB) return sort.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sort.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
+    const start = filtered.length > 0 ? (page - 1) * pageSize + 1 : 0;
+    const end = Math.min(page * pageSize, filtered.length);
+
+    const handleSort = (key) => {
+        setSort(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+        }));
     };
 
     return (
         <div className="fade-in space-y-5">
-            <PageHeader title="Products" subtitle="Manage menu items across all stores"
-                action={<Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Add Product</Btn>} />
-            <Card>
-                {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Loading products…</div>
-                ) : (
-                    <Table headers={[
-                        { label: '#' }, { label: 'Store' }, { label: 'Product Name' },
-                        { label: 'Price', right: true }, { label: 'Status', center: true }, { label: '', right: true }
-                    ]}>
-                        {rows.length === 0 ? (
-                            <tr><td colSpan={6} className="py-10 text-center text-slate-400 text-sm">No products found</td></tr>
-                        ) : rows.map(p => (
-                            <Tr key={p.id}>
-                                <Td mono className="text-xs text-slate-400">{p.id}</Td>
-                                <Td className="text-slate-600">{p.storeName}</Td>
-                                <Td bold>{p.name}</Td>
-                                <Td right bold className="font-mono">฿{Number(p.price).toLocaleString()}</Td>
-                                <Td center>
-                                    <Badge color={STATUS_BADGE[p.status] || 'gray'}>
-                                        {p.status.replace('_', ' ')}
-                                    </Badge>
-                                </Td>
-                                <td className="px-4 py-3 text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Btn size="sm" variant="secondary" onClick={() => setEditing(p)}><Edit2 className="w-3 h-3" /> Edit</Btn>
-                                        <Btn size="sm" variant="danger"    onClick={() => handleDelete(p)}><Trash2 className="w-3 h-3" /> Delete</Btn>
-                                    </div>
-                                </td>
-                            </Tr>
-                        ))}
-                    </Table>
-                )}
+            <PageHeader
+                title="Products"
+                subtitle="Manage menu items across all stores"
+                action={<Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Add Product</Btn>}
+            />
+
+            <Card className="overflow-hidden">
+                <CardHeader
+                    search={
+                        <Input
+                            icon={Search}
+                            placeholder="Search ID, name, store..."
+                            value={search}
+                            onChange={e => { setSearch(e.target.value); setPage(1); }}
+                            className="bg-white border-slate-200 h-10 shadow-sm"
+                        />
+                    }
+                    filter={
+                        <div className="flex items-center gap-3">
+                            <span className="text-xs font-medium text-slate-400">
+                                {start}–{end} of {filtered.length} products
+                            </span>
+                            <Select
+                                value={pageSize}
+                                onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+                                className="h-9 border-slate-200 bg-white shadow-sm w-24"
+                            >
+                                {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
+                            </Select>
+                        </div>
+                    }
+                />
+
+                <Table
+                    onSort={handleSort}
+                    sortConfig={sort}
+                    minWidth="860px"
+                    headers={[
+                        { label: '#',      key: 'productId', sortable: true, width: '6%'  },
+                        { label: 'NAME',   key: 'name',      sortable: true, width: '26%' },
+                        { label: 'STORE',  key: 'storeName', sortable: true, width: '22%' },
+                        { label: 'PRICE',  key: 'price',     sortable: true, right: true,  width: '12%' },
+                        { label: 'STATUS', key: 'status',    sortable: true, center: true, width: '14%' },
+                        { label: 'Actions', right: true,                                    width: '14%' },
+                    ]}
+                >
+                    {loading ? (
+                        <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">Loading…</Td></Tr>
+                    ) : paginated.length === 0 ? (
+                        <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">No products found</Td></Tr>
+                    ) : paginated.map(p => (
+                        <Tr key={p.productId}>
+                            <Td mono className="text-xs text-slate-400 font-bold whitespace-nowrap">{p.productId}</Td>
+                            <Td bold className="whitespace-nowrap">{p.name}</Td>
+                            <Td className="text-slate-600 whitespace-nowrap">{p.storeName}</Td>
+                            <Td right bold mono className="whitespace-nowrap">฿{parseFloat(p.price).toFixed(2)}</Td>
+                            <Td center className="whitespace-nowrap">
+                                <Badge color={STATUS_COLOR[p.status] || 'gray'}>{p.status}</Badge>
+                            </Td>
+                            <Td right className="whitespace-nowrap">
+                                <div className="flex justify-end gap-2">
+                                    <Btn size="sm" variant="secondary" onClick={() => setEditing(p)}>
+                                        <Edit2 className="w-3 h-3" /> Edit
+                                    </Btn>
+                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(p)}>
+                                        <Trash2 className="w-3 h-3" /> Delete
+                                    </Btn>
+                                </div>
+                            </Td>
+                        </Tr>
+                    ))}
+                </Table>
+
+                <Pagination
+                    totalItems={filtered.length}
+                    itemsPerPage={pageSize}
+                    currentPage={page}
+                    onPageChange={setPage}
+                    showSummary={false}
+                    itemLabel="products"
+                />
             </Card>
         </div>
     );

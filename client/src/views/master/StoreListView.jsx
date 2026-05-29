@@ -1,203 +1,195 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, ArrowLeft, Save } from 'lucide-react';
-import { PageHeader, Btn, Card, Table, Tr, Td, Badge, FormField, Input, Select } from '../../components/ui';
-import { getJson, postJson, putJson, deleteJson, getApiErrorMessage } from '../../api/http';
+import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
+import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
+import StoreFormView from './StoreFormView';
 
-const BADGE_COLOR = { ACTIVE: 'green', INACTIVE: 'gray', SUSPENDED: 'red' };
+const STATUS_COLOR = { ACTIVE: 'green', INACTIVE: 'gray', SUSPENDED: 'red' };
 
-function inferCity(addressText) {
-    if (!addressText) return 'Bangkok';
-    const chunks = String(addressText).split(',').map(p => p.trim()).filter(Boolean);
-    return chunks[1] || chunks[0] || 'Bangkok';
+function toTitleCase(str = '') {
+    return str.replace(/_/g, ' ').replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
 
-const CATEGORIES = ['Thai Food', 'Japanese', 'Chinese', 'Western', 'Cafe & Drinks', 'Fast Food', 'Bakery', 'Grocery', 'Other'];
-
-// ── Form ──────────────────────────────────────────────────────────────────────
-function StoreFormInline({ data, onBack, onSaved, showToast }) {
-    const isNew = !data.id;
-    const [name,     setName]     = useState(data.name     || '');
-    const [category, setCategory] = useState(data.category || 'Thai Food');
-    const [address,  setAddress]  = useState(data.address  || '');
-    const [status,   setStatus]   = useState(data.status   || 'ACTIVE');
-    const [saving,   setSaving]   = useState(false);
-
-    const handleSave = async () => {
-        if (!name.trim() || !address.trim())
-            return showToast('Name and address are required', 'error');
-        setSaving(true);
-        try {
-            if (isNew) {
-                const addressRow = await postJson('/addresses', {
-                    address_name: `${name.trim()} Address`,
-                    address_type: 'STORE',
-                    address_line_1: address.trim(),
-                    city: inferCity(address),
-                    country_code: 'TH',
-                });
-                const created = await postJson('/stores', {
-                    name: name.trim(),
-                    address_id: addressRow.address_id,
-                    category: category.toUpperCase().replace(/[^A-Z0-9]+/g, '_'),
-                    status,
-                });
-                showToast(`Store ${created.store_code} created!`);
-            } else {
-                if (data.addressId) {
-                    await putJson(`/addresses/${data.addressId}`, {
-                        address_name: data.addressName || `${name.trim()} Address`,
-                        address_type: 'STORE',
-                        address_line_1: address.trim(),
-                        city: data.city || inferCity(address),
-                        country_code: 'TH',
-                    });
-                }
-                await putJson(`/stores/${data.id}`, {
-                    name: name.trim(),
-                    category: category.toUpperCase().replace(/[^A-Z0-9]+/g, '_'),
-                    status,
-                });
-                showToast('Store saved!');
-            }
-            onSaved();
-        } catch (e) {
-            showToast(getApiErrorMessage(e, 'Unable to save store'), 'error');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    return (
-        <div className="fade-in space-y-5">
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium">
-                <ArrowLeft className="w-4 h-4" /> Back to Stores
-            </button>
-            <Card className="p-5">
-                <h3 className="font-bold text-slate-900 text-lg mb-4">{isNew ? 'New Store' : `Edit: ${data.name}`}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField label="Store Name" required>
-                        <Input value={name} onChange={e => setName(e.target.value)} placeholder="Restaurant name" />
-                    </FormField>
-                    <FormField label="Category" required>
-                        <Select value={category} onChange={e => setCategory(e.target.value)}>
-                            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                        </Select>
-                    </FormField>
-                    <FormField label="Status">
-                        <Select value={status} onChange={e => setStatus(e.target.value)}>
-                            <option value="ACTIVE">Active</option>
-                            <option value="INACTIVE">Inactive</option>
-                            <option value="SUSPENDED">Suspended</option>
-                        </Select>
-                    </FormField>
-                    <div className="md:col-span-2">
-                        <FormField label="Address" required>
-                            <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Full store address" />
-                        </FormField>
-                    </div>
-                </div>
-                <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-slate-100">
-                    <Btn variant="secondary" onClick={onBack} disabled={saving}>Cancel</Btn>
-                    <Btn onClick={handleSave} disabled={saving}>
-                        <Save className="w-4 h-4" /> {saving ? 'Saving…' : 'Save'}
-                    </Btn>
-                </div>
-            </Card>
-        </div>
-    );
-}
-
-// ── List ──────────────────────────────────────────────────────────────────────
 export default function StoreListView({ showToast }) {
     const [editing, setEditing] = useState(null);
-    const [rows, setRows]       = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [tick, setTick]       = useState(0);
+    const [rows, setRows] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [tick, setTick] = useState(0);
+    const [search, setSearch] = useState('');
+    const [sort, setSort] = useState({ key: 'name', direction: 'asc' });
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
     const refresh = () => setTick(t => t + 1);
 
     useEffect(() => {
         let cancelled = false;
         setLoading(true);
         Promise.all([
-            getJson('/stores').catch(() => []),
-            getJson('/addresses').catch(() => []),
+            getJson('/stores'),
+            getJson('/addresses'),
         ]).then(([stores, addresses]) => {
             if (cancelled) return;
             const addressMap = new Map(addresses.map(a => [a.address_id, a]));
-            setRows(stores.map(s => {
+            const joined = stores.map(s => {
                 const addr = addressMap.get(s.address_id) || {};
-                const capitalize = str => str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase().replace(/_/g, ' ') : '-';
                 return {
-                    id:          s.store_code,
-                    storeId:     s.store_id,
-                    addressId:   s.address_id,
-                    addressName: addr.address_name,
-                    city:        addr.city,
-                    name:        s.name,
-                    category:    capitalize(s.category),
-                    status:      s.status || 'ACTIVE',
-                    address:     [addr.address_line_1, addr.city].filter(Boolean).join(', ') || '-',
-                    rating:      s.rating ?? null,
+                    storeCode:  s.store_code,
+                    storeId:    s.store_id,
+                    addressId:  s.address_id,
+                    name:       s.name,
+                    category:   s.category || '—',
+                    status:     s.status || 'ACTIVE',
+                    address:    addr.address_line_1 || '—',
+                    city:       addr.city || '',
+                    rating:     s.rating != null ? parseFloat(s.rating).toFixed(1) : '—',
+                    updatedAt:  s.updated_at ? new Date(s.updated_at).toLocaleDateString() : '—',
                 };
-            }));
-        }).catch(e => {
-            if (cancelled) return;
-            showToast(getApiErrorMessage(e, 'Failed to load stores'), 'error');
-        }).finally(() => { if (!cancelled) setLoading(false); });
+            });
+            setRows(joined);
+        }).catch(err => {
+            if (!cancelled) showToast(getApiErrorMessage(err, 'Failed to load stores'), 'error');
+        }).finally(() => {
+            if (!cancelled) setLoading(false);
+        });
         return () => { cancelled = true; };
-    }, [tick]);  // eslint-disable-line react-hooks/exhaustive-deps
+    }, [tick]);
 
-    if (editing) return (
-        <StoreFormInline
-            data={editing}
-            onBack={() => setEditing(null)}
-            onSaved={() => { setEditing(null); refresh(); }}
-            showToast={showToast}
-        />
+    const handleDelete = async (s) => {
+        if (!window.confirm(`Delete store ${s.storeCode}?`)) return;
+        try {
+            await deleteJson(`/stores/${s.storeCode}`);
+            showToast(`Store ${s.storeCode} deleted`);
+            refresh();
+        } catch (err) {
+            showToast(getApiErrorMessage(err, 'Delete failed'), 'error');
+        }
+    };
+
+    if (editing !== null) {
+        return (
+            <StoreFormView
+                data={editing}
+                onBack={() => setEditing(null)}
+                onSaved={() => { setEditing(null); refresh(); }}
+                showToast={showToast}
+            />
+        );
+    }
+
+    const filtered = rows.filter(s =>
+        s.name.toLowerCase().includes(search.toLowerCase()) ||
+        s.storeCode.toLowerCase().includes(search.toLowerCase()) ||
+        s.category.toLowerCase().includes(search.toLowerCase()) ||
+        s.address.toLowerCase().includes(search.toLowerCase())
     );
 
-    const handleDelete = async (row) => {
-        if (!window.confirm(`Delete store ${row.id} — ${row.name}?`)) return;
-        try {
-            await deleteJson(`/stores/${row.id}`);
-            showToast(`Store ${row.id} deleted`);
-            refresh();
-        } catch (e) {
-            showToast(getApiErrorMessage(e, 'Delete failed'), 'error');
-        }
+    const sorted = [...filtered].sort((a, b) => {
+        const valA = a[sort.key] ?? '';
+        const valB = b[sort.key] ?? '';
+        if (valA < valB) return sort.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sort.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
+    const start = filtered.length > 0 ? (page - 1) * pageSize + 1 : 0;
+    const end = Math.min(page * pageSize, filtered.length);
+
+    const handleSort = (key) => {
+        setSort(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+        }));
     };
 
     return (
         <div className="fade-in space-y-5">
-            <PageHeader title="Stores" subtitle="Manage restaurant & store listings"
-                action={<Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Add Store</Btn>} />
-            <Card>
-                {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Loading stores…</div>
-                ) : (
-                    <Table headers={[
-                        { label: 'Code' }, { label: 'Store Name' }, { label: 'Category' },
-                        { label: 'Address' }, { label: 'Status', center: true }, { label: '', right: true }
-                    ]}>
-                        {rows.length === 0 ? (
-                            <tr><td colSpan={6} className="py-10 text-center text-slate-400 text-sm">No stores found</td></tr>
-                        ) : rows.map(s => (
-                            <Tr key={s.id}>
-                                <Td mono className="text-xs">{s.id}</Td>
-                                <Td bold>{s.name}</Td>
-                                <Td><Badge>{s.category}</Badge></Td>
-                                <Td className="max-w-[200px] truncate text-slate-500">{s.address}</Td>
-                                <Td center><Badge color={BADGE_COLOR[s.status] || 'gray'}>{s.status}</Badge></Td>
-                                <td className="px-4 py-3 text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Btn size="sm" variant="secondary" onClick={() => setEditing(s)}><Edit2 className="w-3 h-3" /> Edit</Btn>
-                                        <Btn size="sm" variant="danger"    onClick={() => handleDelete(s)}><Trash2 className="w-3 h-3" /> Delete</Btn>
-                                    </div>
-                                </td>
-                            </Tr>
-                        ))}
-                    </Table>
-                )}
+            <PageHeader
+                title="Stores"
+                subtitle="Manage restaurant & store listings"
+                action={<Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Add Store</Btn>}
+            />
+
+            <Card className="overflow-hidden">
+                <CardHeader
+                    search={
+                        <Input
+                            icon={Search}
+                            placeholder="Search code, name, category..."
+                            value={search}
+                            onChange={e => { setSearch(e.target.value); setPage(1); }}
+                            className="bg-white border-slate-200 h-10 shadow-sm"
+                        />
+                    }
+                    filter={
+                        <div className="flex items-center gap-3">
+                            <span className="text-xs font-medium text-slate-400">
+                                {start}–{end} of {filtered.length} stores
+                            </span>
+                            <Select
+                                value={pageSize}
+                                onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+                                className="h-9 border-slate-200 bg-white shadow-sm w-24"
+                            >
+                                {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
+                            </Select>
+                        </div>
+                    }
+                />
+
+                <Table
+                    headers={[
+                        { label: 'CODE',     key: 'storeCode', sortable: true, width: '10%' },
+                        { label: 'NAME',     key: 'name',      sortable: true, width: '22%' },
+                        { label: 'CATEGORY', key: 'category',  sortable: true, width: '14%' },
+                        { label: 'ADDRESS',  key: 'address',                   width: '28%' },
+                        { label: 'STATUS',   key: 'status',    sortable: true, center: true, width: '12%' },
+                        { label: 'Actions',  right: true,                       width: '14%' },
+                    ]}
+                    onSort={handleSort}
+                    sortConfig={sort}
+                    minWidth="860px"
+                >
+                    {loading ? (
+                        <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">Loading…</Td></Tr>
+                    ) : paginated.length === 0 ? (
+                        <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">No stores found</Td></Tr>
+                    ) : paginated.map(s => (
+                        <Tr key={s.storeCode}>
+                            <Td mono className="text-xs text-slate-500 font-bold whitespace-nowrap">{s.storeCode}</Td>
+                            <Td bold className="whitespace-nowrap">{s.name}</Td>
+                            <Td className="whitespace-nowrap">
+                                <Badge color="gray">{toTitleCase(s.category)}</Badge>
+                            </Td>
+                            <Td className="max-w-[220px] truncate whitespace-nowrap text-slate-500" title={s.address}>
+                                {s.address}{s.city ? `, ${s.city}` : ''}
+                            </Td>
+                            <Td center className="whitespace-nowrap">
+                                <Badge color={STATUS_COLOR[s.status] || 'gray'}>{s.status}</Badge>
+                            </Td>
+                            <Td right className="whitespace-nowrap">
+                                <div className="flex justify-end gap-2">
+                                    <Btn size="sm" variant="secondary" onClick={() => setEditing(s)}>
+                                        <Edit2 className="w-3 h-3" /> Edit
+                                    </Btn>
+                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(s)}>
+                                        <Trash2 className="w-3 h-3" /> Delete
+                                    </Btn>
+                                </div>
+                            </Td>
+                        </Tr>
+                    ))}
+                </Table>
+
+                <Pagination
+                    totalItems={filtered.length}
+                    itemsPerPage={pageSize}
+                    currentPage={page}
+                    onPageChange={setPage}
+                    showSummary={false}
+                    itemLabel="stores"
+                />
             </Card>
         </div>
     );
