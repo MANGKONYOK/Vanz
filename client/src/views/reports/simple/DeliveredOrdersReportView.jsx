@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, FilterBar, FilterField, Input } from '../../../components/ui';
 import { getJson, getApiErrorMessage } from '../../../api/http';
@@ -6,13 +6,13 @@ import { getJson, getApiErrorMessage } from '../../../api/http';
 export default function DeliveredOrdersReportView({ showToast }) {
     const [rows,      setRows]      = useState([]);
     const [loading,   setLoading]   = useState(false);
+    const [generated, setGenerated] = useState(false);
     const [dateFrom,  setDateFrom]  = useState('');
     const [dateTo,    setDateTo]    = useState('');
-    const [tick,      setTick]      = useState(0);
 
-    useEffect(() => {
-        let cancelled = false;
+    const handleGenerate = () => {
         setLoading(true);
+        setGenerated(true);
         Promise.all([
             getJson('/orders', { status: 'DELIVERED' }).catch(() => []),
             getJson('/customers').catch(() => []),
@@ -21,7 +21,6 @@ export default function DeliveredOrdersReportView({ showToast }) {
             getJson('/deliveries').catch(() => []),
             getJson('/deliverers').catch(() => []),
         ]).then(([orders, customers, profiles, stores, deliveries, deliverers]) => {
-            if (cancelled) return;
             const profileMap   = new Map(profiles.map(p => [p.profile_id, p]));
             const custMap      = new Map(customers.map(c => [c.customer_id, c]));
             const storeMap     = new Map(stores.map(s => [s.store_id, s]));
@@ -59,12 +58,11 @@ export default function DeliveredOrdersReportView({ showToast }) {
 
             setRows(result);
         }).catch(e => {
-            if (!cancelled) showToast?.(getApiErrorMessage(e, 'Failed to load orders'), 'error');
+            showToast?.(getApiErrorMessage(e, 'Failed to load orders'), 'error');
         }).finally(() => {
-            if (!cancelled) setLoading(false);
+            setLoading(false);
         });
-        return () => { cancelled = true; };
-    }, [tick]); // eslint-disable-line react-hooks/exhaustive-deps
+    };
 
     return (
         <div className="fade-in space-y-5">
@@ -76,7 +74,7 @@ export default function DeliveredOrdersReportView({ showToast }) {
                 <FilterField label="Date To">
                     <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
                 </FilterField>
-                <Btn onClick={() => setTick(t => t + 1)} disabled={loading}>
+                <Btn onClick={handleGenerate} disabled={loading}>
                     <Search className="w-4 h-4" /> {loading ? 'Loading…' : 'Generate'}
                 </Btn>
             </FilterBar>
@@ -89,7 +87,11 @@ export default function DeliveredOrdersReportView({ showToast }) {
                         { label: 'Store' }, { label: 'Deliverer' }, { label: 'Duration', right: true }, { label: 'Total', right: true },
                     ]}>
                         {rows.length === 0 ? (
-                            <tr><td colSpan={7} className="py-10 text-center text-current/50 text-sm">No delivered orders found</td></tr>
+                            <tr>
+                                <td colSpan={7} className="py-10 text-center text-current/50 text-sm">
+                                    {generated ? 'No delivered orders found' : 'Set filters and click Generate'}
+                                </td>
+                            </tr>
                         ) : rows.map(o => (
                             <Tr key={o.id}>
                                 <Td bold mono className="text-xs">{o.id}</Td>

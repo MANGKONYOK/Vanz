@@ -1,6 +1,6 @@
-export default function FilterField({ label, children }) {
+export default function FilterField({ label, children, className = '' }) {
     return (
-        <div className="flex-1 min-w-[140px] max-w-[200px]">
+        <div className={`flex-1 min-w-[140px] ${className || 'max-w-[200px]'}`}>
             <label className="text-[10px] font-bold text-slate-500 dark:text-red-100/80 uppercase tracking-wide block mb-1">{label}</label>
             {children}
         </div>
