@@ -82,14 +82,14 @@ export default function DeliveredOrdersReportView({ showToast }) {
             </FilterBar>
             <Card>
                 {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Loading orders…</div>
+                    <div className="py-12 text-center text-current/60 text-sm">Loading orders…</div>
                 ) : (
                     <Table headers={[
                         { label: 'Order ID' }, { label: 'Date' }, { label: 'Customer' },
                         { label: 'Store' }, { label: 'Deliverer' }, { label: 'Duration', right: true }, { label: 'Total', right: true },
                     ]}>
                         {rows.length === 0 ? (
-                            <tr><td colSpan={7} className="py-10 text-center text-slate-400 text-sm">No delivered orders found</td></tr>
+                            <tr><td colSpan={7} className="py-10 text-center text-current/50 text-sm">No delivered orders found</td></tr>
                         ) : rows.map(o => (
                             <Tr key={o.id}>
                                 <Td bold mono className="text-xs">{o.id}</Td>
@@ -97,7 +97,7 @@ export default function DeliveredOrdersReportView({ showToast }) {
                                 <Td>{o.customer}</Td>
                                 <Td>{o.store}</Td>
                                 <Td>{o.deliverer}</Td>
-                                <Td right className="text-xs text-slate-500 font-bold">{o.duration}</Td>
+                                <Td right className="text-xs text-current/60 font-bold">{o.duration}</Td>
                                 <Td right bold>฿{o.total.toLocaleString()}</Td>
                             </Tr>
                         ))}

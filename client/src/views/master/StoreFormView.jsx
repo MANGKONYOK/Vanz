@@ -31,9 +31,9 @@ export default function StoreFormView({ data, onBack, showToast }) {
 
     return (
         <div className="fade-in space-y-5">
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Stores</button>
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Stores</button>
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-6">{data.id ? `Edit: ${data.name}` : 'New Store'}</h3>
+                <h3 className="font-bold text-current mb-6 text-lg">{data.id ? `Edit: ${data.name}` : 'New Store'}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-end gap-3">
                         <div className="flex-1">
@@ -43,7 +43,7 @@ export default function StoreFormView({ data, onBack, showToast }) {
                                     onChange={e => setId(e.target.value.toUpperCase())}
                                     placeholder="ST-001"
                                     readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 text-slate-500 font-mono' : 'font-mono'}
+                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
                                 />
                             </FormField>
                         </div>
@@ -55,11 +55,11 @@ export default function StoreFormView({ data, onBack, showToast }) {
                                     onChange={e => setAutoId(e.target.checked)}
                                     className="sr-only peer"
                                 />
-                                <div className="w-5 h-5 border-2 border-slate-200 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
+                                <div className="w-5 h-5 border-2 border-slate-200 dark:border-slate-700 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
                                     <Check size={12} strokeWidth={4} className={autoId ? 'scale-100' : 'scale-0'} />
                                 </div>
                             </div>
-                            <span className="text-sm font-bold text-slate-600">Auto</span>
+                            <span className="text-sm font-bold text-current/75">Auto</span>
                         </label>
                     </div>
                     <FormField label="Store Name" required error={errors.name?.message}><Input {...register('name')} placeholder="Restaurant name" /></FormField>
@@ -81,7 +81,7 @@ export default function StoreFormView({ data, onBack, showToast }) {
                         </FormField>
                     </div>
                 </div>
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-current/10">
                     <Btn variant="secondary" onClick={onBack}>Cancel</Btn>
                     <Btn onClick={handleSubmit(onSubmit)}><Save className="w-4 h-4" /> Save Store</Btn>
                 </div>

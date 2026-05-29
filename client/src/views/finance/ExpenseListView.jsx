@@ -53,13 +53,13 @@ export default function ExpenseListView({ onNavigate, showToast }) {
 
             <Card className="overflow-hidden">
                 <CardHeader
-                    search={<Input icon={Search} placeholder="Search ID, deliverer, status..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    search={<Input icon={Search} placeholder="Search ID, deliverer, status..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="h-10 shadow-sm" />}
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-slate-400">
+                            <span className="text-xs font-medium text-current/50">
                                 {start}-{end} of {filtered.length} vouchers
                             </span>
-                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 border-slate-200 bg-white shadow-sm w-24">
+                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-24">
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
                         </div>
@@ -79,7 +79,7 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                 >
                     {paginated.map(v => (
                         <Tr key={v.id}>
-                            <Td mono className="text-xs font-bold text-red-600">{v.id}</Td>
+                            <Td mono className="text-xs font-bold text-slate-900 dark:text-slate-100">{v.id}</Td>
                             <Td>{v.date}</Td>
                             <Td bold>{v.delivererName}</Td>
                             <Td center>
@@ -88,12 +88,12 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                                 </Badge>
                             </Td>
                             <Td right bold>฿{v.total?.toLocaleString()}</Td>
-                            <td className="px-4 py-3 text-right">
+                            <Td right>
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(v)}><Edit2 className="w-3 h-3" /> Edit</Btn>
                                     <Btn size="sm" variant="danger" onClick={() => handleDelete(v.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
                                 </div>
-                            </td>
+                            </Td>
                         </Tr>
                     ))}
                 </Table>

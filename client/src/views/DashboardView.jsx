@@ -87,8 +87,8 @@ export default function DashboardView({ onNavigate }) {
     return (
         <div className="space-y-6 fade-in">
             <div>
-                <h2 className="text-2xl font-black text-slate-900">Good morning 👋</h2>
-                <p className="text-sm text-slate-600">{today} · Here's what's happening on your platform today.</p>
+                <h2 className="text-2xl font-extrabold text-red-600 dark:text-red-400">Good morning 👋</h2>
+                <p className="text-sm text-red-600/75 dark:text-red-400/75 mt-0.5 font-medium">{today} · Here's what's happening on your platform today.</p>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard label="Orders Today"     value={loading ? '…' : stats.orders}                         icon={<Package  size={18} />} sub="Placed today"          color="red"   />
@@ -105,13 +105,13 @@ export default function DashboardView({ onNavigate }) {
                         ) : pendingOrders.length === 0 ? (
                             <p className="text-sm text-slate-400 text-center py-4">No orders awaiting dispatch</p>
                         ) : pendingOrders.map(o => (
-                            <div key={o.id} className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                            <div key={o.id} className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200/65 dark:border-amber-900/35">
                                 <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse" />
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-slate-900">{o.id}</p>
-                                    <p className="text-xs text-slate-500 truncate">{o.store} · {o.customer}</p>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-amber-100">{o.id}</p>
+                                    <p className="text-xs text-slate-500/80 dark:text-amber-200/60 truncate">{o.store} · {o.customer}</p>
                                 </div>
-                                <span className="text-xs text-amber-700 font-semibold shrink-0">{o.time}</span>
+                                <span className="text-xs text-amber-700 dark:text-amber-400 font-semibold shrink-0">{o.time}</span>
                             </div>
                         ))}
                     </div>
@@ -124,13 +124,13 @@ export default function DashboardView({ onNavigate }) {
                         ) : recentVouchers.length === 0 ? (
                             <p className="text-sm text-slate-400 text-center py-4">No vouchers yet</p>
                         ) : recentVouchers.map(v => (
-                            <div key={v.id} className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors">
+                            <div key={v.id} className="flex items-center gap-3 p-3 rounded-lg border border-red-100 dark:border-red-900/40 hover:bg-red-50/50 dark:hover:bg-red-950/20 transition-colors">
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-slate-900">{v.id}</p>
-                                    <p className="text-xs text-slate-500">{v.delivererName} · {v.date}</p>
+                                    <p className="text-sm font-bold text-red-950 dark:text-red-100">{v.id}</p>
+                                    <p className="text-xs text-red-700/85 dark:text-red-300/70">{v.delivererName} · {v.date}</p>
                                 </div>
                                 <Badge color={v.status === 'APPROVED' ? 'green' : v.status === 'REJECTED' ? 'red' : 'amber'}>{v.status}</Badge>
-                                <span className="text-sm font-bold text-slate-900 shrink-0">฿{v.total.toLocaleString()}</span>
+                                <span className="text-sm font-bold text-red-950 dark:text-red-100 shrink-0">฿{v.total.toLocaleString()}</span>
                             </div>
                         ))}
                     </div>

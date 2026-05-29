@@ -48,9 +48,9 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
             <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Product"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Product' }, { key: 'price', label: 'Price' }]}
                 data={MOCK_PRODUCTS} onSelect={r => { if (lovIdx !== null) { const n = [...items]; n[lovIdx].productName = r.name; n[lovIdx].productId = r.id; setItems(n); } setIsLovOpen(false); setLovIdx(null); }} />
-            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium"><ArrowLeft className="w-4 h-4" /> Back to Promotions</button>
+            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Promotions</button>
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-4">{isNew ? 'New Campaign' : `Edit: ${editData.name}`}</h3>
+                <h3 className="font-bold text-current mb-4 text-lg">{isNew ? 'New Campaign' : `Edit: ${editData.name}`}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-end gap-3">
                         <div className="flex-1">
@@ -60,7 +60,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                                     onChange={e => setPromoCode(e.target.value.toUpperCase())}
                                     placeholder="PROMO-001"
                                     readOnly={autoCode}
-                                    className={autoCode ? 'bg-slate-50 text-slate-500 font-mono' : 'font-mono'}
+                                    className={autoCode ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
                                 />
                             </FormField>
                         </div>
@@ -72,11 +72,11 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                                     onChange={e => setAutoCode(e.target.checked)}
                                     className="sr-only peer"
                                 />
-                                <div className="w-5 h-5 border-2 border-slate-200 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
+                                <div className="w-5 h-5 border-2 border-slate-200 dark:border-slate-700 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
                                     <Check size={12} strokeWidth={4} className={autoCode ? 'scale-100' : 'scale-0'} />
                                 </div>
                             </div>
-                            <span className="text-sm font-bold text-slate-600 font-sans">Auto</span>
+                            <span className="text-sm font-bold text-current/75 font-sans">Auto</span>
                         </label>
                     </div>
                     <FormField label="Campaign Name" required error={errors.name?.message}><Input {...register('name')} placeholder="e.g. Summer Sale" /></FormField>
@@ -104,19 +104,19 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                 } />
                 <Table headers={[{ label: 'Product' }, { label: 'Discount Value', right: true }, { label: '', center: true }]} minWidth="500px">
                     {items.map((it, i) => (
-                        <tr key={it.id} className="hover:bg-slate-50">
+                        <tr key={it.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                             <td className="px-4 py-3">
-                                <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-red-400">
-                                    <input readOnly value={it.productName} placeholder="Select product..." className="flex-1 min-w-0 px-3 py-1.5 text-sm outline-none bg-white" />
-                                    <button onClick={() => { setLovIdx(i); setIsLovOpen(true); }} className="shrink-0 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-colors border-l border-slate-700">LoV</button>
+                                <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 focus-within:border-red-400 dark:focus-within:border-red-500">
+                                    <input readOnly value={it.productName} placeholder="Select product..." className="flex-1 min-w-0 px-3 py-1.5 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" />
+                                    <button onClick={() => { setLovIdx(i); setIsLovOpen(true); }} className="shrink-0 px-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white text-xs font-bold transition-colors border-l border-slate-700 dark:border-slate-600">LoV</button>
                                 </div>
                             </td>
-                            <td className="px-4 py-3 text-right"><input type="number" value={it.discount} onChange={e => { const n = [...items]; n[i].discount = Number(e.target.value); setItems(n); }} className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 text-right w-24" /></td>
-                            <td className="px-4 py-3 text-center"><button onClick={() => setItems(items.filter(x => x.id !== it.id))} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button></td>
+                            <td className="px-4 py-3 text-right"><input type="number" value={it.discount} onChange={e => { const n = [...items]; n[i].discount = Number(e.target.value); setItems(n); }} className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 dark:focus:border-red-500 text-right w-24" /></td>
+                            <td className="px-4 py-3 text-center"><button onClick={() => setItems(items.filter(x => x.id !== it.id))} className="p-1.5 text-slate-300 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button></td>
                         </tr>
                     ))}
                 </Table>
-                <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex justify-end">
                     <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> Save Campaign</Btn>
                 </div>
             </Card>

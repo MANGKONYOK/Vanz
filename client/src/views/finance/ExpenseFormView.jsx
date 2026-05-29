@@ -47,12 +47,12 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 )}
             />
             
-            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 transition-colors font-medium">
+            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors">
                 <ArrowLeft className="w-4 h-4" /> Back to Vouchers
             </button>
             
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-4">Voucher Header</h3>
+                <h3 className="font-bold text-current mb-4">Voucher Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-end gap-3">
                         <div className="flex-1">
@@ -62,7 +62,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                                     onChange={e => setVoucherId(e.target.value.toUpperCase())} 
                                     placeholder="EXP-001" 
                                     readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 text-slate-500 font-mono' : 'font-mono'}
+                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
                                 />
                             </FormField>
                         </div>
@@ -74,11 +74,11 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                                     onChange={e => setAutoId(e.target.checked)}
                                     className="sr-only peer"
                                 />
-                                <div className="w-5 h-5 border-2 border-slate-200 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
+                                <div className="w-5 h-5 border-2 border-slate-200 dark:border-slate-700 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
                                     <Check size={12} strokeWidth={4} className={autoId ? 'scale-100' : 'scale-0'} />
                                 </div>
                             </div>
-                            <span className="text-sm font-bold text-slate-600 font-sans">Auto</span>
+                            <span className="text-sm font-bold text-current/75 font-sans">Auto</span>
                         </label>
                     </div>
                     <FormField label="Deliverer" required error={errors.delivererId?.message}>
@@ -115,7 +115,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
             
             <Card className="overflow-hidden">
                 <CardHeader 
-                    search={<Input icon={Search} placeholder="Search description, receipt..." value={search} onChange={e => setSearch(e.target.value)} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    search={<Input icon={Search} placeholder="Search description, receipt..." value={search} onChange={e => setSearch(e.target.value)} className="h-10 shadow-sm" />}
                     action={
                         <Btn size="sm" variant="secondary" onClick={() => setItems([...items, { id: Date.now(), type: 'Fuel', desc: '', amount: 0, receipt: '' }])}>
                             <Plus className="w-3.5 h-3.5" /> Add Row
@@ -133,20 +133,20 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                     minWidth="650px"
                 >
                     {filteredItems.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                             <Td>
                                 <input 
                                     value={item.receipt} 
                                     onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].receipt = e.target.value; setItems(n); }} 
                                     placeholder="e.g. RC-1234"
-                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full mono" 
+                                    className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 dark:focus:border-red-500 w-full mono" 
                                 />
                             </Td>
                             <Td>
                                 <select 
                                     value={item.type} 
                                     onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].type = e.target.value; setItems(n); }} 
-                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 bg-white w-full"
+                                    className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full"
                                 >
                                     <option>Toll</option>
                                     <option>Fuel</option>
@@ -160,7 +160,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                                     value={item.desc} 
                                     onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].desc = e.target.value; setItems(n); }} 
                                     placeholder="e.g. Expressway Toll"
-                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 w-full min-w-[120px]" 
+                                    className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 dark:focus:border-red-500 w-full min-w-[120px]" 
                                 />
                             </Td>
                             <Td right>
@@ -168,13 +168,13 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                                     type="number" 
                                     value={item.amount} 
                                     onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].amount = Number(e.target.value); setItems(n); }} 
-                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 text-right w-full min-w-[80px]" 
+                                    className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 dark:focus:border-red-500 text-right w-full min-w-[80px]" 
                                 />
                             </Td>
                             <Td center>
                                 <button 
                                     onClick={() => setItems(items.filter(x => x.id !== item.id))} 
-                                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    className="p-1.5 text-slate-300 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
@@ -182,10 +182,10 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                         </tr>
                     ))}
                 </Table>
-                <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-end items-center gap-4">
+                <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex flex-col sm:flex-row justify-end items-center gap-4">
                     <div className="text-right">
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Expense</p>
-                        <p className="text-3xl font-black text-slate-900 mono">฿{totalAmount}</p>
+                        <p className="text-xs text-current/60 font-bold uppercase tracking-wide">Total Expense</p>
+                        <p className="text-3xl font-black text-current font-bold mono">฿{totalAmount}</p>
                     </div>
                     <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> Save Voucher</Btn>
                 </div>

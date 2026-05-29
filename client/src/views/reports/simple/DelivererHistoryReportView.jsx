@@ -28,7 +28,7 @@ export default function DelivererHistoryReportView() {
                     {MOCK_DELIVERER_HISTORY.map(h => (
                         <Tr key={h.id}>
                             <Td bold mono className="text-xs">{h.id}</Td><Td>{h.date}</Td>
-                            <Td center className="text-xs font-bold text-slate-500">{h.time}</Td>
+                            <Td center className="text-xs font-bold text-current/60">{h.time}</Td>
                             <Td>{h.store}</Td><Td>{h.customer}</Td>
                             <Td right bold>฿{h.fee}</Td>
                             <Td center><Badge color="green">{h.status}</Badge></Td>

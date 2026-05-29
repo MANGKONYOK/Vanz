@@ -61,15 +61,14 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                         data={MOCK_DELIVERERS} onSelect={r => { field.onChange(`${r.id} – ${r.name}`); setSelected([]); setIsLovOpen(false); }} />
                 )}
             />
-            
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 transition-colors font-medium mb-2">
+                   <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors mb-2">
                 <ArrowLeft className="w-4 h-4" /> Back to Payments
             </button>
             
             <PageHeader title="Deliverer Payment" subtitle="Process payments for completed deliverer trips" />
             
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-4">Payment Header</h3>
+                <h3 className="font-bold text-current mb-4">Payment Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-end gap-3">
                         <div className="flex-1">
@@ -79,7 +78,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                                     onChange={e => setPaymentId(e.target.value.toUpperCase())} 
                                     placeholder="PAY-001" 
                                     readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 text-slate-500 font-mono' : 'font-mono'}
+                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
                                 />
                             </FormField>
                         </div>
@@ -91,11 +90,11 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                                     onChange={e => setAutoId(e.target.checked)}
                                     className="sr-only peer"
                                 />
-                                <div className="w-5 h-5 border-2 border-slate-200 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
+                                <div className="w-5 h-5 border-2 border-slate-200 dark:border-slate-700 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
                                     <Check size={12} strokeWidth={4} className={autoId ? 'scale-100' : 'scale-0'} />
                                 </div>
                             </div>
-                            <span className="text-sm font-bold text-slate-600 font-sans">Auto</span>
+                            <span className="text-sm font-bold text-current/75 font-sans">Auto</span>
                         </label>
                     </div>
                     <FormField label="Deliverer" required error={errors.deliverer?.message}>
@@ -134,7 +133,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
             
             <Card className="overflow-hidden">
                 <CardHeader 
-                    search={<Input icon={Search} placeholder="Search Order ID..." value={search} onChange={e => setSearch(e.target.value)} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    search={<Input icon={Search} placeholder="Search Order ID..." value={search} onChange={e => setSearch(e.target.value)} className="h-10 shadow-sm" />}
                     action={<Btn size="sm" variant="secondary" onClick={handleLoadOrders}><RefreshCw className="w-3.5 h-3.5" /> Load Orders</Btn>} 
                 />
                 <Table 
@@ -152,7 +151,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                 >
                     {filteredOrders.length === 0 ? (
                         <tr>
-                            <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-400 font-medium">
+                            <td colSpan={8} className="px-4 py-8 text-center text-sm text-current/50 font-medium bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                                 No unpaid orders found for the selected criteria.
                             </td>
                         </tr>
@@ -162,7 +161,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                                 <Td center>
                                     <input 
                                         type="checkbox" 
-                                        className="rounded accent-red-600 cursor-pointer" 
+                                        className="rounded accent-red-650 cursor-pointer" 
                                         checked={selected.includes(o.id)} 
                                         onChange={() => setSelected(p => p.includes(o.id) ? p.filter(x => x !== o.id) : [...p, o.id])} 
                                     />
@@ -178,12 +177,12 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                         ))
                     )}
                 </Table>
-                <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <p className="text-sm text-slate-500 font-medium">{selected.length} order(s) selected</p>
+                <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p className="text-sm text-current/60 font-medium">{selected.length} order(s) selected</p>
                     <div className="flex items-center gap-6">
                         <div className="text-right">
-                            <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Payment</p>
-                            <p className="text-3xl font-black text-slate-900 mono">฿{total}</p>
+                            <p className="text-xs text-current/60 font-bold uppercase tracking-wide">Total Payment</p>
+                            <p className="text-3xl font-black text-current font-bold mono">฿{total}</p>
                         </div>
                         <Btn onClick={handleSubmit(onSubmit)} size="lg">
                             <CreditCard className="w-4 h-4" /> Confirm Payment

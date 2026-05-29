@@ -90,14 +90,14 @@ export default function TopDeliverersReportView({ showToast }) {
             </FilterBar>
             <Card>
                 {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Calculating top deliverers…</div>
+                    <div className="py-12 text-center text-current/60 text-sm">Calculating top deliverers…</div>
                 ) : (
                     <Table headers={[
                         { label: 'Rank', center: true }, { label: 'Deliverer' }, { label: 'Vehicle' },
                         { label: 'Deliveries', right: true }, { label: 'Total Earnings', right: true }, { label: 'Rating', right: true },
                     ]}>
                         {rows.length === 0 ? (
-                            <tr><td colSpan={6} className="py-10 text-center text-slate-400 text-sm">
+                            <tr><td colSpan={6} className="py-10 text-center text-current/50 text-sm">
                                 {generated ? 'No delivery data found' : 'Set filters and click Generate'}
                             </td></tr>
                         ) : rows.map(d => (
@@ -106,9 +106,9 @@ export default function TopDeliverersReportView({ showToast }) {
                                 <Td bold>{d.name}</Td>
                                 <Td>{d.type}</Td>
                                 <Td right bold>{d.deliveries}</Td>
-                                <Td right bold className="text-emerald-600">฿{d.earnings.toLocaleString()}</Td>
+                                <Td right bold className="text-emerald-600 dark:text-emerald-400">฿{d.earnings.toLocaleString()}</Td>
                                 <td className="px-4 py-3 text-right">
-                                    <span className="flex items-center justify-end gap-1 font-bold text-amber-600">
+                                    <span className="flex items-center justify-end gap-1 font-bold text-amber-600 dark:text-amber-400">
                                         <Star className="w-4 h-4 fill-amber-400 text-amber-400" />{d.rating.toFixed(1)}
                                     </span>
                                 </td>

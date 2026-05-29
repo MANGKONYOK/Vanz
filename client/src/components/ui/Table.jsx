@@ -1,20 +1,20 @@
-import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
 
 export default function Table({ headers, children, minWidth = '500px', onSort, sortConfig }) {
     return (
         <div className="overflow-x-auto main-scrollbar">
             <table className="w-full text-sm text-left" style={{ minWidth }}>
-                <thead className="bg-slate-100 border-b border-slate-200">
+                <thead className="bg-slate-100 dark:bg-black/20 border-b border-slate-200 dark:border-red-900/50 transition-colors duration-300">
                     <tr>
                         {headers.map((h, i) => {
                             const isSortable = h.sortable && onSort;
                             const isSorted = sortConfig?.key === h.key;
                             
                             const textClass = isSorted 
-                                ? 'text-slate-900 font-extrabold' 
+                                ? 'text-current font-bold' 
                                 : isSortable 
-                                    ? 'text-slate-500 hover:text-slate-900 transition-colors duration-200' 
-                                    : 'text-slate-500';
+                                    ? 'text-current/60 hover:text-current/90 transition-colors duration-200' 
+                                    : 'text-current/60';
 
                             return (
                                 <th 
@@ -23,21 +23,23 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                                     style={{ width: h.width }}
                                     className={`px-4 py-3 text-[11px] uppercase tracking-wide whitespace-nowrap group select-none
                                         ${h.right ? 'text-right' : ''} ${h.center ? 'text-center' : ''} 
-                                        ${isSortable ? 'cursor-pointer hover:bg-slate-200/50 transition-colors' : ''}
+                                        ${isSortable ? 'cursor-pointer' : ''}
                                         ${textClass}`}
                                 >
-                                    <div className={`flex items-center gap-1 ${h.right ? 'justify-end' : h.center ? 'justify-center' : ''}`}>
+                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 -ml-2.5 rounded-md transition-colors
+                                        ${isSorted ? 'bg-slate-200/70 dark:bg-black/20 shadow-sm' : isSortable ? 'group-hover:bg-slate-200/40 dark:group-hover:bg-black/10' : ''}
+                                        ${h.right ? 'ml-auto mr-0 -mr-2.5 float-right' : h.center ? 'mx-auto' : ''}`}>
                                         <span>{h.label}</span>
                                         {isSortable && (
                                             <span className="inline-flex items-center min-h-[14px]">
                                                 {isSorted ? (
                                                     sortConfig.direction === 'asc' ? (
-                                                        <ArrowUp size={13} className="text-red-600 font-bold animate-bounce-subtle" />
+                                                        <ChevronUp size={14} className="text-current/70" />
                                                     ) : (
-                                                        <ArrowDown size={13} className="text-red-600 font-bold animate-bounce-subtle" />
+                                                        <ChevronDown size={14} className="text-current/70" />
                                                     )
                                                 ) : (
-                                                    <ArrowUpDown size={13} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-slate-400" />
+                                                    <ArrowUpDown size={14} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-current/50" />
                                                 )}
                                             </span>
                                         )}
@@ -47,16 +49,16 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                         })}
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">{children}</tbody>
+                <tbody className="divide-y divide-slate-100 dark:divide-red-900/50">{children}</tbody>
             </table>
         </div>
     );
 }
 
 export function Tr({ children, onClick }) {
-    return <tr onClick={onClick} className={`hover:bg-slate-50 transition-colors ${onClick ? 'cursor-pointer' : ''}`}>{children}</tr>;
+    return <tr onClick={onClick} className={`hover:bg-slate-50 dark:hover:bg-white/5 transition-colors ${onClick ? 'cursor-pointer' : ''}`}>{children}</tr>;
 }
 
 export function Td({ children, right, center, bold, mono, className = '' }) {
-    return <td className={`px-4 py-3 text-slate-800 ${right ? 'text-right' : ''} ${center ? 'text-center' : ''} ${bold ? 'font-bold text-slate-900' : ''} ${mono ? 'mono text-xs' : ''} ${className}`}>{children}</td>;
+    return <td className={`px-4 py-3 text-current/90 ${right ? 'text-right' : ''} ${center ? 'text-center' : ''} ${bold ? 'font-bold text-current' : ''} ${mono ? 'mono text-xs' : ''} ${className}`}>{children}</td>;
 }

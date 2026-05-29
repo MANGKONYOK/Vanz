@@ -50,3 +50,26 @@ body, html {
 /* Stat card hover */
 .stat-card { transition: transform 0.2s, box-shadow 0.2s; }
 .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+
+/* Interactive Dot Background */
+.bg-grid-pattern {
+    background-color: #f8fafc;
+    background-image: radial-gradient(rgba(148, 163, 184, 0.4) 1px, transparent 1px);
+    background-size: 24px 24px;
+    transition: background-color 0.3s ease;
+}
+
+.dark .bg-grid-pattern {
+    background-color: #0f172a;
+    background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+}
+
+/* Date Picker Icon & Text Adjustments in Dark Mode */
+.dark input {
+    color-scheme: dark;
+}
+
+.dark input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
