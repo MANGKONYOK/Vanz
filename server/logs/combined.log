@@ -3,3 +3,88 @@
 [2026-05-29T06:51:33.029Z] [INFO] Vanz API listening on port 3000
 [2026-05-29T06:54:08.190Z] [INFO] Vanz API listening on port 3000
 [2026-05-29T07:00:26.209Z] [INFO] Vanz API listening on port 3000
+[2026-05-29T15:36:55.313Z] [INFO] Vanz API listening on port 3000
+[2026-05-29T15:36:56.133Z] [INFO] Vanz API listening on port 3000
+[2026-05-29T16:00:43.327Z] [INFO] Vanz API listening on port 3000
+[2026-05-29T16:01:09.892Z] [INFO] Vanz API listening on port 3000
+[2026-05-29T16:01:29.871Z] [INFO] Vanz API listening on port 3000
+[2026-05-29T16:01:34.890Z] [INFO] GET /api/v1/orders
+[2026-05-29T16:01:34.918Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:01:34.918Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:01:34.919Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:01:34.919Z] [INFO] GET /api/v1/deliverers
+[2026-05-29T16:01:34.920Z] [INFO] GET /api/v1/expense-vouchers
+[2026-05-29T16:01:34.920Z] [INFO] GET /api/v1/deliveries
+[2026-05-29T16:01:34.921Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:01:34.921Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:01:34.921Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:01:34.922Z] [INFO] GET /api/v1/deliverers
+[2026-05-29T16:01:34.922Z] [INFO] GET /api/v1/expense-vouchers
+[2026-05-29T16:01:34.924Z] [INFO] GET /api/v1/orders
+[2026-05-29T16:01:34.925Z] [INFO] GET /api/v1/deliveries
+[2026-05-29T16:01:36.206Z] [INFO] GET /api/v1/orders
+[2026-05-29T16:01:36.208Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:01:36.208Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:01:36.209Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:01:36.209Z] [INFO] GET /api/v1/deliverers
+[2026-05-29T16:01:36.210Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:01:36.210Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:01:36.210Z] [INFO] GET /api/v1/deliverers
+[2026-05-29T16:01:36.211Z] [INFO] GET /api/v1/orders
+[2026-05-29T16:01:36.211Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:01:40.475Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:01:40.476Z] [INFO] GET /api/v1/store-products
+[2026-05-29T16:01:40.476Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:01:40.477Z] [INFO] GET /api/v1/store-products
+[2026-05-29T16:01:40.887Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:01:40.888Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:01:40.890Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:01:40.891Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:01:42.144Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:01:42.144Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:01:42.145Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:01:42.145Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:01:42.145Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:01:42.146Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:01:44.656Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:01:44.658Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:01:44.658Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:01:44.659Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:01:45.023Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:01:45.024Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:01:45.025Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:01:45.026Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:01:45.027Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:01:45.027Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:02:23.258Z] [INFO] Vanz API listening on port 3000
+[2026-05-29T16:02:28.891Z] [INFO] Vanz API listening on port 3000
+[2026-05-29T16:02:45.608Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:03:44.245Z] [INFO] Vanz API listening on port 3000
+[2026-05-29T16:03:46.966Z] [INFO] GET /api/v1/orders
+[2026-05-29T16:03:46.968Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:03:46.968Z] [INFO] GET /api/v1/deliverers
+[2026-05-29T16:03:46.968Z] [INFO] GET /api/v1/expense-vouchers
+[2026-05-29T16:03:46.969Z] [INFO] GET /api/v1/deliveries
+[2026-05-29T16:03:46.969Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:03:47.242Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:03:47.370Z] [INFO] GET /api/v1/orders
+[2026-05-29T16:03:47.643Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:03:47.651Z] [INFO] GET /api/v1/deliveries
+[2026-05-29T16:03:47.653Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:03:47.673Z] [INFO] GET /api/v1/deliverers
+[2026-05-29T16:03:47.674Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:03:47.810Z] [INFO] GET /api/v1/expense-vouchers
+[2026-05-29T16:03:51.978Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:03:51.980Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:03:52.116Z] [INFO] GET /api/v1/stores
+[2026-05-29T16:03:52.124Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:03:52.423Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:03:52.424Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:03:52.424Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:03:52.564Z] [INFO] GET /api/v1/addresses
+[2026-05-29T16:03:52.567Z] [INFO] GET /api/v1/profiles
+[2026-05-29T16:03:52.567Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:03:53.612Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:03:53.751Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:03:57.358Z] [INFO] GET /api/v1/customers
+[2026-05-29T16:03:57.495Z] [INFO] GET /api/v1/customers

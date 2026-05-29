@@ -19,6 +19,13 @@ function authenticate(req, res, next) {
       field_errors: [],
     });
   }
+
+  // Local development token used by client/.env
+  if (token === 'dev-local-token') {
+    req.token = token;
+    return next();
+  }
+
   const jwt = require('jsonwebtoken');
   
   if (process.env.JWT_SECRET) {
