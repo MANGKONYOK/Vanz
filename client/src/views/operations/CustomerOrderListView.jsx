@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal } from '../../components/ui';
 import { INITIAL_ORDERS } from '../../data/mockData';
 
 export default function CustomerOrderListView({ onNavigate, showToast }) {
@@ -9,11 +9,13 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
     const [sort, setSort] = useState({ key: 'date', direction: 'desc' });
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-    const handleDelete = (id) => {
-        if (window.confirm(`Are you sure you want to delete order ${id}?`)) {
-            setOrders(prev => prev.filter(o => o.id !== id));
-            showToast(`Order ${id} deleted successfully`, 'error');
+    const confirmDelete = () => {
+        if (confirmDeleteId) {
+            setOrders(prev => prev.filter(o => o.id !== confirmDeleteId));
+            showToast(`Order ${confirmDeleteId} deleted successfully`, 'error');
+            setConfirmDeleteId(null);
         }
     };
 
@@ -88,7 +90,7 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                             <Td right>
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(o)}><Edit2 className="w-3 h-3" /> Edit</Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(o.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
+                                    <Btn size="sm" variant="danger" onClick={() => setConfirmDeleteId(o.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
                                 </div>
                             </Td>
                         </Tr>
@@ -104,6 +106,14 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                     itemLabel="orders"
                 />
             </Card>
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete Customer Order"
+                message={`Are you sure you want to delete order ${confirmDeleteId}? This action will permanently remove the order record from the system.`}
+                onConfirm={confirmDelete}
+            />
         </div>
     );
 }

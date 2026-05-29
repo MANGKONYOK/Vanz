@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal } from '../../components/ui';
 
 const INITIAL_PAYMENTS = [
     { id: 'PAY-2026-000456', period: 'Mar 2026', date: '2026-03-24', delivererName: 'Somchai Jaidee', status: 'PAID', amount: 2450 },
@@ -14,11 +14,13 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
     const [sort, setSort] = useState({ key: 'date', direction: 'desc' });
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-    const handleDelete = (id) => {
-        if (window.confirm(`Are you sure you want to delete payment ${id}?`)) {
-            setPayments(prev => prev.filter(p => p.id !== id));
-            showToast(`Payment ${id} deleted successfully`, 'error');
+    const confirmDelete = () => {
+        if (confirmDeleteId) {
+            setPayments(prev => prev.filter(p => p.id !== confirmDeleteId));
+            showToast(`Payment ${confirmDeleteId} deleted successfully`, 'error');
+            setConfirmDeleteId(null);
         }
     };
 
@@ -96,7 +98,7 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                             <Td right>
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(p)}><Edit2 className="w-3 h-3" /> Edit</Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(p.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
+                                    <Btn size="sm" variant="danger" onClick={() => setConfirmDeleteId(p.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
                                 </div>
                             </Td>
                         </Tr>
@@ -112,6 +114,14 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                     itemLabel="payments"
                 />
             </Card>
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete Deliverer Payment"
+                message={`Are you sure you want to delete payment record ${confirmDeleteId}? This action will permanently remove the payment log from the system.`}
+                onConfirm={confirmDelete}
+            />
         </div>
     );
 }

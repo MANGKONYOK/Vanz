@@ -8,7 +8,7 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                     <tr>
                         {headers.map((h, i) => {
                             const isSortable = h.sortable && onSort;
-                            const isSorted = sortConfig?.key === h.key;
+                            const isSorted = h.key && sortConfig?.key === h.key;
                             
                             const textClass = isSorted 
                                 ? 'text-current font-bold' 
@@ -26,24 +26,26 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                                         ${isSortable ? 'cursor-pointer' : ''}
                                         ${textClass}`}
                                 >
-                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 -ml-2.5 rounded-md transition-colors
-                                        ${isSorted ? 'bg-slate-200/70 dark:bg-black/20 shadow-sm' : isSortable ? 'group-hover:bg-slate-200/40 dark:group-hover:bg-black/10' : ''}
-                                        ${h.right ? 'ml-auto mr-0 -mr-2.5 float-right' : h.center ? 'mx-auto' : ''}`}>
-                                        <span>{h.label}</span>
-                                        {isSortable && (
-                                            <span className="inline-flex items-center min-h-[14px]">
-                                                {isSorted ? (
-                                                    sortConfig.direction === 'asc' ? (
-                                                        <ChevronUp size={14} className="text-current/70" />
+                                    {h.label ? (
+                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 -ml-2.5 rounded-md transition-colors
+                                            ${isSorted ? 'bg-slate-200/70 dark:bg-black/20 shadow-sm' : isSortable ? 'group-hover:bg-slate-200/40 dark:group-hover:bg-black/10' : ''}
+                                            ${h.right ? 'ml-auto mr-0 -mr-2.5 float-right' : h.center ? 'mx-auto' : ''}`}>
+                                            <span>{h.label}</span>
+                                            {isSortable && (
+                                                <span className="inline-flex items-center min-h-[14px]">
+                                                    {isSorted ? (
+                                                        sortConfig.direction === 'asc' ? (
+                                                            <ChevronUp size={14} className="text-current/70" />
+                                                        ) : (
+                                                            <ChevronDown size={14} className="text-current/70" />
+                                                        )
                                                     ) : (
-                                                        <ChevronDown size={14} className="text-current/70" />
-                                                    )
-                                                ) : (
-                                                    <ArrowUpDown size={14} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-current/50" />
-                                                )}
-                                            </span>
-                                        )}
-                                    </div>
+                                                        <ArrowUpDown size={14} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-current/50" />
+                                                    )}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) : null}
                                 </th>
                             );
                         })}

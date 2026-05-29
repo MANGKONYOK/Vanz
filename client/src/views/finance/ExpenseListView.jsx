@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal } from '../../components/ui';
 import { INITIAL_EXPENSE_VOUCHERS } from '../../data/mockData';
 
 export default function ExpenseListView({ onNavigate, showToast }) {
@@ -9,11 +9,13 @@ export default function ExpenseListView({ onNavigate, showToast }) {
     const [sort, setSort] = useState({ key: 'date', direction: 'desc' });
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-    const handleDelete = (id) => {
-        if (window.confirm(`Are you sure you want to delete voucher ${id}?`)) {
-            setVouchers(prev => prev.filter(v => v.id !== id));
-            showToast(`Voucher ${id} deleted successfully`, 'error');
+    const confirmDelete = () => {
+        if (confirmDeleteId) {
+            setVouchers(prev => prev.filter(v => v.id !== confirmDeleteId));
+            showToast(`Voucher ${confirmDeleteId} deleted successfully`, 'error');
+            setConfirmDeleteId(null);
         }
     };
 
@@ -91,7 +93,7 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                             <Td right>
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(v)}><Edit2 className="w-3 h-3" /> Edit</Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(v.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
+                                    <Btn size="sm" variant="danger" onClick={() => setConfirmDeleteId(v.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
                                 </div>
                             </Td>
                         </Tr>
@@ -107,6 +109,14 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                     itemLabel="vouchers"
                 />
             </Card>
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete Expense Voucher"
+                message={`Are you sure you want to delete expense voucher ${confirmDeleteId}? This action will permanently remove the voucher record from the system.`}
+                onConfirm={confirmDelete}
+            />
         </div>
     );
 }

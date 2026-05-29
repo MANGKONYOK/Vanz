@@ -59,8 +59,8 @@ export default function CustomerFormView({ data, onBack, showToast }) {
                                         onChange={e => setAutoId(e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-5 h-5 border-2 border-slate-200 dark:border-slate-700 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
-                                        <Check size={12} strokeWidth={4} className={autoId ? 'scale-100' : 'scale-0'} />
+                                    <div className="w-5 h-5 border-2 border-slate-300 dark:border-white bg-transparent rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
+                                        <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
                                     </div>
                                 </div>
                                 <span className="text-sm font-bold text-current/75">Auto</span>
