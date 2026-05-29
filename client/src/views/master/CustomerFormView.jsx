@@ -1,18 +1,26 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Save, Check } from 'lucide-react';
 import { FormField, Input, Card, Btn } from '../../components/ui';
+import { customerSchema } from '../../schemas/master';
 
 export default function CustomerFormView({ data, onBack, showToast }) {
     const isNew = !data.id;
     const [id, setId] = useState(data.id || '');
     const [autoId, setAutoId] = useState(isNew);
-    const [name, setName] = useState(data.name || '');
-    const [phone, setPhone] = useState(data.phone || '');
-    const [address, setAddress] = useState(data.address || '');
-    const [description, setDescription] = useState(data.description || '');
 
-    const handleSave = () => {
-        if (!name.trim() || !phone.trim()) return showToast('Please fill all required fields', 'error');
+    const { register, handleSubmit, formState: { errors } } = useForm({
+        resolver: zodResolver(customerSchema),
+        defaultValues: {
+            name: data.name || '',
+            phone: data.phone || '',
+            address: data.address || '',
+            description: data.description || '',
+        }
+    });
+
+    const onSubmit = (formData) => {
         if (!autoId && !id.trim()) return showToast('Please enter a Customer ID', 'error');
         showToast('Customer saved!'); onBack();
     };
@@ -58,33 +66,32 @@ export default function CustomerFormView({ data, onBack, showToast }) {
                                 <span className="text-sm font-bold text-slate-600">Auto</span>
                             </label>
                         </div>
-                        <FormField label="Address">
-                            <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Delivery address" />
+                        <FormField label="Address" error={errors.address?.message}>
+                            <Input {...register('address')} placeholder="Delivery address" />
                         </FormField>
                     </div>
 
                     <div className="space-y-4">
-                        <FormField label="Full Name" required>
-                            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Customer name" />
+                        <FormField label="Full Name" required error={errors.name?.message}>
+                            <Input {...register('name')} placeholder="Customer name" />
                         </FormField>
-                        <FormField label="Phone Number" required>
-                            <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="0xx-xxx-xxxx" type="tel" />
+                        <FormField label="Phone Number" required error={errors.phone?.message}>
+                            <Input {...register('phone')} placeholder="0xx-xxx-xxxx" type="tel" />
                         </FormField>
                     </div>
 
                     <div className="md:col-span-2 mt-2">
-                        <FormField label="Description">
-                            <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter details or notes about the customer..." />
+                        <FormField label="Description" error={errors.description?.message}>
+                            <Input {...register('description')} placeholder="Enter details or notes about the customer..." />
                         </FormField>
                     </div>
                 </div>
 
                 <div className="flex justify-end gap-3 mt-8 pt-5 border-t border-slate-100">
                     <Btn variant="secondary" onClick={onBack}>Cancel</Btn>
-                    <Btn onClick={handleSave}><Save className="w-4 h-4" /> Save Customer</Btn>
+                    <Btn onClick={handleSubmit(onSubmit)}><Save className="w-4 h-4" /> Save Customer</Btn>
                 </div>
             </Card>
         </div>
     );
 }
-

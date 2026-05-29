@@ -1,30 +1,28 @@
 'use strict';
 const model = require('../models/stores.model');
+const { schemas } = require('../schemas');
 const { ValidationError, NotFoundError } = require('../utils/errors');
-const VALID_STATUS = ['ACTIVE', 'INACTIVE', 'SUSPENDED'];
+
+function toFieldErrors(zodError) {
+  return zodError.issues.map(issue => ({
+    field: `requestBody.${issue.path.join('.')}`,
+    reason: issue.message,
+  }));
+}
 
 exports.list = (q) => model.findAll(q);
 
 exports.create = async (data) => {
-  const fe = [];
-  if (!data.name)       fe.push({ field: 'requestBody.name',       reason: 'required' });
-  if (!data.address_id) fe.push({ field: 'requestBody.address_id', reason: 'required' });
-  if (!data.category)   fe.push({ field: 'requestBody.category',   reason: 'required' });
-  if (data.status && !VALID_STATUS.includes(data.status))
-    fe.push({ field: 'requestBody.status', reason: `must be one of ${VALID_STATUS.join(', ')}` });
-  if (fe.length) throw new ValidationError('Invalid store input', fe);
+  const result = schemas.storeCreate.safeParse(data);
+  if (!result.success) throw new ValidationError('Invalid store input', toFieldErrors(result.error));
   return model.create(data);
 };
 
 exports.update = async (code, data) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Store ${code} not found`);
-  const fe = [];
-  if (data.status !== undefined && !VALID_STATUS.includes(data.status))
-    fe.push({ field: 'requestBody.status', reason: `must be one of ${VALID_STATUS.join(', ')}` });
-  if (data.rating !== undefined && (isNaN(data.rating) || data.rating < 0 || data.rating > 5))
-    fe.push({ field: 'requestBody.rating', reason: 'must be between 0 and 5' });
-  if (fe.length) throw new ValidationError('Invalid store input', fe);
+  const result = schemas.storeUpdate.safeParse(data);
+  if (!result.success) throw new ValidationError('Invalid store input', toFieldErrors(result.error));
   return model.update(existing.store_id, data);
 };
 

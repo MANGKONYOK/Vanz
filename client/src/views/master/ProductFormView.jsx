@@ -1,25 +1,34 @@
 import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Save, Check } from 'lucide-react';
 import { FormField, Input, Card, Btn, LovInput, LovModal } from '../../components/ui';
 import { MOCK_STORES } from '../../data/mockData';
+import { productSchema } from '../../schemas/master';
 
 export default function ProductFormView({ data, onBack, showToast }) {
     const isNew = !data.id;
     const [id, setId] = useState(data.id || '');
     const [autoId, setAutoId] = useState(isNew);
-    const [active, setActive] = useState(data.active !== false);
-    const [store, setStore] = useState(data.storeId ? `${data.storeId} – ${data.store}` : '');
     const [storeIsLov, setStoreIsLov] = useState(false);
-    const [name, setName] = useState(data.name || '');
-    const [category, setCategory] = useState(data.category || 'Main Dish');
-    const [price, setPrice] = useState(data.price || '');
 
-    const handleSave = () => {
-        if (!store || !name.trim() || price === '') {
-            return showToast('Please fill all required fields', 'error');
+    const { register, handleSubmit, formState: { errors }, control, watch, setValue } = useForm({
+        resolver: zodResolver(productSchema),
+        defaultValues: {
+            store: data.storeId ? `${data.storeId} – ${data.store}` : '',
+            name: data.name || '',
+            price: data.price || '',
+            category: data.category || 'Main Dish',
+            active: data.active !== false,
         }
+    });
+
+    const store = watch('store');
+    const category = watch('category');
+    const active = watch('active');
+
+    const onSubmit = (formData) => {
         if (!autoId && !id.trim()) return showToast('Please enter a Product ID', 'error');
-        if (Number(price) < 0) return showToast('Price cannot be negative', 'error');
         showToast('Product saved!'); onBack();
     };
 
@@ -29,7 +38,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
         <div className="fade-in space-y-5">
             <LovModal isOpen={storeIsLov} onClose={() => setStoreIsLov(false)} title="Store"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Store Name' }, { key: 'category', label: 'Category' }]} data={MOCK_STORES}
-                onSelect={r => { setStore(`${r.id} – ${r.name}`); setStoreIsLov(false); }} />
+                onSelect={r => { setValue('store', `${r.id} – ${r.name}`); setStoreIsLov(false); }} />
             <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Products</button>
             <Card className="p-5">
                 <h3 className="font-bold text-slate-900 mb-6">{data.id ? `Edit: ${data.name}` : 'New Product'}</h3>
@@ -64,20 +73,20 @@ export default function ProductFormView({ data, onBack, showToast }) {
                                 <span className="text-sm font-bold text-slate-600 font-sans">Auto</span>
                             </label>
                         </div>
-                        <FormField label="Product Name" required>
-                            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Menu item name" />
+                        <FormField label="Product Name" required error={errors.name?.message}>
+                            <Input {...register('name')} placeholder="Menu item name" />
                         </FormField>
-                        <FormField label="Unit Price" required>
-                            <Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" />
+                        <FormField label="Unit Price" required error={errors.price?.message}>
+                            <Input type="number" {...register('price')} placeholder="0" />
                         </FormField>
                     </div>
 
                     {/* Row 2: Store (LoV) | Category (toggle list) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <FormField label="Store" required>
+                        <FormField label="Store" required error={errors.store?.message}>
                             <LovInput value={store} onLov={() => setStoreIsLov(true)} placeholder="Select store..." />
                         </FormField>
-                        <FormField label="Category" required>
+                        <FormField label="Category" required error={errors.category?.message}>
                             <div className="flex flex-wrap gap-2 mt-1">
                                 {['Main Dish', 'Drinks', 'Appetizer', 'Dessert', 'Other'].map(cat => {
                                     const isSelected = category === cat;
@@ -85,7 +94,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
                                         <button
                                             key={cat}
                                             type="button"
-                                            onClick={() => setCategory(cat)}
+                                            onClick={() => setValue('category', cat)}
                                             className={`px-4 py-2 text-xs font-bold rounded-xl transition-all border ${
                                                 isSelected
                                                     ? 'bg-red-500 border-red-500 text-white shadow-sm'
@@ -106,7 +115,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
                             <div className="bg-slate-100 p-1 rounded-xl flex w-full max-w-[240px] border border-slate-200/50 mt-1">
                                 <button
                                     type="button"
-                                    onClick={() => setActive(true)}
+                                    onClick={() => setValue('active', true)}
                                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
                                         active
                                             ? 'bg-red-500 text-white shadow-sm font-extrabold'
@@ -117,7 +126,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setActive(false)}
+                                    onClick={() => setValue('active', false)}
                                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
                                         !active
                                             ? 'bg-slate-400 text-white shadow-sm font-extrabold'
@@ -133,7 +142,7 @@ export default function ProductFormView({ data, onBack, showToast }) {
 
                 <div className="flex justify-end gap-3 mt-8 pt-5 border-t border-slate-100">
                     <Btn variant="secondary" onClick={onBack}>Cancel</Btn>
-                    <Btn onClick={handleSave}><Save className="w-4 h-4" /> Save</Btn>
+                    <Btn onClick={handleSubmit(onSubmit)}><Save className="w-4 h-4" /> Save</Btn>
                 </div>
             </Card>
         </div>

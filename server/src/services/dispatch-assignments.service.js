@@ -1,26 +1,29 @@
 'use strict';
 const model = require('../models/dispatch-assignments.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
+const { schemas } = require('../schemas');
+
+function toFieldErrors(zodError) {
+  return zodError.issues.map(issue => ({
+    field: `requestBody.${issue.path.join('.')}`,
+    reason: issue.message,
+  }));
+}
 const VALID_STATUS = ['PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'];
 
 exports.list = (q) => model.findAll(q);
 
 exports.create = async (data) => {
-  const fe = [];
-  if (!data.order_code)     fe.push({ field: 'requestBody.order_code',     reason: 'required' });
-  if (!data.deliverer_code) fe.push({ field: 'requestBody.deliverer_code', reason: 'required' });
-  if (fe.length) throw new ValidationError('Invalid dispatch assignment input', fe);
+  const result = schemas.dispatchAssignmentCreate.safeParse(data);
+  if (!result.success) throw new ValidationError('Invalid dispatch assignment input', toFieldErrors(result.error));
   return model.create(data);
 };
 
 exports.update = async (id, data) => {
   const existing = await model.findById(id);
   if (!existing) throw new NotFoundError(`Dispatch Assignment ${id} not found`);
-  const fe = [];
-  if (!data.status) fe.push({ field: 'requestBody.status', reason: 'required' });
-  if (data.status && !VALID_STATUS.includes(data.status))
-    fe.push({ field: 'requestBody.status', reason: `must be one of ${VALID_STATUS.join(', ')}` });
-  if (fe.length) throw new ValidationError('Invalid dispatch assignment input', fe);
+  const result = schemas.dispatchAssignmentUpdate.safeParse(data);
+  if (!result.success) throw new ValidationError('Invalid dispatch assignment input', toFieldErrors(result.error));
   return model.update(id, data);
 };
 

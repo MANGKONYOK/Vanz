@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Save, Plus, Trash2, Check } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { MOCK_STORES, MOCK_PRODUCTS } from '../../data/mockData';
+import { promotionSchema } from '../../schemas/master';
 
 export default function PromotionFormView({ data, onNavigateBack, showToast }) {
     const isNew = !data;
@@ -9,32 +12,39 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
     const [items, setItems] = useState([{ id: 1, productId: '', productName: '', discount: 0 }]);
     const [isLovOpen, setIsLovOpen] = useState(false);
     const [lovIdx, setLovIdx] = useState(null);
-    const [store, setStore] = useState(editData.storeId ? `${editData.storeId} – ${editData.store}` : '');
     const [storeIsLov, setStoreIsLov] = useState(false);
-    const [name, setName] = useState(editData.name || '');
-    const [startDate, setStartDate] = useState(editData.startDate || '');
-    const [endDate, setEndDate] = useState(editData.endDate || '');
-    const [discountType, setDiscountType] = useState(editData.discountType || 'PERCENTAGE');
     const [promoCode, setPromoCode] = useState(editData.id || '');
     const [autoCode, setAutoCode] = useState(isNew);
 
+    const { register, handleSubmit, formState: { errors }, control, watch, setValue } = useForm({
+        resolver: zodResolver(promotionSchema),
+        defaultValues: {
+            store: editData.storeId ? `${editData.storeId} – ${editData.store}` : '',
+            name: editData.name || '',
+            discountType: editData.discountType || 'PERCENTAGE',
+            startDate: editData.startDate || '',
+            endDate: editData.endDate || '',
+        }
+    });
+
+    const store = watch('store');
+    const discountType = watch('discountType');
+
     const displayCode = autoCode ? (promoCode || 'PROMO-AUTO') : promoCode;
 
-    const handleSave = () => {
+    const onSubmit = (formData) => {
         if (!autoCode && !promoCode.trim()) return showToast('Please enter a Campaign Code', 'error');
-        if (!store) return showToast('Please select a target store', 'error');
-        if (!name.trim()) return showToast('Campaign Name is required', 'error');
-        if (!startDate || !endDate) return showToast('Please specify both Start and End Dates', 'error');
-        if (new Date(endDate) < new Date(startDate)) return showToast('End Date cannot be before Start Date', 'error');
+        if (new Date(formData.endDate) < new Date(formData.startDate)) return showToast('End Date cannot be before Start Date', 'error');
         if (items.length === 0) return showToast('Must include at least one product in the campaign', 'error');
         if (items.some(i => !i.productName || i.discount <= 0)) return showToast('All products must have valid positive discounts', 'error');
         showToast('Promotion Campaign saved successfully!'); onNavigateBack();
     };
+
     return (
         <div className="fade-in space-y-5">
             <LovModal isOpen={storeIsLov} onClose={() => setStoreIsLov(false)} title="Store"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Store' }, { key: 'category', label: 'Category' }]}
-                data={MOCK_STORES} onSelect={r => { setStore(`${r.id} – ${r.name}`); setStoreIsLov(false); }} />
+                data={MOCK_STORES} onSelect={r => { setValue('store', `${r.id} – ${r.name}`); setStoreIsLov(false); }} />
             <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Product"
                 columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Product' }, { key: 'price', label: 'Price' }]}
                 data={MOCK_PRODUCTS} onSelect={r => { if (lovIdx !== null) { const n = [...items]; n[lovIdx].productName = r.name; n[lovIdx].productId = r.id; setItems(n); } setIsLovOpen(false); setLovIdx(null); }} />
@@ -69,15 +79,21 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                             <span className="text-sm font-bold text-slate-600 font-sans">Auto</span>
                         </label>
                     </div>
-                    <FormField label="Campaign Name" required><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Summer Sale" /></FormField>
-                    <FormField label="Store" required>
+                    <FormField label="Campaign Name" required error={errors.name?.message}><Input {...register('name')} placeholder="e.g. Summer Sale" /></FormField>
+                    <FormField label="Store" required error={errors.store?.message}>
                         <LovInput value={store} onLov={() => setStoreIsLov(true)} placeholder="Select store..." />
                     </FormField>
-                    <FormField label="Discount Type" required>
-                        <Select value={discountType} onChange={e => setDiscountType(e.target.value)}><option value="PERCENTAGE">Percentage</option><option value="FIXED_AMOUNT">Fixed Amount</option></Select>
+                    <FormField label="Discount Type" required error={errors.discountType?.message}>
+                        <Controller
+                            name="discountType"
+                            control={control}
+                            render={({ field }) => (
+                                <Select value={field.value} onChange={field.onChange}><option value="PERCENTAGE">Percentage</option><option value="FIXED_AMOUNT">Fixed Amount</option></Select>
+                            )}
+                        />
                     </FormField>
-                    <FormField label="Start Date" required><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></FormField>
-                    <FormField label="End Date" required><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></FormField>
+                    <FormField label="Start Date" required error={errors.startDate?.message}><Input type="date" {...register('startDate')} /></FormField>
+                    <FormField label="End Date" required error={errors.endDate?.message}><Input type="date" {...register('endDate')} /></FormField>
                 </div>
             </Card>
             <Card className="overflow-hidden">
@@ -101,7 +117,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                     ))}
                 </Table>
                 <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-                    <Btn onClick={handleSave} size="lg"><Save className="w-4 h-4" /> Save Campaign</Btn>
+                    <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> Save Campaign</Btn>
                 </div>
             </Card>
         </div>
