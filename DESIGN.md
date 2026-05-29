@@ -110,6 +110,19 @@ Dashboard and all Report views use `useEffect([])` (single fetch on mount, no ti
 - Product list = `/store-products` + `/stores` joined by `store_id`
 - Dashboard = `/orders` + `/deliverers` + `/expense-vouchers` + `/deliveries` + `/stores` + `/customers` + `/profiles`
 
+**Business code preview (Add forms)** — `src/api/codeGen.js`:  
+Every "Add" form (Customer, Deliverer, Store) displays a predicted next code in a read-only field. The code is computed client-side by fetching the current list and calling `nextCode(codes, prefix, padLen)`. The server always generates the *real* code from the inserted row's ID and the preview is purely informational.
+
+| Form | Prefix | Pad | Example |
+|------|--------|-----|---------|
+| Customer | `CUST-` | 4 | `CUST-0007` |
+| Deliverer | `DLV-` | 4 | `DLV-0003` |
+| Store | `STR-` | 4 | `STR-0012` |
+| Promotion | `PROMO-` | 4 | `PROMO-0005` |
+| Order (year-scoped) | `ORD-YYYY-` | 6 | `ORD-2026-000042` |
+| Payment (year-scoped) | `PAY-YYYY-` | 6 | `PAY-2026-000018` |
+| Expense Voucher (year-scoped) | `EXP-YYYY-` | 6 | `EXP-2026-000009` |
+
 ### 2.2 Folder Structure
 
 ```
@@ -120,7 +133,8 @@ client/src/
 ├── main.jsx                       ← ReactDOM entry
 ├── assets/                        ← Static images
 ├── api/
-│   └── http.js                    ← Axios client (baseURL, Bearer token, helpers)
+│   ├── http.js                    ← Axios client (baseURL, Bearer token, helpers)
+│   └── codeGen.js                 ← Business code generator (nextCode, nextYearCode)
 ├── data/
 │   ├── mockData.js                ← Legacy boot-time loader (unused — no view imports it)
 │   └── liveData.js                ← Re-exports from mockData (unused — compatibility layer)
@@ -822,10 +836,15 @@ Blocked by API when customer has orders, reviews, or favourite stores.
 
 | Field | Required | Notes |
 |-------|----------|-------|
+| Customer Code | — | Read-only; shows predicted next code via `nextCode` |
 | Full Name | Yes | maps to profile.full_name |
 | Phone Number | Yes | maps to profile.phone |
-| Membership Level | — | Select: STANDARD / GOLD / PLATINUM |
-| Address | — | maps to address.address_line_1 |
+| Email | — | maps to profile.email |
+| Membership Level | Yes | Select: STANDARD / GOLD / PLATINUM |
+| Address | Yes | maps to address.address_line_1 |
+| City | Yes | maps to address.city (required by POST /addresses) |
+
+> `address_name` = full_name, `address_type` = `HOME`, `country_code` = `TH` (hardcoded defaults).
 
 #### API
 - `GET /api/v1/customers` · `GET /api/v1/profiles` · `GET /api/v1/addresses`
@@ -889,11 +908,13 @@ useEffect([tick])
 
 | Field | Required | Type |
 |-------|----------|------|
+| Deliverer Code | — | Read-only; shows predicted next code via `nextCode` |
 | Full Name | Yes | Input |
-| License Plate | Yes | Input |
+| License Plate | Yes | Input (auto-uppercased) |
 | Phone Number | Yes | Input |
+| Email | — | Input |
 | Vehicle Type | Yes | Select: MOTORCYCLE / CAR / BICYCLE / SCOOTER / VAN / TRUCK |
-| Status | — | Select: Active (AVAILABLE) / Busy (BUSY) / Inactive (OFFLINE) |
+| Status | — | 3-way toggle: Active (AVAILABLE) / Busy (BUSY) / Inactive (OFFLINE) |
 
 #### API
 - `GET /api/v1/deliverers` + `GET /api/v1/profiles`
@@ -955,12 +976,15 @@ useEffect([tick])
 
 | Field | Required | Type |
 |-------|----------|------|
+| Store Code | — | Read-only; shows predicted next code via `nextCode` |
 | Store Name | Yes | Input |
-| Category | Yes | Select: Thai Food / Japanese / Chinese / Western / Cafe & Drinks / Fast Food / Bakery / Grocery / Other |
+| Category | Yes | Select: THAI_FOOD / JAPANESE / CHINESE / WESTERN / CAFE_DRINKS / FAST_FOOD / BAKERY / GROCERY / OTHER |
 | Status | — | Select: ACTIVE / INACTIVE / SUSPENDED |
-| Address | Yes | Input (full-width, col-span-2) |
+| City | Yes | Input (maps to address.city) |
+| Address | Yes | Input (full-width, col-span-2 — maps to address.address_line_1) |
 
-> **Note:** `phone` and `operating_hours` are not in the Store database table and are not captured in the form.
+> `address_type` = `STORE`, `country_code` = `TH` (hardcoded defaults).  
+> `phone` and `operating_hours` are not in the Store database table and are not captured in the form.
 
 #### API
 - `GET /api/v1/stores` + `GET /api/v1/addresses`
@@ -1022,13 +1046,15 @@ useEffect([tick])
 
 | Field | Required | Type |
 |-------|----------|------|
-| Store | Yes (new only) | `LovInput` → `LovModal` (live store list); read-only on edit |
+| Product ID | — | Read-only integer (server-assigned) |
+| Store | Yes (new only) | `LovInput` → `LovModal` (live store list from parent); read-only on edit |
 | Product Name | Yes | Input |
-| Unit Price (฿) | Yes | Input number (≥ 0) |
-| Status | — | Custom toggle: Available (AVAILABLE) / Unavailable (UNAVAILABLE) |
+| Unit Price (฿) | Yes | Input number (≥ 0, step 0.01) |
+| Status | — | Select: AVAILABLE / OUT_OF_STOCK / UNAVAILABLE / DISCONTINUED |
 
 > **Note:** `category` is not a field in Store_Products — it belongs to the store itself.  
-> Path param is **integer** `product_id`, not a business code.
+> Path param is **integer** `product_id`, not a business code.  
+> The store list is fetched once by `ProductListView` and passed as a `stores` prop to `ProductFormView` to avoid duplicate requests.
 
 #### API
 - `GET /api/v1/store-products` + `GET /api/v1/stores`
@@ -1418,7 +1444,7 @@ Card → Table (results)
 | 2 | `Store_Products` has no `code` column in DB | API.md v1.0 used `product_code` path param | **Fixed** in API v1.1 → uses `product_id` (integer) |
 | 3 | `Order.status` typed as `int8` in DB schema | Documentation error | Should be `enum` — DB column is correct, markdown typo |
 | 4 | `Order_Items.unit_price` typed as `text` in DB | Documentation error | Should be `numeric` — markdown typo |
-| 5 | `StoreListView` has `phone` + `operating_hours` | Neither exists in `Store` table | Either add fields to DB or remove from UI |
+| 5 | `StoreListView` / `StoreFormView` had `phone` + `operating_hours` | Neither exists in `Store` table | **Fixed** — fields removed; `City` added (required by address API) |
 | 6 | `CustomerOrderFormView` has `payment_method` | Not in `Order` table | Remove from UI or add to DB |
 | 7 | `payments.service.js` and `expense-vouchers.service.js` validated `delivery_code` | Server rejected valid POST bodies | **Fixed** — both services now validate `delivery_id` (positive integer); models updated to match |
 | 8 | `ExpenseFormView` included `PARKING` expense type | Not in API spec enum (FUEL/MAINTENANCE/TOLL/OTHER) | **Fixed** — PARKING removed from frontend type list |
