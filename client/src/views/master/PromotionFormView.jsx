@@ -1,123 +1,296 @@
-import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Save, Plus, Trash2, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
-import { MOCK_STORES, MOCK_PRODUCTS } from '../../data/mockData';
-import { promotionSchema } from '../../schemas/master';
+import { getJson, postJson, getApiErrorMessage } from '../../api/http';
+import { nextCode } from '../../api/codeGen';
 
 export default function PromotionFormView({ data, onNavigateBack, showToast }) {
     const isNew = !data;
     const editData = data || {};
-    const [items, setItems] = useState([{ id: 1, productId: '', productName: '', discount: 0 }]);
-    const [isLovOpen, setIsLovOpen] = useState(false);
-    const [lovIdx, setLovIdx] = useState(null);
-    const [storeIsLov, setStoreIsLov] = useState(false);
-    const [promoCode, setPromoCode] = useState(editData.id || '');
-    const [autoCode, setAutoCode] = useState(isNew);
 
-    const { register, handleSubmit, formState: { errors }, control, watch, setValue } = useForm({
-        resolver: zodResolver(promotionSchema),
-        defaultValues: {
-            store: editData.storeId ? `${editData.storeId} – ${editData.store}` : '',
-            name: editData.name || '',
-            discountType: editData.discountType || 'PERCENTAGE',
-            startDate: editData.startDate || '',
-            endDate: editData.endDate || '',
+    // Header state
+    const [store,        setStore]        = useState(editData.storeCode ? `${editData.storeCode} – ${editData.storeName}` : '');
+    const [storeCode,    setStoreCode]    = useState(editData.storeCode || '');
+    const [storeId,      setStoreId]      = useState(editData.storeId   || null);
+    const [name,         setName]         = useState(editData.name      || '');
+    const [startDate,    setStartDate]    = useState(editData.startDate || '');
+    const [endDate,      setEndDate]      = useState(editData.endDate   || '');
+    const [discountType, setDiscountType] = useState(editData.discountType || 'PERCENTAGE');
+    const [previewCode,  setPreviewCode]  = useState(editData.promotionCode || '…');
+
+    // Line items
+    const [items, setItems] = useState(
+        (editData.items || []).length > 0
+            ? editData.items.map(it => ({
+                uid:         it.promotion_item_id || Date.now() + Math.random(),
+                productId:   it.product_id,
+                productName: '',      // name resolved from LoV — not stored in promotion_items
+                discount:    it.discount_value || 0,
+              }))
+            : [{ uid: Date.now(), productId: '', productName: '', discount: 0 }]
+    );
+
+    // LoV state
+    const [storeIsLov,    setStoreIsLov]    = useState(false);
+    const [productIsLov,  setProductIsLov]  = useState(false);
+    const [lovIdx,        setLovIdx]        = useState(null);
+
+    // Live LoV data
+    const [lovStores,    setLovStores]   = useState([]);
+    const [lovProducts,  setLovProducts] = useState([]);
+
+    const [saving, setSaving] = useState(false);
+
+    // Fetch stores + code preview on mount
+    useEffect(() => {
+        getJson('/stores')
+            .then(storeList => {
+                setLovStores(storeList.map(s => ({
+                    id:       s.store_code,
+                    storeId:  s.store_id,
+                    name:     s.name,
+                    category: s.category,
+                })));
+            })
+            .catch(() => {});
+
+        if (isNew) {
+            getJson('/promotions')
+                .then(promos => {
+                    const codes = promos.map(p => p.promotion_code);
+                    setPreviewCode(nextCode(codes, 'PROMO-', 4));
+                })
+                .catch(() => setPreviewCode('PROMO-????'));
         }
-    });
+    }, [isNew]);
 
-    const store = watch('store');
-    const discountType = watch('discountType');
+    // Fetch products when a store is selected
+    const loadProducts = (sid) => {
+        if (!sid) return;
+        // find store_code from storeId
+        const storeEntry = lovStores.find(s => s.storeId === sid);
+        const storeCodeFilter = storeEntry ? storeEntry.id : null;
+        const params = storeCodeFilter ? { store_code: storeCodeFilter } : {};
+        getJson('/store-products', params)
+            .then(products => {
+                setLovProducts(products.map(p => ({
+                    id:    p.product_id,
+                    name:  p.name,
+                    price: parseFloat(p.unit_price).toFixed(2),
+                })));
+            })
+            .catch(() => setLovProducts([]));
+    };
 
-    const displayCode = autoCode ? (promoCode || 'PROMO-AUTO') : promoCode;
+    const handleSelectStore = (r) => {
+        setStoreCode(r.id);
+        setStoreId(r.storeId);
+        setStore(`${r.id} – ${r.name}`);
+        setStoreIsLov(false);
+        // Reset items + load products for the chosen store
+        setItems([{ uid: Date.now(), productId: '', productName: '', discount: 0 }]);
+        loadProducts(r.storeId);
+    };
 
-    const onSubmit = (formData) => {
-        if (!autoCode && !promoCode.trim()) return showToast('Please enter a Campaign Code', 'error');
-        if (new Date(formData.endDate) < new Date(formData.startDate)) return showToast('End Date cannot be before Start Date', 'error');
-        if (items.length === 0) return showToast('Must include at least one product in the campaign', 'error');
-        if (items.some(i => !i.productName || i.discount <= 0)) return showToast('All products must have valid positive discounts', 'error');
-        showToast('Promotion Campaign saved successfully!'); onNavigateBack();
+    const handleSelectProduct = (r) => {
+        if (lovIdx === null) return;
+        const next = [...items];
+        next[lovIdx] = { ...next[lovIdx], productId: r.id, productName: r.name };
+        setItems(next);
+        setProductIsLov(false);
+        setLovIdx(null);
+    };
+
+    const openProductLov = (i) => {
+        if (!storeId) return showToast('Please select a store first', 'error');
+        if (lovProducts.length === 0) loadProducts(storeId);
+        setLovIdx(i);
+        setProductIsLov(true);
+    };
+
+    const validate = () => {
+        if (!storeCode)       return 'Please select a target store';
+        if (!name.trim())     return 'Campaign Name is required';
+        if (!startDate || !endDate) return 'Please specify both Start and End Dates';
+        if (new Date(endDate) < new Date(startDate)) return 'End Date cannot be before Start Date';
+        if (items.length === 0) return 'Must include at least one product';
+        if (items.some(i => !i.productId)) return 'All rows must have a product selected';
+        if (items.some(i => Number(i.discount) <= 0)) return 'All discount values must be > 0';
+        return null;
+    };
+
+    const handleSave = async () => {
+        const err = validate();
+        if (err) return showToast(err, 'error');
+        setSaving(true);
+        try {
+            await postJson('/promotions', {
+                store_code:    storeCode,
+                name:          name.trim(),
+                start_date:    startDate,
+                end_date:      endDate,
+                discount_type: discountType,
+                promotion_items: items.map(i => ({
+                    product_id:     Number(i.productId),
+                    discount_value: Number(i.discount),
+                })),
+            });
+            showToast('Promotion created successfully!');
+            onNavigateBack();
+        } catch (err) {
+            showToast(getApiErrorMessage(err, 'Save failed'), 'error');
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
         <div className="fade-in space-y-5">
-            <LovModal isOpen={storeIsLov} onClose={() => setStoreIsLov(false)} title="Store"
-                columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Store' }, { key: 'category', label: 'Category' }]}
-                data={MOCK_STORES} onSelect={r => { setValue('store', `${r.id} – ${r.name}`); setStoreIsLov(false); }} />
-            <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Product"
-                columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Product' }, { key: 'price', label: 'Price' }]}
-                data={MOCK_PRODUCTS} onSelect={r => { if (lovIdx !== null) { const n = [...items]; n[lovIdx].productName = r.name; n[lovIdx].productId = r.id; setItems(n); } setIsLovOpen(false); setLovIdx(null); }} />
-            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Promotions</button>
+            {/* Store LoV */}
+            <LovModal
+                isOpen={storeIsLov}
+                onClose={() => setStoreIsLov(false)}
+                title="Select Store"
+                columns={[
+                    { key: 'id',       label: 'Code'     },
+                    { key: 'name',     label: 'Store'    },
+                    { key: 'category', label: 'Category' },
+                ]}
+                data={lovStores}
+                onSelect={handleSelectStore}
+            />
+            {/* Product LoV */}
+            <LovModal
+                isOpen={productIsLov}
+                onClose={() => { setProductIsLov(false); setLovIdx(null); }}
+                title="Select Product"
+                columns={[
+                    { key: 'id',    label: 'ID'      },
+                    { key: 'name',  label: 'Product' },
+                    { key: 'price', label: 'Price'   },
+                ]}
+                data={lovProducts}
+                onSelect={handleSelectProduct}
+            />
+
+            <button
+                onClick={onNavigateBack}
+                className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium"
+            >
+                <ArrowLeft className="w-4 h-4" /> Back to Promotions
+            </button>
+
+            {/* Campaign Details Card */}
             <Card className="p-5">
-                <h3 className="font-bold text-current mb-4 text-lg">{isNew ? 'New Campaign' : `Edit: ${editData.name}`}</h3>
+                <h3 className="font-bold text-slate-900 mb-4">
+                    {isNew ? 'New Campaign' : `Edit: ${editData.name}`}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-end gap-3">
-                        <div className="flex-1">
-                            <FormField label="Promotion ID" required>
-                                <Input
-                                    value={displayCode}
-                                    onChange={e => setPromoCode(e.target.value.toUpperCase())}
-                                    placeholder="PROMO-001"
-                                    readOnly={autoCode}
-                                    className={autoCode ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
-                                />
-                            </FormField>
-                        </div>
-                        <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
-                            <div className="relative">
-                                <input
-                                    type="checkbox"
-                                    checked={autoCode}
-                                    onChange={e => setAutoCode(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-5 h-5 border-2 border-slate-300 dark:border-white bg-transparent rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
-                                    <Check size={12} strokeWidth={4} color="white" className={autoCode ? 'scale-100' : 'scale-0'} />
-                                </div>
-                            </div>
-                            <span className="text-sm font-bold text-slate-700 dark:text-gray-200 font-sans">Auto</span>
-                        </label>
-                    </div>
-                    <FormField label="Campaign Name" required error={errors.name?.message}><Input {...register('name')} placeholder="e.g. Summer Sale" /></FormField>
-                    <FormField label="Store" required error={errors.store?.message}>
-                        <LovInput value={store} onLov={() => setStoreIsLov(true)} placeholder="Select store..." />
-                    </FormField>
-                    <FormField label="Discount Type" required error={errors.discountType?.message}>
-                        <Controller
-                            name="discountType"
-                            control={control}
-                            render={({ field }) => (
-                                <Select value={field.value} onChange={field.onChange}><option value="PERCENTAGE">Percentage</option><option value="FIXED_AMOUNT">Fixed Amount</option></Select>
-                            )}
+                    {/* Promotion Code — read-only preview */}
+                    <FormField label="Promotion Code">
+                        <Input
+                            value={previewCode}
+                            readOnly
+                            className="bg-slate-50 text-slate-500 font-mono"
+                            title="Code is assigned by server on save"
                         />
                     </FormField>
-                    <FormField label="Start Date" required error={errors.startDate?.message}><Input type="date" {...register('startDate')} /></FormField>
-                    <FormField label="End Date" required error={errors.endDate?.message}><Input type="date" {...register('endDate')} /></FormField>
+
+                    <FormField label="Campaign Name" required>
+                        <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Summer Sale" />
+                    </FormField>
+
+                    <FormField label="Store" required>
+                        <LovInput value={store} onLov={() => setStoreIsLov(true)} placeholder="Select store…" />
+                    </FormField>
+
+                    <FormField label="Discount Type" required>
+                        <Select value={discountType} onChange={e => setDiscountType(e.target.value)}>
+                            <option value="PERCENTAGE">Percentage (%)</option>
+                            <option value="FIXED_AMOUNT">Fixed Amount (฿)</option>
+                        </Select>
+                    </FormField>
+
+                    <FormField label="Start Date" required>
+                        <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    </FormField>
+
+                    <FormField label="End Date" required>
+                        <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+                    </FormField>
                 </div>
             </Card>
+
+            {/* Promotion Items Card */}
             <Card className="overflow-hidden">
-                <CardHeader title="Promotion Items" action={
-                    <Btn size="sm" variant="secondary" onClick={() => setItems([...items, { id: Date.now(), productId: '', productName: '', discount: 0 }])}>
-                        <Plus className="w-3.5 h-3.5" /> Add Product
-                    </Btn>
-                } />
-                <Table headers={[{ label: 'Product' }, { label: 'Discount Value', right: true }, { label: '', center: true }]} minWidth="500px">
+                <CardHeader
+                    title="Promotion Items"
+                    action={
+                        <Btn
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setItems([...items, { uid: Date.now(), productId: '', productName: '', discount: 0 }])}
+                        >
+                            <Plus className="w-3.5 h-3.5" /> Add Product
+                        </Btn>
+                    }
+                />
+                <Table
+                    headers={[
+                        { label: 'Product' },
+                        { label: `Discount Value ${discountType === 'PERCENTAGE' ? '(%)' : '(฿)'}`, right: true },
+                        { label: '', center: true },
+                    ]}
+                    minWidth="500px"
+                >
                     {items.map((it, i) => (
-                        <tr key={it.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                        <tr key={it.uid} className="hover:bg-slate-50">
                             <td className="px-4 py-3">
-                                <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 focus-within:border-red-400 dark:focus-within:border-red-500">
-                                    <input readOnly value={it.productName} placeholder="Select product..." className="flex-1 min-w-0 px-3 py-1.5 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" />
-                                    <button onClick={() => { setLovIdx(i); setIsLovOpen(true); }} className="shrink-0 px-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white text-xs font-bold transition-colors border-l border-slate-700 dark:border-slate-600">LoV</button>
+                                <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-red-400">
+                                    <input
+                                        readOnly
+                                        value={it.productName || (it.productId ? `Product #${it.productId}` : '')}
+                                        placeholder="Select product…"
+                                        className="flex-1 min-w-0 px-3 py-1.5 text-sm outline-none bg-white"
+                                    />
+                                    <button
+                                        onClick={() => openProductLov(i)}
+                                        className="shrink-0 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-colors border-l border-slate-700"
+                                    >
+                                        LoV
+                                    </button>
                                 </div>
                             </td>
-                            <td className="px-4 py-3 text-right"><input type="number" value={it.discount} onChange={e => { const n = [...items]; n[i].discount = Number(e.target.value); setItems(n); }} className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 dark:focus:border-red-500 text-right w-24" /></td>
-                            <td className="px-4 py-3 text-center"><button onClick={() => setItems(items.filter(x => x.id !== it.id))} className="p-1.5 text-slate-300 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button></td>
+                            <td className="px-4 py-3 text-right">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={it.discount}
+                                    onChange={e => {
+                                        const next = [...items];
+                                        next[i] = { ...next[i], discount: e.target.value };
+                                        setItems(next);
+                                    }}
+                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 text-right w-24"
+                                />
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                                <button
+                                    onClick={() => setItems(items.filter(x => x.uid !== it.uid))}
+                                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </td>
                         </tr>
                     ))}
                 </Table>
-                <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex justify-end">
-                    <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> Save Campaign</Btn>
+                <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                    <Btn onClick={handleSave} size="lg" disabled={saving}>
+                        <Save className="w-4 h-4" />
+                        {saving ? 'Saving…' : 'Save Campaign'}
+                    </Btn>
                 </div>
             </Card>
         </div>

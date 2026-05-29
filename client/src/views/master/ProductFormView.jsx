@@ -1,148 +1,183 @@
-import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Save, Check } from 'lucide-react';
-import { FormField, Input, Card, Btn, LovInput, LovModal } from '../../components/ui';
-import { MOCK_STORES } from '../../data/mockData';
-import { productSchema } from '../../schemas/master';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Save } from 'lucide-react';
+import { FormField, Input, Card, Btn, Select, LovInput, LovModal } from '../../components/ui';
+import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 
-export default function ProductFormView({ data, onBack, showToast }) {
-    const isNew = !data.id;
-    const [id, setId] = useState(data.id || '');
-    const [autoId, setAutoId] = useState(isNew);
-    const [storeIsLov, setStoreIsLov] = useState(false);
+const STATUS_OPTIONS = [
+    { value: 'AVAILABLE',    label: 'Available'    },
+    { value: 'OUT_OF_STOCK', label: 'Out of Stock' },
+    { value: 'UNAVAILABLE',  label: 'Unavailable'  },
+    { value: 'DISCONTINUED', label: 'Discontinued' },
+];
 
-    const { register, handleSubmit, formState: { errors }, control, watch, setValue } = useForm({
-        resolver: zodResolver(productSchema),
-        defaultValues: {
-            store: data.storeId ? `${data.storeId} – ${data.store}` : '',
-            name: data.name || '',
-            price: data.price || '',
-            category: data.category || 'Main Dish',
-            active: data.active !== false,
+export default function ProductFormView({ data = {}, stores: initStores = [], onBack, onSaved, showToast }) {
+    const isNew = !data.productId;
+
+    // Store LoV — use pre-fetched list from parent (ProductListView); refresh if empty
+    const [stores,      setStores]      = useState(initStores);
+    const [storeDisplay, setStoreDisplay] = useState(
+        data.storeCode ? `${data.storeCode} – ${data.storeName}` : ''
+    );
+    const [selectedStoreCode, setSelectedStoreCode] = useState(data.storeCode || '');
+    const [storeIsLov,  setStoreIsLov]  = useState(false);
+
+    const [name,   setName]   = useState(data.name  || '');
+    const [price,  setPrice]  = useState(data.price != null ? String(data.price) : '');
+    const [status, setStatus] = useState(data.status || 'AVAILABLE');
+    const [saving, setSaving] = useState(false);
+
+    // If parent didn't provide stores list (edge case), fetch live
+    useEffect(() => {
+        if (stores.length === 0) {
+            getJson('/stores')
+                .then(list => setStores(list.map(s => ({
+                    id:       s.store_code,
+                    storeId:  s.store_id,
+                    name:     s.name,
+                    category: s.category,
+                }))))
+                .catch(() => {});
         }
-    });
+    }, []);
 
-    const store = watch('store');
-    const category = watch('category');
-    const active = watch('active');
-
-    const onSubmit = (formData) => {
-        if (!autoId && !id.trim()) return showToast('Please enter a Product ID', 'error');
-        showToast('Product saved!'); onBack();
+    const validate = () => {
+        if (isNew && !selectedStoreCode) return 'Please select a Store';
+        if (!name.trim())               return 'Product Name is required';
+        if (price === '')               return 'Unit Price is required';
+        if (Number(price) < 0)          return 'Price cannot be negative';
+        return null;
     };
 
-    const displayId = autoId ? (id || 'PRD-AUTO') : id;
+    const handleSave = async () => {
+        const err = validate();
+        if (err) return showToast(err, 'error');
+
+        setSaving(true);
+        try {
+            if (isNew) {
+                await postJson('/store-products', {
+                    store_code: selectedStoreCode,
+                    name:       name.trim(),
+                    unit_price: parseFloat(price),
+                    status:     status,
+                });
+                showToast('Product created successfully!');
+            } else {
+                await putJson(`/store-products/${data.productId}`, {
+                    name:       name.trim(),
+                    unit_price: parseFloat(price),
+                    status:     status,
+                });
+                showToast('Product updated successfully!');
+            }
+            onSaved();
+        } catch (err) {
+            showToast(getApiErrorMessage(err, 'Save failed'), 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <div className="fade-in space-y-5">
-            <LovModal isOpen={storeIsLov} onClose={() => setStoreIsLov(false)} title="Store"
-                columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Store Name' }, { key: 'category', label: 'Category' }]} data={MOCK_STORES}
-                onSelect={r => { setValue('store', `${r.id} – ${r.name}`); setStoreIsLov(false); }} />
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"><ArrowLeft className="w-4 h-4" /> Back to Products</button>
+            {/* Store LoV modal */}
+            <LovModal
+                isOpen={storeIsLov}
+                onClose={() => setStoreIsLov(false)}
+                title="Select Store"
+                columns={[
+                    { key: 'id',       label: 'Code'     },
+                    { key: 'name',     label: 'Store'    },
+                    { key: 'category', label: 'Category' },
+                ]}
+                data={stores}
+                onSelect={r => {
+                    setSelectedStoreCode(r.id);
+                    setStoreDisplay(`${r.id} – ${r.name}`);
+                    setStoreIsLov(false);
+                }}
+            />
+
+            <button
+                onClick={onBack}
+                className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium transition-colors"
+            >
+                <ArrowLeft className="w-4 h-4" /> Back to Products
+            </button>
+
             <Card className="p-5">
-                <h3 className="font-bold text-current mb-6 text-lg">{data.id ? `Edit: ${data.name}` : 'New Product'}</h3>
-                
-                <div className="space-y-6">
-                    {/* Row 1: Product ID | Product Name | Unit Price */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <div className="flex items-end gap-3">
-                            <div className="flex-1">
-                                <FormField label="Product ID" required>
-                                    <Input
-                                        value={displayId}
-                                        onChange={e => setId(e.target.value.toUpperCase())}
-                                        placeholder="PRD-001"
-                                        readOnly={autoId}
-                                        className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
-                                    />
-                                </FormField>
-                            </div>
-                            <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
-                                <div className="relative">
-                                    <input
-                                        type="checkbox"
-                                        checked={autoId}
-                                        onChange={e => setAutoId(e.target.checked)}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-5 h-5 border-2 border-slate-300 dark:border-white bg-transparent rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
-                                        <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
-                                    </div>
-                                </div>
-                                <span className="text-sm font-bold text-slate-700 dark:text-gray-200 font-sans">Auto</span>
-                            </label>
-                        </div>
-                        <FormField label="Product Name" required error={errors.name?.message}>
-                            <Input {...register('name')} placeholder="Menu item name" />
-                        </FormField>
-                        <FormField label="Unit Price" required error={errors.price?.message}>
-                            <Input type="number" {...register('price')} placeholder="0" />
-                        </FormField>
-                    </div>
+                <h3 className="font-bold text-slate-900 text-lg mb-6">
+                    {isNew ? 'New Product' : `Edit: ${data.name}`}
+                </h3>
 
-                    {/* Row 2: Store (LoV) | Category (toggle list) */}
+                <div className="space-y-5">
+                    {/* Row 1: Product ID (read-only) | Status */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <FormField label="Store" required error={errors.store?.message}>
-                            <LovInput value={store} onLov={() => setStoreIsLov(true)} placeholder="Select store..." />
+                        <FormField label="Product ID">
+                            <Input
+                                value={isNew ? '(assigned by server)' : String(data.productId)}
+                                readOnly
+                                className="bg-slate-50 text-slate-400 font-mono"
+                            />
                         </FormField>
-                        <FormField label="Category" required error={errors.category?.message}>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                                {['Main Dish', 'Drinks', 'Appetizer', 'Dessert', 'Other'].map(cat => {
-                                    const isSelected = category === cat;
-                                    return (
-                                        <button
-                                            key={cat}
-                                            type="button"
-                                            onClick={() => setValue('category', cat)}
-                                            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all border ${
-                                                isSelected
-                                                    ? 'bg-red-500 border-red-500 text-white shadow-sm font-extrabold'
-                                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-650'
-                                            }`}
-                                        >
-                                            {cat}
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                        <FormField label="Status">
+                            <Select value={status} onChange={e => setStatus(e.target.value)}>
+                                {STATUS_OPTIONS.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </Select>
                         </FormField>
                     </div>
 
-                    {/* Row 3: Active tab switch */}
-                    <div className="grid grid-cols-1 gap-5">
-                        <FormField label="Status">
-                            <div className="bg-slate-100 dark:bg-black/20 p-1 rounded-xl flex w-full max-w-[240px] border border-slate-200/50 dark:border-red-900/30 mt-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setValue('active', true)}
-                                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
-                                        active
-                                            ? 'bg-red-500 text-white shadow-sm font-extrabold'
-                                            : 'text-slate-500 dark:text-gray-300 hover:text-slate-800 dark:hover:text-white'
-                                    }`}
-                                >
-                                    Active
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setValue('active', false)}
-                                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
-                                        !active
-                                            ? 'bg-slate-400 dark:bg-slate-600 text-white shadow-sm font-extrabold'
-                                            : 'text-slate-500 dark:text-gray-300 hover:text-slate-800 dark:hover:text-white'
-                                    }`}
-                                >
-                                    Inactive
-                                </button>
-                            </div>
+                    {/* Row 2: Store (LoV) | Product Name */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <FormField label="Store" required>
+                            {isNew ? (
+                                <LovInput
+                                    value={storeDisplay}
+                                    onLov={() => setStoreIsLov(true)}
+                                    placeholder="Select store…"
+                                />
+                            ) : (
+                                /* Store cannot be changed after creation */
+                                <Input
+                                    value={storeDisplay || data.storeName}
+                                    readOnly
+                                    className="bg-slate-50 text-slate-500"
+                                    title="Store cannot be changed after creation"
+                                />
+                            )}
+                        </FormField>
+                        <FormField label="Product Name" required>
+                            <Input
+                                value={name}
+                                onChange={e => setName(e.target.value)}
+                                placeholder="Menu item name"
+                            />
+                        </FormField>
+                    </div>
+
+                    {/* Row 3: Unit Price */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <FormField label="Unit Price (฿)" required>
+                            <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={price}
+                                onChange={e => setPrice(e.target.value)}
+                                placeholder="0.00"
+                            />
                         </FormField>
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-8 pt-5 border-t border-current/10">
-                    <Btn variant="secondary" onClick={onBack}>Cancel</Btn>
-                    <Btn onClick={handleSubmit(onSubmit)}><Save className="w-4 h-4" /> Save</Btn>
+                <div className="flex justify-end gap-3 mt-8 pt-5 border-t border-slate-100">
+                    <Btn variant="secondary" onClick={onBack} disabled={saving}>Cancel</Btn>
+                    <Btn onClick={handleSave} disabled={saving}>
+                        <Save className="w-4 h-4" />
+                        {saving ? 'Saving…' : 'Save Product'}
+                    </Btn>
                 </div>
             </Card>
         </div>

@@ -175,7 +175,7 @@ Product catalogue for a store. Prices and availability managed at the product le
 | FK | store_id | int8 | YES | — | Owning store → Store.id |
 | | name | text | YES | — | Product name |
 | | unit_price | numeric | YES | — | Selling price per unit |
-| | status | enum | YES | — | AVAILABLE / OUT_OF_STOCK / DISCONTINUED / UNAVAILABLE |
+| | status | enum | YES | — | available / out_of_stock / discontinued / unavailable |
 | | updated_at | timestamps | YES | NOW() | Last update timestamp |
 
 **Example Records:**

@@ -1,32 +1,90 @@
-import { useState } from 'react';
-import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Plus, Trash2 } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
-import { MOCK_PROMOTIONS } from '../../data/mockData';
+import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
+
+function computeStatus(startDate, endDate) {
+    const today = new Date();
+    const start = new Date(startDate);
+    const end   = new Date(endDate);
+    if (today < start) return 'UPCOMING';
+    if (today > end)   return 'EXPIRED';
+    return 'ACTIVE';
+}
+
+const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
 
 export default function PromotionListView({ onNavigate, showToast }) {
-    const [search, setSearch] = useState('');
-    const [sort, setSort] = useState({ key: 'name', direction: 'asc' });
-    const [page, setPage] = useState(1);
+    const [rows,     setRows]     = useState([]);
+    const [loading,  setLoading]  = useState(true);
+    const [tick,     setTick]     = useState(0);
+    const [search,   setSearch]   = useState('');
+    const [sort,     setSort]     = useState({ key: 'name', direction: 'asc' });
+    const [page,     setPage]     = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-    // 1. Filter
-    const filtered = MOCK_PROMOTIONS.filter(p =>
-        p.id.toLowerCase().includes(search.toLowerCase()) ||
+    const refresh = () => setTick(t => t + 1);
+
+    useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+        Promise.all([
+            getJson('/promotions'),
+            getJson('/stores'),
+        ]).then(([promotions, stores]) => {
+            if (cancelled) return;
+            const storeMap = new Map(stores.map(s => [s.store_id, s]));
+            const joined = promotions.map(p => {
+                const store = storeMap.get(p.store_id) || {};
+                return {
+                    promotionCode: p.promotion_code,
+                    promotionId:   p.promotion_id,
+                    storeId:       p.store_id,
+                    storeCode:     store.store_code || '—',
+                    storeName:     store.name       || '—',
+                    name:          p.name,
+                    startDate:     p.start_date,
+                    endDate:       p.end_date,
+                    discountType:  p.discount_type,
+                    status:        computeStatus(p.start_date, p.end_date),
+                    items:         p.promotion_items || [],
+                };
+            });
+            setRows(joined);
+        }).catch(err => {
+            if (!cancelled) showToast(getApiErrorMessage(err, 'Failed to load promotions'), 'error');
+        }).finally(() => {
+            if (!cancelled) setLoading(false);
+        });
+        return () => { cancelled = true; };
+    }, [tick]);
+
+    const handleDelete = async (p) => {
+        if (!window.confirm(`Delete promotion ${p.promotionCode}?`)) return;
+        try {
+            await deleteJson(`/promotions/${p.promotionCode}`);
+            showToast(`Promotion ${p.promotionCode} deleted`);
+            refresh();
+        } catch (err) {
+            showToast(getApiErrorMessage(err, 'Delete failed'), 'error');
+        }
+    };
+
+    const filtered = rows.filter(p =>
+        p.promotionCode.toLowerCase().includes(search.toLowerCase()) ||
         p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.store.toLowerCase().includes(search.toLowerCase()) ||
+        p.storeName.toLowerCase().includes(search.toLowerCase()) ||
         p.discountType.toLowerCase().includes(search.toLowerCase())
     );
 
-    // 2. Sort
     const sorted = [...filtered].sort((a, b) => {
-        const valA = a[sort.key];
-        const valB = b[sort.key];
+        const valA = a[sort.key] ?? '';
+        const valB = b[sort.key] ?? '';
         if (valA < valB) return sort.direction === 'asc' ? -1 : 1;
         if (valA > valB) return sort.direction === 'asc' ? 1 : -1;
         return 0;
     });
 
-    // 3. Paginate
     const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
     const start = filtered.length > 0 ? (page - 1) * pageSize + 1 : 0;
     const end = Math.min(page * pageSize, filtered.length);
@@ -40,54 +98,76 @@ export default function PromotionListView({ onNavigate, showToast }) {
 
     return (
         <div className="fade-in space-y-5">
-            <PageHeader title="Promotions" subtitle="Manage store promotional campaigns"
-                action={<Btn onClick={() => onNavigate()}><Plus className="w-4 h-4" /> Create Promotion</Btn>} />
+            <PageHeader
+                title="Promotions"
+                subtitle="Manage store promotional campaigns"
+                action={<Btn onClick={() => onNavigate()}><Plus className="w-4 h-4" /> Create Promotion</Btn>}
+            />
 
             <Card className="overflow-hidden">
                 <CardHeader
-                    search={<Input icon={Search} placeholder="Search ID, campaign, store..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="h-10 shadow-sm" />}
+                    search={
+                        <Input
+                            icon={Search}
+                            placeholder="Search code, campaign, store..."
+                            value={search}
+                            onChange={e => { setSearch(e.target.value); setPage(1); }}
+                            className="bg-white border-slate-200 h-10 shadow-sm"
+                        />
+                    }
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
-                                {start}-{end} of {filtered.length} promotions
+                            <span className="text-xs font-medium text-slate-400">
+                                {start}–{end} of {filtered.length} promotions
                             </span>
-                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-24">
+                            <Select
+                                value={pageSize}
+                                onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+                                className="h-9 border-slate-200 bg-white shadow-sm w-24"
+                            >
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
                         </div>
                     }
                 />
+
                 <Table
                     onSort={handleSort}
                     sortConfig={sort}
                     minWidth="900px"
                     headers={[
-                        { label: 'ID', key: 'id', sortable: true, width: '16%' },
-                        { label: 'CAMPAIGN', key: 'name', sortable: true, width: '20%' },
-                        { label: 'STORE', key: 'store', sortable: true, width: '16%' },
-                        { label: 'PERIOD', width: '18%' },
-                        { label: 'TYPE', key: 'discountType', sortable: true, width: '12%' },
-                        { label: 'STATUS', center: true, key: 'status', sortable: true, width: '8%' },
-                        { label: 'Actions', right: true, width: '10%' }
+                        { label: 'CODE',     key: 'promotionCode', sortable: true, width: '14%' },
+                        { label: 'CAMPAIGN', key: 'name',          sortable: true, width: '20%' },
+                        { label: 'STORE',    key: 'storeName',     sortable: true, width: '16%' },
+                        { label: 'PERIOD',                                          width: '20%' },
+                        { label: 'TYPE',     key: 'discountType',  sortable: true, width: '14%' },
+                        { label: 'STATUS',   key: 'status',        sortable: true, center: true, width: '10%' },
+                        { label: 'Actions',  right: true,                           width: '10%' },
                     ]}
                 >
-                    {paginated.map(p => (
-                        <Tr key={p.id}>
-                            <Td mono className="text-xs text-slate-900 dark:text-slate-100 font-bold whitespace-nowrap">{p.id}</Td>
+                    {loading ? (
+                        <Tr><Td colSpan={7} className="text-center text-slate-400 py-8">Loading…</Td></Tr>
+                    ) : paginated.length === 0 ? (
+                        <Tr><Td colSpan={7} className="text-center text-slate-400 py-8">No promotions found</Td></Tr>
+                    ) : paginated.map(p => (
+                        <Tr key={p.promotionCode}>
+                            <Td mono className="text-xs text-red-600 font-bold whitespace-nowrap">{p.promotionCode}</Td>
                             <Td bold className="whitespace-nowrap">{p.name}</Td>
-                            <Td className="whitespace-nowrap">{p.store}</Td>
+                            <Td className="whitespace-nowrap">{p.storeName}</Td>
                             <Td className="text-xs whitespace-nowrap">{p.startDate} → {p.endDate}</Td>
-                            <Td className="whitespace-nowrap"><Badge>{p.discountType}</Badge></Td>
-                            <Td center className="whitespace-nowrap"><Badge color={p.status === 'Active' ? 'green' : 'gray'}>{p.status}</Badge></Td>
+                            <Td className="whitespace-nowrap"><Badge color="gray">{p.discountType}</Badge></Td>
+                            <Td center className="whitespace-nowrap">
+                                <Badge color={STATUS_COLOR[p.status] || 'gray'}>{p.status}</Badge>
+                            </Td>
                             <Td right className="whitespace-nowrap">
-                                <div className="flex justify-end gap-2">
-                                    <Btn size="sm" variant="secondary" onClick={() => onNavigate(p)}><Edit2 className="w-3 h-3" /> Edit</Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => showToast('Promotion deleted', 'error')}><Trash2 className="w-3 h-3" /> Delete</Btn>
-                                </div>
+                                <Btn size="sm" variant="danger" onClick={() => handleDelete(p)}>
+                                    <Trash2 className="w-3 h-3" /> Delete
+                                </Btn>
                             </Td>
                         </Tr>
                     ))}
                 </Table>
+
                 <Pagination
                     totalItems={filtered.length}
                     itemsPerPage={pageSize}
