@@ -69,7 +69,7 @@ exports.create = async (data) => {
     if (!store) throw Object.assign(new Error(`Store ${data.store_code} not found`), { name: 'NotFoundError' });
     const { rows: [ins] } = await client.query(
       'INSERT INTO "order" (customer_id,store_id,total_price,address_snapshot,status,code) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
-      [cust.id, store.id, data.total_price, data.address_snapshot, 'PENDING', 'ORD-TMP-' + Date.now()]
+      [cust.id, store.id, data.total_price, data.address_snapshot, 'pending', 'ORD-TMP-' + Date.now()]
     );
     const year = new Date().getFullYear();
     const code = 'ORD-' + year + '-' + String(ins.id).padStart(6, '0');

@@ -1,7 +1,7 @@
 'use strict';
 const model  = require('../models/customers.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
-const VALID_LEVELS = ['STANDARD', 'GOLD', 'PLATINUM'];
+const VALID_LEVELS = ['Bronze', 'Silver', 'Gold', 'Platinum'];
 
 exports.list = (q) => model.findAll(q);
 
@@ -9,7 +9,6 @@ exports.create = async (data) => {
   const fe = [];
   if (!data.profile_id)       fe.push({ field: 'requestBody.profile_id',       reason: 'required' });
   if (!data.address_id)       fe.push({ field: 'requestBody.address_id',       reason: 'required' });
-  if (!data.membership_level) fe.push({ field: 'requestBody.membership_level', reason: 'required' });
   if (data.membership_level && !VALID_LEVELS.includes(data.membership_level))
     fe.push({ field: 'requestBody.membership_level', reason: `must be one of ${VALID_LEVELS.join(', ')}` });
   if (fe.length) throw new ValidationError('Invalid customer input', fe);

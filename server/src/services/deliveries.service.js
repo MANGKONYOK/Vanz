@@ -1,7 +1,7 @@
 'use strict';
 const model = require('../models/deliveries.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
-const VALID_TYPES = ['STANDARD', 'HURRY', 'EXPRESS', 'SCHEDULED'];
+const VALID_TYPES = ['Standard', 'Hurry', 'Express', 'Scheduled'];
 
 exports.list = (q) => model.findAll(q);
 

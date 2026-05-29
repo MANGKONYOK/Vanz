@@ -32,7 +32,7 @@ exports.create = async (data) => {
     await client.query('BEGIN');
     const { rows: [ins] } = await client.query(
       'INSERT INTO store (name,address_id,category,status,code) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-      [data.name, data.address_id, data.category, data.status || 'ACTIVE', 'STR-TMP-' + Date.now()]
+      [data.name, data.address_id, data.category, data.status || 'inactive', 'STR-TMP-' + Date.now()]
     );
     const code = 'STR-' + String(ins.id).padStart(4, '0');
     const { rows: [r] } = await client.query('UPDATE store SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);
@@ -48,7 +48,7 @@ exports.findByCode = async (code) => {
 };
 
 exports.update = async (id, data) => {
-  const allowed = ['name','address_id','category','status','rating'];
+  const allowed = ['name','address_id','category','status'];
   const sets = []; const p = [];
   allowed.forEach(k => { if (data[k] !== undefined) { p.push(data[k]); sets.push(`${k} = $${p.length}`); }});
   if (!sets.length) { const { rows:[r] } = await pool.query('SELECT * FROM store WHERE id=$1',[id]); return fmt(r); }

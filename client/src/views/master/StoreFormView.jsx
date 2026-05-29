@@ -16,16 +16,18 @@ const CATEGORY_OPTIONS = [
     { value: 'OTHER',        label: 'Other'        },
 ];
 
-const STATUS_OPTIONS = ['ACTIVE', 'INACTIVE', 'SUSPENDED'];
+const STATUS_OPTIONS = ['active', 'inactive', 'suspended'];
 
 export default function StoreFormView({ data = {}, onBack, onSaved, showToast }) {
     const isNew = !data.storeCode;
 
-    const [name,        setName]        = useState(data.name     || '');
-    const [category,    setCategory]    = useState(data.category || 'THAI_FOOD');
-    const [status,      setStatus]      = useState(data.status   || 'ACTIVE');
-    const [address,     setAddress]     = useState(data.address  || '');
-    const [city,        setCity]        = useState(data.city     || '');
+    const [name,        setName]        = useState(data.name      || '');
+    const [category,    setCategory]    = useState(data.category  || 'THAI_FOOD');
+    const [status,      setStatus]      = useState(data.status    || 'active');
+    const [address,     setAddress]     = useState(data.address   || '');
+    const [address2,    setAddress2]    = useState(data.address2  || '');
+    const [city,        setCity]        = useState(data.city      || '');
+    const [province,    setProvince]    = useState(data.province  || '');
     const [previewCode, setPreviewCode] = useState(data.storeCode || '…');
     const [saving,      setSaving]      = useState(false);
 
@@ -40,10 +42,11 @@ export default function StoreFormView({ data = {}, onBack, onSaved, showToast })
     }, [isNew]);
 
     const validate = () => {
-        if (!name.trim())    return 'Store Name is required';
-        if (!category)       return 'Category is required';
-        if (!address.trim()) return 'Address is required';
-        if (!city.trim())    return 'City is required';
+        if (!name.trim())     return 'Store Name is required';
+        if (!category)        return 'Category is required';
+        if (!address.trim())  return 'Address Line 1 is required';
+        if (!city.trim())     return 'City is required';
+        if (!province.trim()) return 'Province is required';
         return null;
     };
 
@@ -59,7 +62,9 @@ export default function StoreFormView({ data = {}, onBack, onSaved, showToast })
                     address_name:   name.trim(),
                     address_type:   'STORE',
                     address_line_1: address.trim(),
+                    address_line_2: address2.trim(),
                     city:           city.trim(),
+                    province:       province.trim(),
                     country_code:   'TH',
                 });
                 // 2. Create store
@@ -75,7 +80,9 @@ export default function StoreFormView({ data = {}, onBack, onSaved, showToast })
                 await Promise.all([
                     putJson(`/addresses/${data.addressId}`, {
                         address_line_1: address.trim(),
+                        address_line_2: address2.trim(),
                         city:           city.trim(),
+                        province:       province.trim(),
                     }),
                     putJson(`/stores/${data.storeCode}`, {
                         name:     name.trim(),
@@ -144,10 +151,22 @@ export default function StoreFormView({ data = {}, onBack, onSaved, showToast })
                         <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Bangkok" />
                     </FormField>
 
-                    {/* Address — full width */}
+                    {/* Province */}
+                    <FormField label="Province" required>
+                        <Input value={province} onChange={e => setProvince(e.target.value)} placeholder="Bangkok" />
+                    </FormField>
+
+                    {/* Address Line 1 — full width */}
                     <div className="md:col-span-2">
-                        <FormField label="Address" required>
-                            <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Street address / building" />
+                        <FormField label="Address Line 1" required>
+                            <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="House no., street, road" />
+                        </FormField>
+                    </div>
+
+                    {/* Address Line 2 — full width */}
+                    <div className="md:col-span-2">
+                        <FormField label="Address Line 2">
+                            <Input value={address2} onChange={e => setAddress2(e.target.value)} placeholder="Unit, floor, building (optional)" />
                         </FormField>
                     </div>
                 </div>

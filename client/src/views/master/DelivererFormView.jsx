@@ -4,11 +4,11 @@ import { FormField, Input, Card, Btn, Select } from '../../components/ui';
 import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 import { nextCode } from '../../api/codeGen';
 
-const VEHICLE_OPTIONS = ['MOTORCYCLE', 'CAR', 'BICYCLE', 'SCOOTER', 'VAN', 'TRUCK'];
+const VEHICLE_OPTIONS = ['Motorcycle', 'Car', 'Bicycle', 'Scooter', 'Van', 'Truck'];
 const STATUS_OPTIONS  = [
-    { value: 'AVAILABLE', label: 'Active'   },
-    { value: 'BUSY',      label: 'Busy'     },
-    { value: 'OFFLINE',   label: 'Inactive' },
+    { value: 'available', label: 'Active'   },
+    { value: 'busy',      label: 'Busy'     },
+    { value: 'offline',   label: 'Inactive' },
 ];
 
 export default function DelivererFormView({ data = {}, onBack, onSaved, showToast }) {
@@ -18,8 +18,8 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
     const [phone,         setPhone]         = useState(data.phone         || '');
     const [email,         setEmail]         = useState(data.email         || '');
     const [license,       setLicense]       = useState(data.license       || '');
-    const [vehicleType,   setVehicleType]   = useState(data.type          || 'MOTORCYCLE');
-    const [currentStatus, setCurrentStatus] = useState(data.currentStatus || 'AVAILABLE');
+    const [vehicleType,   setVehicleType]   = useState(data.type          || 'Motorcycle');
+    const [currentStatus, setCurrentStatus] = useState(data.currentStatus || 'available');
     const [previewCode,   setPreviewCode]   = useState(data.delivererCode  || '…');
     const [saving,        setSaving]        = useState(false);
 
@@ -153,7 +153,7 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
                         <FormField label="Vehicle Type" required>
                             <Select value={vehicleType} onChange={e => setVehicleType(e.target.value)}>
                                 {VEHICLE_OPTIONS.map(v => (
-                                    <option key={v} value={v}>{v.charAt(0) + v.slice(1).toLowerCase()}</option>
+                                    <option key={v} value={v}>{v}</option>
                                 ))}
                             </Select>
                         </FormField>

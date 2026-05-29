@@ -61,7 +61,7 @@ export default function DelivererHistoryReportView({ showToast }) {
                     store:    store.name || '-',
                     customer: prof.full_name || cust.customer_code || '-',
                     fee:      Number(d.delivery_fee || 0),
-                    status:   order.status || 'DELIVERED',
+                    status:   order.status || 'delivered',
                 };
             });
 

@@ -34,8 +34,8 @@ exports.create = async (data) => {
     `INSERT INTO address (address_name,address_type,address_line_1,address_line_2,city,province,country_code,latitude,longitude)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
     [data.address_name, data.address_type, data.address_line_1,
-     data.address_line_2 || null, data.city, data.province || null,
-     data.country_code, data.latitude ?? null, data.longitude ?? null]
+     data.address_line_2 || '', data.city, data.province || '',
+     data.country_code, data.latitude ?? 0, data.longitude ?? 0]
   );
   return fmt(r);
 };

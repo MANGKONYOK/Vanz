@@ -1,22 +1,34 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, Td, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
-import { getJson, postJson, getApiErrorMessage } from '../../api/http';
+import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 
 function extractCode(value) {
     return String(value || '').split(' – ')[0].trim();
 }
 
-const EXPENSE_TYPES = ['FUEL', 'MAINTENANCE', 'TOLL', 'OTHER'];
+const EXPENSE_TYPES = ['fuel', 'maintenance', 'toll', 'other'];
 
-export default function ExpenseFormView({ onNavigateBack, showToast }) {
-    const onBack = onNavigateBack || (() => {});
+export default function ExpenseFormView({ data, onNavigateBack, onBack: onBackProp, onSaved, showToast }) {
+    const isNew  = !data?.id;
+    const onBack = onBackProp || onNavigateBack || (() => {});
 
     const [deliverers,   setDeliverers]   = useState([]);
     const [delivererId,  setDelivererId]  = useState('');
     const [isLovOpen,    setIsLovOpen]    = useState(false);
-    const [voucherDate,  setVoucherDate]  = useState(() => new Date().toISOString().slice(0, 10));
-    const [items,        setItems]        = useState([{ id: 1, type: 'TOLL', desc: '', amount: 0, receipt: '' }]);
+    const [voucherDate,  setVoucherDate]  = useState(() => data?.date || new Date().toISOString().slice(0, 10));
+    const [status,       setStatus]       = useState(() => data?.status || 'draft');
+    const [items,        setItems]        = useState(() =>
+        isNew
+            ? [{ id: 1, type: 'fuel', desc: '', amount: 0, receipt: '' }]
+            : (data.expenseItems || []).map((it, idx) => ({
+                id:      idx + 1,
+                type:    it.expense_type    || 'fuel',
+                desc:    it.description     || '',
+                amount:  Number(it.amount   || 0),
+                receipt: it.receipt_reference_code || '',
+            }))
+    );
     const [saving,       setSaving]       = useState(false);
 
     const totalAmount = items.reduce((s, i) => s + Number(i.amount || 0), 0);
@@ -44,33 +56,38 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
     };
 
     const handleSave = async () => {
-        if (!delivererId)              return showToast('Please select a deliverer', 'error');
-        if (items.length === 0)        return showToast('Voucher must have at least one expense item', 'error');
+        if (items.length === 0)                      return showToast('Voucher must have at least one expense item', 'error');
         if (items.some(i => Number(i.amount) <= 0))  return showToast('All expense amounts must be greater than zero', 'error');
         if (items.some(i => !i.desc.trim()))         return showToast('Please provide a description for each item', 'error');
+        const payload = {
+            voucher_date:  voucherDate,
+            total_amount:  totalAmount,
+            expense_items: items.map(i => ({
+                expense_type:           i.type,
+                description:            i.desc.trim(),
+                amount:                 Number(i.amount),
+                receipt_reference_code: i.receipt.trim() || undefined,
+            })),
+        };
         setSaving(true);
         try {
-            const delivererCode = extractCode(delivererId);
-            // Look up the latest delivery for this deliverer to link the voucher
-            const deliveries = await getJson('/deliveries', { deliverer_code: delivererCode });
-            const delivery = Array.isArray(deliveries) ? deliveries[deliveries.length - 1] : null;
-            if (!delivery) {
-                showToast('Selected deliverer has no delivery record — voucher cannot be linked', 'error');
-                return;
+            if (isNew) {
+                if (!delivererId) { setSaving(false); return showToast('Please select a deliverer', 'error'); }
+                const delivererCode = extractCode(delivererId);
+                const deliveries    = await getJson('/deliveries', { deliverer_code: delivererCode });
+                const delivery      = Array.isArray(deliveries) ? deliveries[deliveries.length - 1] : null;
+                if (!delivery) {
+                    showToast('Selected deliverer has no delivery record — voucher cannot be linked', 'error');
+                    return;
+                }
+                await postJson('/expense-vouchers', { ...payload, delivery_id: delivery.delivery_id });
+                showToast('Voucher created successfully!');
+                onBack();
+            } else {
+                await putJson(`/expense-vouchers/${data.id}`, { ...payload, status });
+                showToast('Voucher updated successfully!');
+                (onSaved || onBack)();
             }
-            await postJson('/expense-vouchers', {
-                delivery_id:  delivery.delivery_id,
-                voucher_date: voucherDate,
-                total_amount: totalAmount,
-                expense_items: items.map(i => ({
-                    expense_type:           i.type,
-                    description:            i.desc.trim(),
-                    amount:                 Number(i.amount),
-                    receipt_reference_code: i.receipt.trim() || undefined,
-                })),
-            });
-            showToast('Voucher saved successfully!');
-            onBack();
         } catch (e) {
             showToast(getApiErrorMessage(e, 'Unable to save voucher'), 'error');
         } finally {
@@ -96,12 +113,26 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
             <Card className="p-5">
                 <h3 className="font-bold text-slate-900 mb-4">Voucher Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField label="Deliverer" required>
-                        <LovInput value={delivererId} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer…" />
-                    </FormField>
+                    {isNew ? (
+                        <FormField label="Deliverer" required>
+                            <LovInput value={delivererId} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer…" />
+                        </FormField>
+                    ) : (
+                        <FormField label="Voucher Code">
+                            <Input value={data.id} readOnly className="bg-slate-50 font-mono text-xs font-bold text-red-600" />
+                        </FormField>
+                    )}
                     <FormField label="Voucher Date" required>
                         <Input type="date" value={voucherDate} onChange={e => setVoucherDate(e.target.value)} />
                     </FormField>
+                    {!isNew && (
+                        <FormField label="Status">
+                            <Select value={status} onChange={e => setStatus(e.target.value)}>
+                                <option value="draft">draft</option>
+                                <option value="submitted">submitted</option>
+                            </Select>
+                        </FormField>
+                    )}
                 </div>
             </Card>
 
@@ -109,7 +140,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
             <Card className="overflow-hidden">
                 <CardHeader title="Expense Items" action={
                     <Btn size="sm" variant="secondary"
-                        onClick={() => setItems(prev => [...prev, { id: Date.now(), type: 'TOLL', desc: '', amount: 0, receipt: '' }])}>
+                        onClick={() => setItems(prev => [...prev, { id: Date.now(), type: 'fuel', desc: '', amount: 0, receipt: '' }])}>
                         <Plus className="w-3.5 h-3.5" /> Add Row
                     </Btn>
                 } />

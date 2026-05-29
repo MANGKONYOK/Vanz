@@ -5,10 +5,10 @@ import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 import ProductFormView from './ProductFormView';
 
 const STATUS_COLOR = {
-    AVAILABLE:    'green',
-    OUT_OF_STOCK: 'amber',
-    DISCONTINUED: 'red',
-    UNAVAILABLE:  'gray',
+    available:    'green',
+    out_of_stock: 'amber',
+    discontinued: 'red',
+    unavailable:  'gray',
 };
 
 export default function ProductListView({ showToast }) {
@@ -51,7 +51,7 @@ export default function ProductListView({ showToast }) {
                     storeName:  store.name       || '—',
                     name:       p.name,
                     price:      p.unit_price,
-                    status:     p.status || 'AVAILABLE',
+                    status:     p.status || 'available',
                     updatedAt:  p.updated_at ? new Date(p.updated_at).toLocaleDateString() : '—',
                 };
             });

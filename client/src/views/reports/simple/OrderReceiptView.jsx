@@ -13,7 +13,7 @@ export default function OrderReceiptView({ showToast }) {
     // Load delivered orders for the LoV
     useEffect(() => {
         Promise.all([
-            getJson('/orders', { status: 'DELIVERED' }).catch(() => []),
+            getJson('/orders', { status: 'delivered' }).catch(() => []),
             getJson('/customers').catch(() => []),
             getJson('/profiles').catch(() => []),
             getJson('/stores').catch(() => []),
@@ -21,7 +21,7 @@ export default function OrderReceiptView({ showToast }) {
             const profileMap = new Map(profiles.map(p => [p.profile_id, p]));
             const custMap    = new Map(customers.map(c => [c.customer_id, c]));
             const storeMap   = new Map(stores.map(s => [s.store_id, s]));
-            setLovOrders((orders || []).filter(o => o.status === 'DELIVERED').map(o => {
+            setLovOrders((orders || []).filter(o => o.status === 'delivered').map(o => {
                 const cust  = custMap.get(o.customer_id) || {};
                 const prof  = profileMap.get(cust.profile_id) || {};
                 const store = storeMap.get(o.store_id) || {};

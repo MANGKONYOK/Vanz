@@ -4,8 +4,8 @@ import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select,
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 import DelivererFormView from './DelivererFormView';
 
-const STATUS_MAP = { AVAILABLE: 'Active', BUSY: 'Busy', OFFLINE: 'Inactive' };
-const STATUS_COLOR = { AVAILABLE: 'green', BUSY: 'amber', OFFLINE: 'gray' };
+const STATUS_MAP = { available: 'Active', busy: 'Busy', offline: 'Inactive' };
+const STATUS_COLOR = { available: 'green', busy: 'amber', offline: 'gray' };
 
 export default function DelivererListView({ showToast }) {
     const [editing, setEditing] = useState(null);
@@ -39,7 +39,7 @@ export default function DelivererListView({ showToast }) {
                     email:         prof.email || '',
                     license:       d.license_plate || '—',
                     type:          d.vehicle_type || '—',
-                    currentStatus: d.current_status || 'OFFLINE',
+                    currentStatus: d.current_status || 'offline',
                     status:        STATUS_MAP[d.current_status] || d.current_status,
                     rating:        d.rating != null ? parseFloat(d.rating).toFixed(1) : '—',
                     created:       d.created_at ? new Date(d.created_at).toLocaleDateString() : '—',

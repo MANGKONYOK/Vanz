@@ -1,6 +1,6 @@
 # API.md — Vanz Marketplace Delivery Platform
 
-> Version 1.3 · Updated 28 May 2026  
+> Version 1.4 · Updated 29 May 2026  
 > Project: Marketplace Delivery Platform Management System  
 > Team: Panjapong Poobancheun, Sorawit Chaithong, Kittiphat Noikate, Piti Srisongkram
 
@@ -258,7 +258,7 @@ Retrieve orders for a given customer.
 | order_date | datetime (ISO 8601) | Order creation timestamp |
 | total_price | number (decimal) | Total order amount (client-provided) |
 | address_snapshot | string | Delivery address snapshot |
-| status | string (enum) | PENDING / CONFIRMED / PREPARING / PICKED_UP / DELIVERING / DELIVERED / CANCELLED |
+| status | string (enum) | pending / confirmed / preparing / picked_up / delivering / delivered / cancelled |
 | order_items | array of OrderItemOutput | Line items |
 
 *Order Line Items (OrderItemOutput)*
@@ -318,7 +318,7 @@ Update an existing order and replace its line items.
 
 | Field | Type | Required | Description | Validation |
 |-------|------|----------|-------------|------------|
-| status | string (enum) | No | New order status | One of: PENDING / CONFIRMED / CANCELLED |
+| status | string (enum) | No | New order status | One of: pending / confirmed / cancelled |
 | address_snapshot | string | No | Updated delivery address | Allowed only if status is PENDING |
 | total_price | number (decimal) | No | Updated total — **recalculated by frontend** | Must be >= 0 if provided |
 
@@ -383,8 +383,8 @@ Retrieve payments for a given deliverer within an optional period.
 | payment_period_start | date (YYYY-MM-DD) | Payment period start |
 | payment_period_end | date (YYYY-MM-DD) | Payment period end |
 | total_payment | number (decimal) | Total payment amount (client-provided) |
-| status | string (enum) | PENDING / PAID / CANCELLED / FAILED / PROCESSING / COMPLETED |
-| payment_datetime | datetime (ISO 8601) / null | Actual payment timestamp |
+| status | string (enum) | pending / paid / cancelled / failed / processing / completed |
+| payment_datetime | datetime (ISO 8601) | Actual payment timestamp |
 | payment_items | array of PaymentItemOutput | Breakdown items |
 
 *Payment Line Items (PaymentItemOutput)*
@@ -413,7 +413,7 @@ Create a new payment record together with its line items.
 | payment_period_start | date (YYYY-MM-DD) | Yes | Payment period start | Must be a valid date |
 | payment_period_end | date (YYYY-MM-DD) | Yes | Payment period end | Must be > payment_period_start |
 | total_payment | number (decimal) | Yes | Sum of all item amounts — **calculated by frontend** | Must be >= 0 |
-| payment_datetime | datetime (ISO 8601) | No | Actual payment timestamp | Defaults to server time if omitted |
+| payment_datetime | datetime (ISO 8601) | Yes | Actual payment timestamp | Must be a valid datetime |
 
 *Payment Items (array — must have ≥ 1 item)*
 
@@ -445,7 +445,7 @@ Update an existing payment and replace its line items. **Only allowed when statu
 |-------|------|----------|-------------|------------|
 | payment_period_start | date (YYYY-MM-DD) | No | Payment period start | Must be a valid date |
 | payment_period_end | date (YYYY-MM-DD) | No | Payment period end | Must be > payment_period_start |
-| status | string (enum) | No | New payment status | One of: PENDING / PAID / CANCELLED |
+| status | string (enum) | No | New payment status | One of: pending / paid / cancelled |
 | total_payment | number (decimal) | No | Updated total — **recalculated by frontend** | Must be >= 0 if provided |
 
 *Payment Items (array — replaces existing items if provided)*
@@ -506,7 +506,7 @@ Retrieve expense vouchers for a given deliverer.
 | delivery_id | integer | Associated delivery |
 | voucher_code | string | Human-readable voucher code (e.g. EXP-2026-000789) |
 | voucher_date | date (YYYY-MM-DD) | Date of voucher |
-| status | string (enum) | DRAFT / SUBMITTED / APPROVED / REJECTED |
+| status | string (enum) | draft / submitted / approved / rejected / paid |
 | total_amount | number (decimal) | Sum of all item amounts (client-provided) |
 | updated_at | datetime (ISO 8601) | Last update timestamp |
 | expense_items | array of ExpenseVoucherItemOutput | Expense line items |
@@ -517,7 +517,7 @@ Retrieve expense vouchers for a given deliverer.
 |-------|------|-------------|
 | expense_item_id | integer | Line item internal ID |
 | expense_voucher_id | integer | Parent voucher ID |
-| expense_type | string (enum) | FUEL / MAINTENANCE / TOLL / OTHER |
+| expense_type | string (enum) | fuel / maintenance / toll / other |
 | description | string | Expense description |
 | amount | number (decimal) | Expense amount |
 | receipt_reference_code | string / null | Receipt reference code |
@@ -525,7 +525,7 @@ Retrieve expense vouchers for a given deliverer.
 ---
 
 ### POST `/api/v1/expense-vouchers`
-Create a new expense voucher. Status defaults to **DRAFT** on creation (the service layer inserts `'DRAFT'` explicitly — the `status` column has no database-level DEFAULT).
+Create a new expense voucher. Status defaults to **draft** on creation. The `status` column has a database-level DEFAULT of `'draft'`.
 
 **Request Body**
 
@@ -541,7 +541,7 @@ Create a new expense voucher. Status defaults to **DRAFT** on creation (the serv
 
 | Field | Type | Required | Description | Validation |
 |-------|------|----------|-------------|------------|
-| expense_type | string (enum) | Yes | Category | One of: FUEL / MAINTENANCE / TOLL / OTHER |
+| expense_type | string (enum) | Yes | Category | One of: fuel / maintenance / toll / other |
 | description | string | Yes | Expense description | Must not be blank |
 | amount | number (decimal) | Yes | Expense amount | Must be > 0 |
 | receipt_reference_code | string | No | Receipt reference code | Must be unique if provided |
@@ -566,14 +566,14 @@ Update an existing expense voucher. **Only allowed when status is DRAFT.**
 | Field | Type | Required | Description | Validation |
 |-------|------|----------|-------------|------------|
 | voucher_date | date (YYYY-MM-DD) | No | Date of voucher | Cannot be a future date |
-| status | string (enum) | No | New voucher status | One of: DRAFT / SUBMITTED |
+| status | string (enum) | No | New voucher status | One of: draft / submitted |
 | total_amount | number (decimal) | No | Updated total — **recalculated by frontend** | Must be >= 0 if provided |
 
 *Expense Items (array — replaces existing items if provided)*
 
 | Field | Type | Required | Description | Validation |
 |-------|------|----------|-------------|------------|
-| expense_type | string (enum) | Yes (if array provided) | Category | One of: FUEL / MAINTENANCE / TOLL / OTHER |
+| expense_type | string (enum) | Yes (if array provided) | Category | One of: fuel / maintenance / toll / other |
 | description | string | Yes (if array provided) | Expense description | Must not be blank |
 | amount | number (decimal) | Yes (if array provided) | Expense amount | Must be > 0 |
 | receipt_reference_code | string | No | Receipt reference code | Must be unique if provided |
@@ -628,7 +628,7 @@ Retrieve promotions for a given store.
 | name | string | Promotion name |
 | start_date | date (YYYY-MM-DD) | Promotion start date |
 | end_date | date (YYYY-MM-DD) | Promotion end date |
-| discount_type | string (enum) | PERCENTAGE / FIXED_AMOUNT |
+| discount_type | string (enum) | percentage / fixed_amount |
 | promotion_items | array of PromotionItemOutput | Products in this promotion |
 
 *Promotion Line Items (PromotionItemOutput)*
@@ -655,14 +655,14 @@ Create a new promotion together with its line items.
 | name | string | Yes | Promotion name | Must not be blank |
 | start_date | date (YYYY-MM-DD) | Yes | Promotion start date | Must be a valid date |
 | end_date | date (YYYY-MM-DD) | Yes | Promotion end date | Must be >= start_date |
-| discount_type | string (enum) | Yes | Discount type | One of: PERCENTAGE / FIXED_AMOUNT |
+| discount_type | string (enum) | Yes | Discount type | One of: percentage / fixed_amount |
 
 *Promotion Items (array — must have ≥ 1 item)*
 
 | Field | Type | Required | Description | Validation |
 |-------|------|----------|-------------|------------|
 | product_id | integer | Yes | Product identifier | Must exist in Store_Products for the given store |
-| discount_value | number (decimal) | Yes | Discount amount or rate | Must be > 0; percentage must be <= 100 |
+| discount_value | number (decimal) | Yes | Discount amount or rate | Must be > 0; if discount_type is percentage, must be <= 100 |
 
 **Response — Success:** `PromotionOutput`
 
@@ -686,7 +686,7 @@ Update an existing promotion and replace its line items.
 | name | string | No | Promotion name | Must not be blank if provided |
 | start_date | date (YYYY-MM-DD) | No | Promotion start date | Must be a valid date |
 | end_date | date (YYYY-MM-DD) | No | Promotion end date | Must be >= start_date |
-| discount_type | string (enum) | No | Discount type | One of: PERCENTAGE / FIXED_AMOUNT |
+| discount_type | string (enum) | No | Discount type | One of: percentage / fixed_amount |
 
 *Promotion Items (array — replaces existing items if provided)*
 
@@ -741,12 +741,12 @@ Delete a promotion and all its line items.
 | address_name | string | Address label |
 | address_type | string | Address type classification |
 | address_line_1 | string | First line |
-| address_line_2 | string / null | Second line |
+| address_line_2 | string | Second address line (blank if unused) |
 | city | string | City name |
-| province | string / null | Province or state |
+| province | string | Province or state |
 | country_code | string | ISO 3166-1 alpha-2 (e.g. TH) |
-| latitude | number / null | Latitude coordinate |
-| longitude | number / null | Longitude coordinate |
+| latitude | number | Latitude coordinate (0 if unknown) |
+| longitude | number | Longitude coordinate (0 if unknown) |
 
 ---
 
@@ -849,7 +849,7 @@ Blocked when profile is referenced by a Customer or Deliverer.
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
 | customer_code | string | No | Must exist if provided |
-| membership_level | string (enum) | No | STANDARD / GOLD / PLATINUM |
+| membership_level | string (enum) | No | Bronze / Silver / Gold / Platinum |
 | profile_id | integer | No | Must exist if provided |
 
 **Response — Success (CustomerOutput)**
@@ -860,7 +860,7 @@ Blocked when profile is referenced by a Customer or Deliverer.
 | profile_id | integer | Related profile |
 | customer_code | string | Business code (e.g. CUST-0001) |
 | address_id | integer | Default address |
-| membership_level | string (enum) | STANDARD / GOLD / PLATINUM |
+| membership_level | string (enum) | Bronze / Silver / Gold / Platinum |
 | total_spent | number | Cumulative spend |
 | created_at | datetime | Creation timestamp |
 
@@ -871,8 +871,17 @@ Blocked when profile is referenced by a Customer or Deliverer.
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
 | profile_id | integer | Yes | Must exist; unused by another customer |
-| address_id | integer | Yes | Must exist in Address |
-| membership_level | string (enum) | Yes | STANDARD / GOLD / PLATINUM |
+| address_id | integer | No* | Must exist in Address (*required if inline address fields not provided) |
+| address_name | string | No* | Address label (*required if address_id not provided) |
+| address_type | string | No* | Address type classification (*required if address_id not provided) |
+| address_line_1 | string | No* | Street address (*required if address_id not provided) |
+| address_line_2 | string | No | Second address line |
+| city | string | No* | City name (*required if address_id not provided) |
+| province | string | No | Province or state |
+| country_code | string | No* | ISO 3166-1 alpha-2 (*required if address_id not provided) | Must be 2 characters |
+| latitude | number | No | -90 to 90 if provided |
+| longitude | number | No | -180 to 180 if provided |
+| membership_level | string (enum) | No | Bronze / Silver / Gold / Platinum; defaults to Bronze if omitted |
 
 **Response:** `CustomerOutput`
 
@@ -882,8 +891,17 @@ Blocked when profile is referenced by a Customer or Deliverer.
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
-| address_id | integer | No | Must exist if provided |
-| membership_level | string (enum) | No | STANDARD / GOLD / PLATINUM |
+| address_id | integer | No | Must exist in Address if provided |
+| address_name | string | No | Address label (used only when updating the linked address inline) |
+| address_type | string | No | Address type classification |
+| address_line_1 | string | No | Street address |
+| address_line_2 | string | No | Second address line |
+| city | string | No | City name |
+| province | string | No | Province or state |
+| country_code | string | No | Must be 2 characters if provided |
+| latitude | number | No | -90 to 90 if provided |
+| longitude | number | No | -180 to 180 if provided |
+| membership_level | string (enum) | No | Bronze / Silver / Gold / Platinum |
 
 **Response:** `CustomerOutput`
 
@@ -908,7 +926,7 @@ Blocked when customer has orders, reviews, or favourite stores.
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
 | deliverer_code | string | No | Must exist if provided |
-| current_status | string (enum) | No | AVAILABLE / BUSY / OFFLINE |
+| current_status | string (enum) | No | available / busy / offline |
 | vehicle_type | string | No | Free text match |
 
 **Response — Success (DelivererOutput)**
@@ -920,8 +938,8 @@ Blocked when customer has orders, reviews, or favourite stores.
 | deliverer_code | string | Business code (e.g. DLV-0001) |
 | vehicle_type | string | Vehicle type |
 | license_plate | string | Vehicle registration |
-| current_status | string (enum) | AVAILABLE / BUSY / OFFLINE |
-| rating | number / null | Average rating |
+| current_status | string (enum) | available / busy / offline |
+| rating | number | Average rating (0 if none yet) |
 | created_at | datetime | Creation timestamp |
 
 ---
@@ -933,8 +951,7 @@ Blocked when customer has orders, reviews, or favourite stores.
 | profile_id | integer | Yes | Must exist; unused by another deliverer |
 | vehicle_type | string | Yes | Must not be blank |
 | license_plate | string | Yes | Must be unique |
-| current_status | string (enum) | No | Defaults to AVAILABLE |
-| rating | number | No | Initial rating; defaults to 0 | Must be 0–5 if provided |
+| current_status | string (enum) | No | Defaults to offline if omitted |
 
 **Response:** `DelivererOutput`
 
@@ -946,8 +963,7 @@ Blocked when customer has orders, reviews, or favourite stores.
 |-------|------|----------|------------|
 | vehicle_type | string | No | Must not be blank if provided |
 | license_plate | string | No | Must be unique if provided |
-| current_status | string (enum) | No | AVAILABLE / BUSY / OFFLINE |
-| rating | number | No | 0–5 |
+| current_status | string (enum) | No | available / busy / offline |
 
 **Response:** `DelivererOutput`
 
@@ -973,7 +989,7 @@ Blocked when deliverer has deliveries, assignments, payments, or expense voucher
 |-------|------|----------|------------|
 | store_code | string | No | Must exist if provided |
 | category | string | No | Free text match |
-| status | string (enum) | No | ACTIVE / INACTIVE / SUSPENDED |
+| status | string (enum) | No | active / inactive / suspended |
 
 **Response — Success (StoreOutput)**
 
@@ -984,8 +1000,8 @@ Blocked when deliverer has deliveries, assignments, payments, or expense voucher
 | address_id | integer | Store address |
 | store_code | string | Business code (e.g. STR-0001) |
 | category | string | Store category |
-| rating | number / null | Average rating |
-| status | string (enum) | ACTIVE / INACTIVE / SUSPENDED |
+| rating | number | Average rating (0 if none yet) |
+| status | string (enum) | active / inactive / suspended |
 | updated_at | datetime | Last update timestamp |
 
 ---
@@ -995,10 +1011,18 @@ Blocked when deliverer has deliveries, assignments, payments, or expense voucher
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
 | name | string | Yes | Unique; must not be blank |
-| address_id | integer | Yes | Must exist in Address |
+| address_id | integer | No* | Must exist in Address (*required if inline address fields not provided) |
+| address_name | string | No* | Address label (*required if address_id not provided) |
+| address_type | string | No* | Address type classification (*required if address_id not provided) |
+| address_line_1 | string | No* | Street address (*required if address_id not provided) |
+| address_line_2 | string | No | Second address line |
+| city | string | No* | City name (*required if address_id not provided) |
+| province | string | No | Province or state |
+| country_code | string | No* | ISO 3166-1 alpha-2 (*required if address_id not provided) | Must be 2 characters |
+| latitude | number | No | -90 to 90 if provided |
+| longitude | number | No | -180 to 180 if provided |
 | category | string | Yes | Must not be blank |
-| status | string (enum) | No | Defaults to ACTIVE |
-| rating | number | No | Initial rating; defaults to 0 | Must be 0–5 if provided |
+| status | string (enum) | No | Defaults to inactive if omitted |
 
 **Response:** `StoreOutput`
 
@@ -1009,10 +1033,18 @@ Blocked when deliverer has deliveries, assignments, payments, or expense voucher
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
 | name | string | No | Unique if provided |
-| address_id | integer | No | Must exist if provided |
+| address_id | integer | No | Must exist in Address if provided |
+| address_name | string | No | Address label (used only when updating the linked address inline) |
+| address_type | string | No | Address type classification |
+| address_line_1 | string | No | Street address |
+| address_line_2 | string | No | Second address line |
+| city | string | No | City name |
+| province | string | No | Province or state |
+| country_code | string | No | Must be 2 characters if provided |
+| latitude | number | No | -90 to 90 if provided |
+| longitude | number | No | -180 to 180 if provided |
 | category | string | No | Must not be blank if provided |
-| status | string (enum) | No | ACTIVE / INACTIVE / SUSPENDED |
-| rating | number | No | 0–5 |
+| status | string (enum) | No | active / inactive / suspended |
 
 **Response:** `StoreOutput`
 
@@ -1040,7 +1072,7 @@ Blocked when store has products, promotions, favourite links, or orders.
 |-------|------|----------|------------|
 | product_id | integer | No | Must exist if provided |
 | store_code | string | No | Must exist in Store.code if provided |
-| status | string (enum) | No | AVAILABLE / OUT_OF_STOCK / DISCONTINUED / UNAVAILABLE |
+| status | string (enum) | No | available / out_of_stock / discontinued / unavailable |
 
 **Response — Success (StoreProductOutput)**
 
@@ -1050,7 +1082,7 @@ Blocked when store has products, promotions, favourite links, or orders.
 | store_id | integer | Owning store |
 | name | string | Product name |
 | unit_price | number | Selling price per unit |
-| status | string (enum) | AVAILABLE / OUT_OF_STOCK / DISCONTINUED / UNAVAILABLE |
+| status | string (enum) | available / out_of_stock / discontinued / unavailable |
 | updated_at | datetime | Last update |
 
 ---
@@ -1062,7 +1094,7 @@ Blocked when store has products, promotions, favourite links, or orders.
 | store_code | string | Yes | Must exist in Store.code |
 | name | string | Yes | Must not be blank |
 | unit_price | number | Yes | Must be >= 0 |
-| status | string (enum) | No | Defaults to AVAILABLE |
+| status | string (enum) | No | Defaults to available |
 
 **Response:** `StoreProductOutput`
 
@@ -1076,7 +1108,7 @@ Blocked when store has products, promotions, favourite links, or orders.
 |-------|------|----------|------------|
 | name | string | No | Must not be blank if provided |
 | unit_price | number | No | Must be >= 0 if provided |
-| status | string (enum) | No | AVAILABLE / OUT_OF_STOCK / DISCONTINUED / UNAVAILABLE |
+| status | string (enum) | No | available / out_of_stock / discontinued / unavailable |
 
 **Response:** `StoreProductOutput`
 
@@ -1228,7 +1260,7 @@ Blocked when store has products, promotions, favourite links, or orders.
 | delivery_id | integer | Delivery internal ID |
 | order_id | integer | Related order |
 | deliverer_id | integer | Assigned deliverer |
-| delivery_type | string (enum) | STANDARD / HURRY / EXPRESS / SCHEDULED |
+| delivery_type | string (enum) | Standard / Hurry / Express / Scheduled |
 | pickup_time | datetime / null | Pickup timestamp |
 | delivery_time | datetime / null | Delivery completion timestamp |
 | delivery_fee | number | Delivery fee amount |
@@ -1241,7 +1273,7 @@ Blocked when store has products, promotions, favourite links, or orders.
 |-------|------|----------|------------|
 | order_code | string | Yes | Must exist; not already have a delivery |
 | deliverer_code | string | Yes | Must exist in Deliverer.code |
-| delivery_type | string (enum) | Yes | STANDARD / HURRY / EXPRESS / SCHEDULED |
+| delivery_type | string (enum) | Yes | Standard / Hurry / Express / Scheduled |
 | pickup_time | datetime | No | Valid datetime if provided |
 | delivery_time | datetime | No | Must be >= pickup_time if both provided |
 | delivery_fee | number | Yes | Must be >= 0 |
@@ -1257,7 +1289,7 @@ Blocked when store has products, promotions, favourite links, or orders.
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
 | deliverer_code | string | No | Must exist if provided |
-| delivery_type | string (enum) | No | STANDARD / HURRY / EXPRESS / SCHEDULED |
+| delivery_type | string (enum) | No | Standard / Hurry / Express / Scheduled |
 | pickup_time | datetime | No | Valid datetime if provided |
 | delivery_time | datetime | No | Must be >= pickup_time if both known |
 | delivery_fee | number | No | Must be >= 0 if provided |
@@ -1287,7 +1319,7 @@ Blocked when store has products, promotions, favourite links, or orders.
 | assignment_id | integer | No | Must exist if provided |
 | order_code | string | No | Must exist in Order.code if provided |
 | deliverer_code | string | No | Must exist in Deliverer.code if provided |
-| status | string (enum) | No | PENDING / ACCEPTED / REJECTED / EXPIRED |
+| status | string (enum) | No | pending / accepted / rejected / expired |
 
 **Response — Success (DispatchAssignmentOutput)**
 
@@ -1298,7 +1330,7 @@ Blocked when store has products, promotions, favourite links, or orders.
 | deliverer_id | integer | Offered deliverer |
 | order_code | string | Target order business code |
 | deliverer_code | string | Offered deliverer business code |
-| status | string (enum) | PENDING / ACCEPTED / REJECTED / EXPIRED |
+| status | string (enum) | pending / accepted / rejected / expired |
 | assigned_at | datetime | Assignment creation timestamp |
 | responded_at | datetime / null | Deliverer response timestamp |
 
@@ -1319,7 +1351,7 @@ Blocked when store has products, promotions, favourite links, or orders.
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
-| status | string (enum) | Yes | PENDING / ACCEPTED / REJECTED / EXPIRED |
+| status | string (enum) | Yes | pending / accepted / rejected / expired |
 | responded_at | datetime | No | Valid datetime if provided |
 
 **Response:** `DispatchAssignmentOutput`
@@ -1401,34 +1433,34 @@ Administrative cleanup only.
 
 ### Order Status
 ```
-PENDING → CONFIRMED → PREPARING → PICKED_UP → DELIVERING → DELIVERED
-       └─────────────────────────────────────────────────→ CANCELLED
+pending → confirmed → preparing → picked_up → delivering → delivered
+        └──────────────────────────────────────────────→ cancelled
 ```
-- PUT allows: PENDING / CONFIRMED / CANCELLED
-- DELETE allowed from: PENDING only
+- PUT allows: pending / confirmed / cancelled
+- DELETE allowed from: pending only
 
 ### Payment Status
 ```
-PENDING → PROCESSING → PAID / COMPLETED
-        └───────────→ FAILED
-        └───────────→ CANCELLED
+pending → processing → paid / completed
+        └───────────→ failed
+        └───────────→ cancelled
 ```
-- PUT allowed from: PENDING only
-- DELETE allowed from: PENDING only
+- PUT allowed from: pending only
+- DELETE allowed from: pending only
 
 ### Expense Voucher Status
 ```
-DRAFT → SUBMITTED → APPROVED
-                 └→ REJECTED
+draft → submitted → approved
+                 └→ rejected
 ```
-- PUT allowed from: DRAFT only (can transition to SUBMITTED)
-- DELETE allowed from: DRAFT only
+- PUT allowed from: draft only (can transition to submitted)
+- DELETE allowed from: draft only
 
 ### Dispatch Assignment Status
 ```
-PENDING → ACCEPTED
-        → REJECTED
-        → EXPIRED
+pending → accepted
+        → rejected
+        → expired
 ```
 
 ---

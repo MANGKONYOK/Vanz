@@ -9,7 +9,7 @@ function computeStatus(startDate, endDate) {
     const end   = new Date(endDate);
     if (today < start) return 'UPCOMING';
     if (today > end)   return 'EXPIRED';
-    return 'ACTIVE';
+    return 'active';
 }
 
 const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };

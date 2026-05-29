@@ -14,7 +14,7 @@ export default function DeliveredOrdersReportView({ showToast }) {
         let cancelled = false;
         setLoading(true);
         Promise.all([
-            getJson('/orders', { status: 'DELIVERED' }).catch(() => []),
+            getJson('/orders', { status: 'delivered' }).catch(() => []),
             getJson('/customers').catch(() => []),
             getJson('/profiles').catch(() => []),
             getJson('/stores').catch(() => []),
@@ -29,7 +29,7 @@ export default function DeliveredOrdersReportView({ showToast }) {
             const delivererMap = new Map(deliverers.map(d => [d.deliverer_id, d]));
 
             let result = (orders || [])
-                .filter(o => o.status === 'DELIVERED')
+                .filter(o => o.status === 'delivered')
                 .map(o => {
                     const cust     = custMap.get(o.customer_id) || {};
                     const prof     = profileMap.get(cust.profile_id) || {};

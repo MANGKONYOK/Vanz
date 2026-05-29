@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, Badge, FilterBar, FilterField, Input, Select } from '../../components/ui';
-import { getJson, getApiErrorMessage } from '../../api/http';
+import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
+import DelivererPaymentView from './DelivererPaymentView';
 
-const STATUS_BADGE = { PENDING: 'amber', PAID: 'green', CANCELLED: 'red' };
-const ALL_STATUSES = ['PENDING', 'PAID', 'CANCELLED'];
+const STATUS_BADGE = { pending: 'amber', paid: 'green', cancelled: 'red' };
+const ALL_STATUSES = ['pending', 'paid', 'cancelled'];
 
 export default function DelivererPaymentListView({ onNavigate, showToast }) {
+    const [editing,      setEditing]      = useState(null); // null = list | row = edit mode
     const [rows,         setRows]         = useState([]);
     const [loading,      setLoading]      = useState(false);
     const [search,       setSearch]       = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [tick,         setTick]         = useState(0);
+
+    const refresh = () => setTick(t => t + 1);
 
     useEffect(() => {
         let cancelled = false;
@@ -36,10 +40,13 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                 return {
                     id:            p.payment_code,
                     paymentId:     p.payment_id,
+                    deliveryId:    p.delivery_id,
                     period:        periodStart && periodEnd ? `${periodStart} – ${periodEnd}` : periodStart || '—',
+                    periodStart,
+                    periodEnd,
                     date:          String(p.payment_datetime || '').slice(0, 10),
                     delivererName: prof.full_name || deliverer.deliverer_code || `Deliverer#${delivery.deliverer_id || '?'}`,
-                    status:        p.status || 'PENDING',
+                    status:        p.status || 'pending',
                     total:         Number(p.total_payment || 0),
                 };
             }));
@@ -50,6 +57,28 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
         });
         return () => { cancelled = true; };
     }, [tick]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handleDelete = async (p) => {
+        if (!window.confirm(`Delete payment ${p.id}?`)) return;
+        try {
+            await deleteJson(`/payments/${p.id}`);
+            showToast(`Payment ${p.id} deleted`);
+            refresh();
+        } catch (e) {
+            showToast(getApiErrorMessage(e, 'Delete failed'), 'error');
+        }
+    };
+
+    if (editing !== null) {
+        return (
+            <DelivererPaymentView
+                data={editing}
+                onBack={() => setEditing(null)}
+                onSaved={() => { setEditing(null); refresh(); }}
+                showToast={showToast}
+            />
+        );
+    }
 
     const filtered = rows.filter(p => {
         const matchSearch = !search ||
@@ -87,9 +116,10 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                     <Table headers={[
                         { label: 'Payment Code' }, { label: 'Period' }, { label: 'Date' },
                         { label: 'Deliverer' }, { label: 'Status', center: true }, { label: 'Total', right: true },
+                        { label: 'Actions', right: true },
                     ]}>
                         {filtered.length === 0 ? (
-                            <tr><td colSpan={6} className="py-10 text-center text-slate-400 text-sm">
+                            <tr><td colSpan={7} className="py-10 text-center text-slate-400 text-sm">
                                 {rows.length === 0 ? 'No payments found' : 'No payments match the current filter'}
                             </td></tr>
                         ) : filtered.map(p => (
@@ -100,6 +130,20 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                                 <Td bold>{p.delivererName}</Td>
                                 <Td center><Badge color={STATUS_BADGE[p.status] || 'gray'}>{p.status}</Badge></Td>
                                 <Td right bold className="mono">฿{p.total.toLocaleString()}</Td>
+                                <Td right className="whitespace-nowrap">
+                                    {p.status === 'pending' ? (
+                                        <div className="flex justify-end gap-2">
+                                            <Btn size="sm" variant="secondary" onClick={() => setEditing(p)}>
+                                                <Edit2 className="w-3 h-3" /> Edit
+                                            </Btn>
+                                            <Btn size="sm" variant="danger" onClick={() => handleDelete(p)}>
+                                                <Trash2 className="w-3 h-3" /> Delete
+                                            </Btn>
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs text-slate-400">—</span>
+                                    )}
+                                </Td>
                             </Tr>
                         ))}
                     </Table>

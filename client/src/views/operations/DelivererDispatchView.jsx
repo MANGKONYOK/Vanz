@@ -7,7 +7,7 @@ function extractCode(value) {
     return String(value || '').split(' – ')[0].trim();
 }
 
-const VEHICLE_ICON = { MOTORCYCLE: '🏍', CAR: '🚗', BICYCLE: '🚲', SCOOTER: '🛵', VAN: '🚐', TRUCK: '🚚' };
+const VEHICLE_ICON = { Motorcycle: '🏍', Car: '🚗', Bicycle: '🚲', Scooter: '🛵', Van: '🚐', Truck: '🚚' };
 
 export default function DelivererDispatchView({ showToast }) {
     // Prepared orders queue
@@ -42,7 +42,7 @@ export default function DelivererDispatchView({ showToast }) {
 
             // Show CONFIRMED and PREPARING orders in the dispatch queue
             const prepared = orders
-                .filter(o => o.status === 'CONFIRMED' || o.status === 'PREPARING')
+                .filter(o => o.status === 'confirmed' || o.status === 'preparing')
                 .map(o => {
                     const cust  = custMap.get(o.customer_id) || {};
                     const prof  = profileMap.get(cust.profile_id) || {};

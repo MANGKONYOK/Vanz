@@ -70,8 +70,8 @@ exports.create = async (data) => {
     const { rows: [chk] } = await client.query('SELECT id FROM delivery WHERE id=$1', [deliveryId]);
     if (!chk) throw Object.assign(new Error(`Delivery ${data.delivery_id} not found`), { name: 'NotFoundError' });
     const { rows: [ins] } = await client.query(
-      'INSERT INTO payment (delivery_id,payment_period_start,payment_period_end,total_payment,status,code,payment_datetime) VALUES ($1,$2,$3,$4,$5,$6,NOW()) RETURNING id',
-      [deliveryId, data.payment_period_start, data.payment_period_end, data.total_payment, 'PENDING', 'PAY-TMP-' + Date.now()]
+      'INSERT INTO payment (delivery_id,payment_period_start,payment_period_end,total_payment,status,code,payment_datetime) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id',
+      [deliveryId, data.payment_period_start, data.payment_period_end, data.total_payment, 'pending', 'PAY-TMP-' + Date.now(), data.payment_datetime]
     );
     const year = new Date().getFullYear();
     const code = 'PAY-' + year + '-' + String(ins.id).padStart(6, '0');
@@ -96,7 +96,7 @@ exports.update = async (id, data) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const hdrFields = ['payment_period_start','payment_period_end','status','total_payment'];
+    const hdrFields = ['payment_period_start','payment_period_end','status','total_payment','payment_datetime'];
     const sets = []; const p = [];
     hdrFields.forEach(k => { if (data[k] !== undefined) { p.push(data[k]); sets.push(`${k} = $${p.length}`); }});
     let hdr;

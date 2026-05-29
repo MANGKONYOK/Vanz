@@ -29,9 +29,9 @@ export default function DashboardView({ onNavigate }) {
 
             // Stats
             const todayOrders   = (orders || []).filter(o => String(o.order_date || '').slice(0, 10) === today);
-            const activeDeliverersCount = (deliverers || []).filter(d => d.current_status !== 'OFFLINE').length;
+            const activeDeliverersCount = (deliverers || []).filter(d => d.current_status !== 'offline').length;
             const todayRevenue  = todayOrders.reduce((s, o) => s + Number(o.total_price || 0), 0);
-            const pendingVouchersCount = (vouchers || []).filter(v => v.status === 'SUBMITTED').length;
+            const pendingVouchersCount = (vouchers || []).filter(v => v.status === 'submitted').length;
 
             setStats({
                 orders:     todayOrders.length,
@@ -42,7 +42,7 @@ export default function DashboardView({ onNavigate }) {
 
             // Dispatch queue: CONFIRMED or PREPARING orders
             const queueOrders = (orders || [])
-                .filter(o => o.status === 'CONFIRMED' || o.status === 'PREPARING')
+                .filter(o => o.status === 'confirmed' || o.status === 'preparing')
                 .slice(0, 5)
                 .map(o => {
                     const cust  = custMap.get(o.customer_id) || {};
@@ -71,7 +71,7 @@ export default function DashboardView({ onNavigate }) {
                         id:            v.voucher_code,
                         delivererName: prof.full_name || deliverer.deliverer_code || '—',
                         date:          String(v.voucher_date || '').slice(0, 10),
-                        status:        v.status || 'DRAFT',
+                        status:        v.status || 'draft',
                         total:         Number(v.total_amount || 0),
                     };
                 });
@@ -129,7 +129,7 @@ export default function DashboardView({ onNavigate }) {
                                     <p className="text-sm font-bold text-slate-900">{v.id}</p>
                                     <p className="text-xs text-slate-500">{v.delivererName} · {v.date}</p>
                                 </div>
-                                <Badge color={v.status === 'APPROVED' ? 'green' : v.status === 'REJECTED' ? 'red' : 'amber'}>{v.status}</Badge>
+                                <Badge color={v.status === 'approved' ? 'green' : v.status === 'rejected' ? 'red' : 'amber'}>{v.status}</Badge>
                                 <span className="text-sm font-bold text-slate-900 shrink-0">฿{v.total.toLocaleString()}</span>
                             </div>
                         ))}

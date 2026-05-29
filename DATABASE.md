@@ -1,6 +1,6 @@
 # DATABASE.md — Vanz Marketplace Delivery Platform
 
-> Version 1.1 · Schema documented 28 May 2026  
+> Version 1.2 · Schema documented 29 May 2026  
 > Project: Marketplace Delivery Platform Management System  
 > Team: Panjapong Poobancheun, Sorawit Chaithong, Kittiphat Noikate, Piti Srisongkram
 
@@ -53,12 +53,12 @@ Stores physical location details. Used by `Customer` (default delivery address) 
 | | address_name | text | YES | — | Label for this address (e.g. Home, Office) |
 | | address_type | text | YES | — | Type classification of address |
 | | address_line_1 | text | YES | — | First line of street address |
-| | address_line_2 | text | NO | NULL | Second line (optional) |
+| | address_line_2 | text | YES | — | Second address line (blank if unused) |
 | | city | text | YES | — | City name |
-| | province | text | NO | NULL | Province or state |
+| | province | text | YES | — | Province or state |
 | | country_code | varchar(2) | YES | — | ISO 3166-1 alpha-2 (e.g. TH) |
-| | latitude | numeric | NO | NULL | Geographic latitude coordinate |
-| | longitude | numeric | NO | NULL | Geographic longitude coordinate |
+| | latitude | numeric | YES | 0 | Geographic latitude coordinate (defaults to 0 if unknown) |
+| | longitude | numeric | YES | 0 | Geographic longitude coordinate (defaults to 0 if unknown) |
 
 **Example Records:**
 
@@ -102,7 +102,7 @@ Represents a registered customer. Linked to a `Profile` and a default `Address`.
 | FK | profile_id | int8 | YES | — | References Profile.id |
 | AK | code | text | YES | — | Unique business code (e.g. CUST-0001) |
 | FK | address_id | int8 | YES | — | Default delivery address → Address.id |
-| | membership_level | enum | YES | — | STANDARD / GOLD / PLATINUM |
+| | membership_level | enum | YES | 'Bronze' | Bronze / Silver / Gold / Platinum |
 | | total_spent | numeric | YES | 0 | Cumulative spend by this customer |
 | | created_at | datetime | YES | NOW() | Record creation timestamp |
 
@@ -124,10 +124,10 @@ Represents a registered delivery person. Linked to a `Profile`. Tracks vehicle i
 | PK | id | serial & int8 | YES | — | Auto-increment primary key |
 | FK | profile_id | int8 | YES | — | References Profile.id |
 | AK | code | text | YES | — | Unique business code (e.g. DLV-0001) |
-| | vehicle_type | text | YES | — | MOTORCYCLE / CAR / BICYCLE / SCOOTER / VAN / TRUCK |
+| | vehicle_type | text | YES | — | Motorcycle / Car / Bicycle / Scooter / Van / Truck |
 | | license_plate | text | YES | — | Vehicle license plate number |
-| | current_status | enum | YES | — | AVAILABLE / BUSY / OFFLINE |
-| | rating | numeric | NO | NULL | Average customer rating (0.0–5.0) |
+| | current_status | enum | YES | 'offline' | available / busy / offline |
+| | rating | numeric | YES | 0 | Average customer rating (0.0–5.0) |
 | | created_at | datetime | YES | NOW() | Record creation timestamp |
 
 **Example Records:**
@@ -152,8 +152,8 @@ Represents a merchant store with a physical address and product catalogue.
 | FK | address_id | int8 | YES | — | Physical store location → Address.id |
 | AK | code | text | YES | — | Unique business code (e.g. STR-0001) |
 | | category | text | YES | — | RESTAURANT / GROCERY / CAFE / etc. |
-| | rating | numeric | NO | NULL | Average customer rating (0.0–5.0) |
-| | status | enum | YES | — | ACTIVE / INACTIVE / SUSPENDED |
+| | rating | numeric | YES | 0 | Average customer rating (0.0–5.0) |
+| | status | enum | YES | 'inactive' | active / inactive / suspended |
 | | updated_at | timestamps | YES | NOW() | Last update timestamp |
 
 **Example Records:**
@@ -199,7 +199,7 @@ Header record for a promotional campaign belonging to a store.
 | AK | code | text | YES | — | Unique business code (e.g. PROMO-0001) |
 | | start_date | date | YES | — | Date the promotion becomes active |
 | | end_date | date | YES | — | Date the promotion expires (inclusive) |
-| | discount_type | enum | YES | — | PERCENTAGE / FIXED_AMOUNT |
+| | discount_type | enum | YES | — | percentage / fixed_amount |
 
 **Example Records:**
 
@@ -286,7 +286,7 @@ Header record for a customer order placed at a specific store.
 | AK | code | text | YES | — | Unique order code (e.g. ORD-2026-000123) |
 | | total_price | numeric | YES | — | Total order amount — computed at order time |
 | | address_snapshot | text | YES | — | Delivery address captured at moment of ordering |
-| | status | text | YES | — | PENDING / CONFIRMED / PREPARING / PICKED_UP / DELIVERING / DELIVERED / CANCELLED |
+| | status | text | YES | 'pending' | pending / confirmed / preparing / picked_up / delivering / delivered / cancelled |
 | | updated_at | timestamps | YES | NOW() | Last update timestamp |
 
 **Example Records:**
@@ -308,7 +308,7 @@ Line items of an order. `unit_price` and `extend_price` are snapshotted at order
 | FK | order_id | int8 | YES | — | Parent order → Order.id |
 | FK | product_id | int8 | YES | — | Ordered product → Store_Products.id |
 | | quantity | numeric | YES | — | Number of units ordered |
-| | unit_price | text | YES | — | Price per unit captured at order time |
+| | unit_price | numeric | YES | — | Price per unit captured at order time |
 | | extend_price | numeric | YES | — | quantity × unit_price — calculated at order time |
 | | updated_at | timestamps | YES | NOW() | Last update timestamp |
 
@@ -332,7 +332,7 @@ Tracks the physical delivery of a single order — assigned deliverer, timing, a
 | PK | id | int8 | YES | — | Auto-increment primary key |
 | FK | order_id | int8 | YES | — | Fulfilled order → Order.id |
 | FK | deliverer_id | int8 | YES | — | Assigned deliverer → Deliverer.id |
-| | delivery_type | enum | YES | — | STANDARD / HURRY / EXPRESS / SCHEDULED |
+| | delivery_type | enum | YES | — | Standard / Hurry / Express / Scheduled |
 | | pickup_time | timestamps | NO | NULL | Timestamp when deliverer picked up the order |
 | | delivery_time | timestamps | NO | NULL | Timestamp when order was delivered |
 | | delivery_fee | numeric | YES | — | Fee charged for this delivery |
@@ -356,7 +356,7 @@ Header for a deliverer expense claim associated with a delivery.
 | FK | delivery_id | int8 | YES | — | Associated delivery → Delivery.id |
 | AK | code | text | YES | — | Unique business code (e.g. EXP-2026-000789) |
 | | voucher_date | date | YES | — | Date the expenses were incurred |
-| | status | enum | YES | — | DRAFT / SUBMITTED / APPROVED / REJECTED / PAID |
+| | status | enum | YES | 'draft' | draft / submitted / approved / rejected / paid |
 | | total_amount | numeric | YES | — | Sum of all expense item amounts — computed |
 | | updated_at | timestamps | YES | NOW() | Last update timestamp |
 
@@ -377,7 +377,7 @@ Itemised expense lines within a voucher (fuel, maintenance, toll, etc.).
 |-----|--------|-----------|----------|---------|-------------|
 | PK | id | int8 | YES | — | Auto-increment primary key |
 | FK | expense_voucher_id | int8 | YES | — | Parent voucher → Expense_Voucher.id |
-| | expense_type | enum | YES | — | FUEL / MAINTENANCE / TOLL / OTHER |
+| | expense_type | enum | YES | — | fuel / maintenance / toll / other |
 | | description | text | YES | — | Free-text description of the expense |
 | | amount | numeric | YES | — | Expense amount (must be > 0) |
 | | receipt_reference_code | text | NO | NULL | Optional external receipt reference code |
@@ -403,8 +403,8 @@ Header for a periodic payment to a deliverer, covering one or more completed del
 | | payment_period_start | datetime | YES | — | Start of the payment period |
 | | payment_period_end | datetime | YES | — | End of the payment period |
 | | total_payment | numeric | YES | — | Total payment amount for the period |
-| | status | enum | YES | — | PENDING / PAID / CANCELLED / FAILED / PROCESSING / COMPLETED |
-| | payment_datetime | timestamps | NO | NULL | Actual payment processing timestamp |
+| | status | enum | YES | 'pending' | pending / paid / cancelled / failed / processing / completed |
+| | payment_datetime | timestamps | YES | — | Actual payment processing timestamp |
 
 **Example Records:**
 
@@ -448,7 +448,7 @@ Records each attempt to offer an order to a deliverer. Multiple rows may exist p
 | PK | id | int8 | YES | — | Auto-increment primary key |
 | FK | order_id | int8 | YES | — | Order being dispatched → Order.id |
 | FK | deliverer_id | int8 | YES | — | Deliverer being offered the order → Deliverer.id |
-| | status | enum | YES | — | PENDING / ACCEPTED / REJECTED / EXPIRED |
+| | status | enum | YES | 'pending' | pending / accepted / rejected / expired |
 | | assigned_at | timestamps | YES | NOW() | Timestamp when assignment was created |
 | | responded_at | timestamps | NO | NULL | Timestamp when deliverer responded |
 

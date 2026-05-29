@@ -4,7 +4,7 @@ import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select,
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 import StoreFormView from './StoreFormView';
 
-const STATUS_COLOR = { ACTIVE: 'green', INACTIVE: 'gray', SUSPENDED: 'red' };
+const STATUS_COLOR = { active: 'green', inactive: 'gray', suspended: 'red' };
 
 function toTitleCase(str = '') {
     return str.replace(/_/g, ' ').replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
@@ -39,9 +39,11 @@ export default function StoreListView({ showToast }) {
                     addressId:  s.address_id,
                     name:       s.name,
                     category:   s.category || '—',
-                    status:     s.status || 'ACTIVE',
-                    address:    addr.address_line_1 || '—',
+                    status:     s.status || 'active',
+                    address:    addr.address_line_1 || '',
+                    address2:   addr.address_line_2 || '',
                     city:       addr.city || '',
+                    province:   addr.province || '',
                     rating:     s.rating != null ? parseFloat(s.rating).toFixed(1) : '—',
                     updatedAt:  s.updated_at ? new Date(s.updated_at).toLocaleDateString() : '—',
                 };

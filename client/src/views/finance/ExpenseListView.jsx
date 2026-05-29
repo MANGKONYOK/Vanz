@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, Badge, FilterBar, FilterField, Input, Select } from '../../components/ui';
-import { getJson, getApiErrorMessage } from '../../api/http';
+import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
+import ExpenseFormView from './ExpenseFormView';
 
-const STATUS_BADGE = { DRAFT: 'gray', SUBMITTED: 'amber', APPROVED: 'green', REJECTED: 'red' };
-const ALL_STATUSES = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'];
+const STATUS_BADGE = { draft: 'gray', submitted: 'amber', approved: 'green', rejected: 'red' };
+const ALL_STATUSES = ['draft', 'submitted', 'approved', 'rejected'];
 
 export default function ExpenseListView({ onNavigate, showToast }) {
-    const [rows,       setRows]       = useState([]);
-    const [loading,    setLoading]    = useState(false);
-    const [search,     setSearch]     = useState('');
+    const [editing,      setEditing]      = useState(null); // null = list | row = edit mode
+    const [rows,         setRows]         = useState([]);
+    const [loading,      setLoading]      = useState(false);
+    const [search,       setSearch]       = useState('');
     const [statusFilter, setStatusFilter] = useState('');
-    const [tick,       setTick]       = useState(0);
+    const [tick,         setTick]         = useState(0);
+
+    const refresh = () => setTick(t => t + 1);
 
     useEffect(() => {
         let cancelled = false;
@@ -34,10 +38,12 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                 return {
                     id:            v.voucher_code,
                     voucherId:     v.expense_voucher_id,
+                    deliveryId:    v.delivery_id,
                     date:          String(v.voucher_date || '').slice(0, 10),
                     delivererName: prof.full_name || deliverer.deliverer_code || `Deliverer#${delivery.deliverer_id || '?'}`,
-                    status:        v.status || 'DRAFT',
+                    status:        v.status || 'draft',
                     total:         Number(v.total_amount || 0),
+                    expenseItems:  v.expense_items || [],
                 };
             }));
         }).catch(e => {
@@ -47,6 +53,28 @@ export default function ExpenseListView({ onNavigate, showToast }) {
         });
         return () => { cancelled = true; };
     }, [tick]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handleDelete = async (v) => {
+        if (!window.confirm(`Delete voucher ${v.id}?`)) return;
+        try {
+            await deleteJson(`/expense-vouchers/${v.id}`);
+            showToast(`Voucher ${v.id} deleted`);
+            refresh();
+        } catch (e) {
+            showToast(getApiErrorMessage(e, 'Delete failed'), 'error');
+        }
+    };
+
+    if (editing !== null) {
+        return (
+            <ExpenseFormView
+                data={editing}
+                onBack={() => setEditing(null)}
+                onSaved={() => { setEditing(null); refresh(); }}
+                showToast={showToast}
+            />
+        );
+    }
 
     const filtered = rows.filter(v => {
         const matchSearch = !search ||
@@ -84,9 +112,10 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                     <Table headers={[
                         { label: 'Voucher Code' }, { label: 'Date' }, { label: 'Deliverer' },
                         { label: 'Status', center: true }, { label: 'Amount', right: true },
+                        { label: 'Actions', right: true },
                     ]}>
                         {filtered.length === 0 ? (
-                            <tr><td colSpan={5} className="py-10 text-center text-slate-400 text-sm">
+                            <tr><td colSpan={6} className="py-10 text-center text-slate-400 text-sm">
                                 {rows.length === 0 ? 'No vouchers found' : 'No vouchers match the current filter'}
                             </td></tr>
                         ) : filtered.map(v => (
@@ -96,6 +125,20 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                                 <Td bold>{v.delivererName}</Td>
                                 <Td center><Badge color={STATUS_BADGE[v.status] || 'gray'}>{v.status}</Badge></Td>
                                 <Td right bold className="mono">฿{v.total.toLocaleString()}</Td>
+                                <Td right className="whitespace-nowrap">
+                                    {v.status === 'draft' ? (
+                                        <div className="flex justify-end gap-2">
+                                            <Btn size="sm" variant="secondary" onClick={() => setEditing(v)}>
+                                                <Edit2 className="w-3 h-3" /> Edit
+                                            </Btn>
+                                            <Btn size="sm" variant="danger" onClick={() => handleDelete(v)}>
+                                                <Trash2 className="w-3 h-3" /> Delete
+                                            </Btn>
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs text-slate-400">—</span>
+                                    )}
+                                </Td>
                             </Tr>
                         ))}
                     </Table>

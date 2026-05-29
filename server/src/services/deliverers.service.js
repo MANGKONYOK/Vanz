@@ -1,7 +1,7 @@
 'use strict';
 const model  = require('../models/deliverers.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
-const VALID_STATUS = ['AVAILABLE', 'BUSY', 'OFFLINE'];
+const VALID_STATUS = ['available', 'busy', 'offline'];
 
 exports.list = (q) => model.findAll(q);
 
@@ -24,8 +24,6 @@ exports.update = async (code, data) => {
   const fe = [];
   if (data.current_status !== undefined && !VALID_STATUS.includes(data.current_status))
     fe.push({ field: 'requestBody.current_status', reason: `must be one of ${VALID_STATUS.join(', ')}` });
-  if (data.rating !== undefined && (isNaN(data.rating) || data.rating < 0 || data.rating > 5))
-    fe.push({ field: 'requestBody.rating', reason: 'must be between 0 and 5' });
   if (fe.length) throw new ValidationError('Invalid deliverer input', fe);
   return model.update(existing.deliverer_id, data);
 };

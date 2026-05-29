@@ -32,7 +32,7 @@ exports.create = async (data) => {
     await client.query('BEGIN');
     const { rows: [ins] } = await client.query(
       'INSERT INTO deliverer (profile_id,vehicle_type,license_plate,current_status,code) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-      [data.profile_id, data.vehicle_type, data.license_plate, data.current_status || 'AVAILABLE', 'DLV-TMP-' + Date.now()]
+      [data.profile_id, data.vehicle_type, data.license_plate, data.current_status || 'offline', 'DLV-TMP-' + Date.now()]
     );
     const code = 'DLV-' + String(ins.id).padStart(4, '0');
     const { rows: [r] } = await client.query('UPDATE deliverer SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);
@@ -48,7 +48,7 @@ exports.findByCode = async (code) => {
 };
 
 exports.update = async (id, data) => {
-  const allowed = ['vehicle_type','license_plate','current_status','rating'];
+  const allowed = ['vehicle_type','license_plate','current_status'];
   const sets = []; const p = [];
   allowed.forEach(k => { if (data[k] !== undefined) { p.push(data[k]); sets.push(`${k} = $${p.length}`); }});
   if (!sets.length) { const { rows:[r] } = await pool.query('SELECT * FROM deliverer WHERE id=$1',[id]); return fmt(r); }

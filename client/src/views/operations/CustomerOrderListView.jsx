@@ -4,17 +4,17 @@ import { PageHeader, Btn, Card, Table, Tr, Td, Badge, FilterBar, FilterField, In
 import { getJson, getApiErrorMessage } from '../../api/http';
 
 const STATUS_BADGE = {
-    PENDING:    'amber',
-    CONFIRMED:  'amber',
-    PREPARING:  'blue',
-    PREPARED:   'blue',
-    PICKED_UP:  'blue',
-    DELIVERING: 'blue',
-    DELIVERED:  'green',
-    CANCELLED:  'red',
+    pending:    'amber',
+    confirmed:  'amber',
+    preparing:  'blue',
+    prepared:   'blue',
+    picked_up:  'blue',
+    delivering: 'blue',
+    delivered:  'green',
+    cancelled:  'red',
 };
 
-const ALL_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING', 'PREPARED', 'PICKED_UP', 'DELIVERING', 'DELIVERED', 'CANCELLED'];
+const ALL_STATUSES = ['pending', 'confirmed', 'preparing', 'picked_up', 'delivering', 'delivered', 'cancelled'];
 
 export default function CustomerOrderListView({ onNavigate, showToast }) {
     const [rows, setRows]       = useState([]);
@@ -47,7 +47,7 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                     date:    String(o.order_date || '').slice(0, 10),
                     customer: prof.full_name || cust.customer_code || `Cust#${o.customer_id}`,
                     store:    store.name || `Store#${o.store_id}`,
-                    status:   o.status || 'PENDING',
+                    status:   o.status || 'pending',
                     total:    Number(o.total_price || 0),
                 };
             }));

@@ -1,8 +1,8 @@
 'use strict';
 const model = require('../models/orders.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
-const VALID_STATUS = ['PENDING', 'CONFIRMED', 'PREPARING', 'PICKED_UP', 'DELIVERING', 'DELIVERED', 'CANCELLED'];
-const MUTABLE_STATUS = ['PENDING', 'CONFIRMED', 'CANCELLED'];
+const VALID_STATUS = ['pending', 'confirmed', 'preparing', 'picked_up', 'delivering', 'delivered', 'cancelled'];
+const MUTABLE_STATUS = ['pending', 'confirmed', 'cancelled'];
 
 exports.list = (q) => model.findAll(q);
 
@@ -38,7 +38,7 @@ exports.update = async (code, data) => {
   const fe = [];
   if (data.status !== undefined && !MUTABLE_STATUS.includes(data.status))
     fe.push({ field: 'requestBody.status', reason: `must be one of ${MUTABLE_STATUS.join(', ')}` });
-  if (data.address_snapshot !== undefined && existing.status !== 'PENDING')
+  if (data.address_snapshot !== undefined && existing.status !== 'pending')
     fe.push({ field: 'requestBody.address_snapshot', reason: 'can only be updated when order status is PENDING' });
   if (data.total_price !== undefined && (isNaN(data.total_price) || Number(data.total_price) < 0))
     fe.push({ field: 'requestBody.total_price', reason: 'must be >= 0' });
@@ -58,8 +58,8 @@ exports.update = async (code, data) => {
 exports.remove = async (code) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Order ${code} not found`);
-  if (existing.status !== 'PENDING')
-    throw new ValidationError(`Order ${code} can only be deleted when status is PENDING`);
+  if (existing.status !== 'pending')
+    throw new ValidationError(`Order ${code} can only be deleted when status is pending`);
   await model.deleteById(existing.order_id);
   return { message: `Order ${code} deleted successfully` };
 };

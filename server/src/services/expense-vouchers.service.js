@@ -1,7 +1,7 @@
 'use strict';
 const model = require('../models/expense-vouchers.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
-const VALID_TYPES = ['FUEL', 'MAINTENANCE', 'TOLL', 'OTHER'];
+const VALID_TYPES = ['fuel', 'maintenance', 'toll', 'other'];
 
 exports.list = (q) => model.findAll(q);
 
@@ -35,11 +35,11 @@ exports.create = async (data) => {
 exports.update = async (code, data) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Expense Voucher ${code} not found`);
-  if (existing.status !== 'DRAFT')
-    throw new ValidationError(`Expense Voucher ${code} can only be updated when status is DRAFT`);
+  if (existing.status !== 'draft')
+    throw new ValidationError(`Expense Voucher ${code} can only be updated when status is draft`);
   const fe = [];
-  if (data.status !== undefined && !['DRAFT', 'SUBMITTED'].includes(data.status))
-    fe.push({ field: 'requestBody.status', reason: 'must be one of DRAFT, SUBMITTED' });
+  if (data.status !== undefined && !['draft', 'submitted'].includes(data.status))
+    fe.push({ field: 'requestBody.status', reason: 'must be one of draft, submitted' });
   if (data.voucher_date !== undefined && new Date(data.voucher_date) > new Date())
     fe.push({ field: 'requestBody.voucher_date', reason: 'cannot be a future date' });
   if (data.total_amount !== undefined && (isNaN(data.total_amount) || Number(data.total_amount) < 0))
@@ -61,8 +61,8 @@ exports.update = async (code, data) => {
 exports.remove = async (code) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Expense Voucher ${code} not found`);
-  if (existing.status !== 'DRAFT')
-    throw new ValidationError(`Expense Voucher ${code} can only be deleted when status is DRAFT`);
+  if (existing.status !== 'draft')
+    throw new ValidationError(`Expense Voucher ${code} can only be deleted when status is draft`);
   await model.deleteById(existing.expense_voucher_id);
   return { message: `Expense Voucher ${code} deleted successfully` };
 };

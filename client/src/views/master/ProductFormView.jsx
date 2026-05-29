@@ -4,10 +4,10 @@ import { FormField, Input, Card, Btn, Select, LovInput, LovModal } from '../../c
 import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 
 const STATUS_OPTIONS = [
-    { value: 'AVAILABLE',    label: 'Available'    },
-    { value: 'OUT_OF_STOCK', label: 'Out of Stock' },
-    { value: 'UNAVAILABLE',  label: 'Unavailable'  },
-    { value: 'DISCONTINUED', label: 'Discontinued' },
+    { value: 'available',    label: 'Available'    },
+    { value: 'out_of_stock', label: 'Out of Stock' },
+    { value: 'unavailable',  label: 'Unavailable'  },
+    { value: 'discontinued', label: 'Discontinued' },
 ];
 
 export default function ProductFormView({ data = {}, stores: initStores = [], onBack, onSaved, showToast }) {
@@ -23,7 +23,7 @@ export default function ProductFormView({ data = {}, stores: initStores = [], on
 
     const [name,   setName]   = useState(data.name  || '');
     const [price,  setPrice]  = useState(data.price != null ? String(data.price) : '');
-    const [status, setStatus] = useState(data.status || 'AVAILABLE');
+    const [status, setStatus] = useState(data.status || 'available');
     const [saving, setSaving] = useState(false);
 
     // If parent didn't provide stores list (edge case), fetch live

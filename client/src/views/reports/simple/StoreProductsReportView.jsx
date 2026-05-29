@@ -33,7 +33,7 @@ export default function StoreProductsReportView({ showToast }) {
                     store:      s.name || '-',
                     name:       p.name,
                     price:      Number(p.unit_price || 0),
-                    status:     p.status || 'AVAILABLE',
+                    status:     p.status || 'available',
                 };
             });
             setAllProducts(mapped);

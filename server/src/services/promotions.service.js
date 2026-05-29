@@ -1,7 +1,7 @@
 'use strict';
 const model = require('../models/promotions.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
-const VALID_DISCOUNT = ['PERCENTAGE', 'FIXED_AMOUNT'];
+const VALID_DISCOUNT = ['percentage', 'fixed_amount'];
 
 exports.list = (q) => model.findAll(q);
 
@@ -23,7 +23,7 @@ exports.create = async (data) => {
       if (!item.product_id) fe.push({ field: `requestBody.promotion_items[${i}].product_id`, reason: 'required' });
       if (item.discount_value === undefined || Number(item.discount_value) <= 0)
         fe.push({ field: `requestBody.promotion_items[${i}].discount_value`, reason: 'must be > 0' });
-      if (data.discount_type === 'PERCENTAGE' && item.discount_value !== undefined && Number(item.discount_value) > 100)
+      if (data.discount_type === 'percentage' && item.discount_value !== undefined && Number(item.discount_value) > 100)
         fe.push({ field: `requestBody.promotion_items[${i}].discount_value`, reason: 'percentage must be <= 100' });
     });
   }
@@ -43,7 +43,7 @@ exports.update = async (code, data) => {
       if (!item.product_id) fe.push({ field: `requestBody.promotion_items[${i}].product_id`, reason: 'required' });
       if (item.discount_value === undefined || Number(item.discount_value) <= 0)
         fe.push({ field: `requestBody.promotion_items[${i}].discount_value`, reason: 'must be > 0' });
-      if (discountType === 'PERCENTAGE' && item.discount_value !== undefined && Number(item.discount_value) > 100)
+      if (discountType === 'percentage' && item.discount_value !== undefined && Number(item.discount_value) > 100)
         fe.push({ field: `requestBody.promotion_items[${i}].discount_value`, reason: 'percentage must be <= 100' });
     });
   }

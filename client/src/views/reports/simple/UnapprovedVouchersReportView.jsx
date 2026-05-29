@@ -42,7 +42,7 @@ export default function UnapprovedVouchersReportView({ showToast }) {
                     date:          String(v.voucher_date || '').slice(0, 10),
                     items:         (v.expense_items || []).length,
                     total:         Number(v.total_amount || 0),
-                    status:        v.status || 'DRAFT',
+                    status:        v.status || 'draft',
                 };
             }));
         }).catch(e => {
@@ -54,7 +54,7 @@ export default function UnapprovedVouchersReportView({ showToast }) {
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const unapproved = allVouchers.filter(v => {
-        if (v.status === 'APPROVED' || v.status === 'REJECTED') return false;
+        if (v.status === 'approved' || v.status === 'rejected') return false;
         if (statusFilter && v.status !== statusFilter) return false;
         if (dateFrom && v.date < dateFrom) return false;
         if (dateTo   && v.date > dateTo)   return false;

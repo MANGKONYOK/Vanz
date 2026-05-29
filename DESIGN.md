@@ -1,6 +1,6 @@
 # DESIGN.md — Vanz Frontend Architecture & UI Design
 
-> Version 1.3 · Updated 28 May 2026  
+> Version 1.4 · Updated 29 May 2026  
 > Tech Stack: React 18 · Vite · Tailwind CSS v4 · Lucide React
 
 ---
@@ -40,9 +40,9 @@
 
 | Status | `color` prop | Bg / Text | Applies to |
 |--------|-------------|-----------|------------|
-| Success / Approved / Active | `green` | `emerald-100` / `emerald-700` | APPROVED, PAID, ACTIVE, DELIVERED |
-| Warning / Pending | `amber` | `amber-100` / `amber-700` | SUBMITTED, PENDING, PREPARING |
-| Danger / Rejected | `red` | `red-100` / `red-700` | REJECTED, CANCELLED |
+| Success / Approved / Active | `green` | `emerald-100` / `emerald-700` | approved, paid, active, delivered |
+| Warning / Pending | `amber` | `amber-100` / `amber-700` | submitted, pending, preparing |
+| Danger / Rejected | `red` | `red-100` / `red-700` | rejected, cancelled |
 | Info | `blue` | `blue-100` / `blue-700` | Informational |
 | Default | `gray` | `slate-100` / `slate-700` | Other / unknown |
 
@@ -523,21 +523,39 @@ Empty state: "All orders have been dispatched ✓"
 | Component | Role |
 |-----------|------|
 | `PageHeader` | "Expense Vouchers" + "Create Voucher" |
+| `FilterBar` + `FilterField` | Search input + Status dropdown |
 | `Card` | Table wrapper |
 | `Table` / `Tr` / `Td` / `Badge` | Voucher rows |
+| `Btn` (secondary/danger, sm) | Edit / Delete per `draft` row |
 
 #### Table Columns
 
 | Column | Style |
 |--------|-------|
-| Voucher ID | mono red-600 bold |
-| Date | default |
+| Voucher Code | mono red-600 bold |
+| Date | xs slate-500 |
 | Deliverer | bold |
-| Status | `Badge` (green/red/amber) |
-| Amount | right bold `฿` |
+| Status | `Badge` (gray=draft, amber=submitted, green=approved, red=rejected) |
+| Amount | right bold mono `฿` |
+| Actions | Edit + Delete (draft only); `—` otherwise |
+
+#### State
+
+| Variable | Purpose |
+|----------|---------|
+| `editing` | `null` = list; row object = edit form (renders `ExpenseFormView`) |
+| `rows` | Live joined vouchers |
+| `tick` | Re-fetch trigger |
+| `search` | Voucher code / deliverer filter |
+| `statusFilter` | Status filter |
+
+#### CRUD
+- **Create:** "Create Voucher" navigates to `expense_form` via `onNavigate`
+- **Edit:** Opens `ExpenseFormView` inline (draft only) — `setEditing(row)`
+- **Delete:** `DELETE /api/v1/expense-vouchers/{voucher_code}` (draft only) → `refresh()`
 
 #### API
-- `GET /api/v1/expense-vouchers`
+- `GET /api/v1/expense-vouchers` · `GET /api/v1/deliveries` · `GET /api/v1/deliverers` · `GET /api/v1/profiles`
 
 ---
 
@@ -562,21 +580,30 @@ Empty state: "All orders have been dispatched ✓"
 | `Btn` (secondary) | Add Row |
 | `Btn` (primary, lg) | Save Voucher |
 
-#### Card 1 — Voucher Header (grid 3-col)
+#### Modes
 
-| Field | Type |
-|-------|------|
-| Voucher Code | Input read-only mono (EXP-YYYY-NNNNNN) |
-| Deliverer* | LovInput → deliverer picker |
-| Voucher Date* | Input type=date |
-| Status | Select (DRAFT/SUBMITTED/APPROVED/REJECTED) |
-| Approved By | Input |
+| Prop | Behaviour |
+|------|-----------|
+| `data` absent (create) | Shows Deliverer LoV; POSTs new voucher |
+| `data` present (edit) | Shows voucher code read-only + status Select; PUTs update |
+
+`onBack` / `onSaved` props used in edit mode (from `ExpenseListView`).  
+`onNavigateBack` used in create mode (from `App.jsx`).
+
+#### Card 1 — Voucher Header (grid 2-col)
+
+| Field | Create | Edit |
+|-------|--------|------|
+| Deliverer | `LovInput` (required) | — (hidden) |
+| Voucher Code | — (hidden) | Input read-only mono |
+| Voucher Date | Input type=date | Input type=date |
+| Status | — (always `draft`) | Select: draft / submitted |
 
 #### Card 2 — Expense Items (editable table)
 
 | Column | Type |
 |--------|------|
-| Type | Select per row (FUEL/MAINTENANCE/TOLL/OTHER) |
+| Type | Select per row: fuel / maintenance / toll / other |
 | Description | text input |
 | Receipt Reference | text input mono |
 | Amount | number input right-aligned |
@@ -621,21 +648,40 @@ Footer: `Total Amount = Σ(amount)` — **frontend-calculated** — sent as `tot
 | Component | Role |
 |-----------|------|
 | `PageHeader` | "Deliverer Payments" + "Create Payment" |
+| `FilterBar` + `FilterField` | Search input + Status dropdown |
 | `Card` | Table wrapper |
 | `Table` / `Tr` / `Td` / `Badge` | Payment rows |
+| `Btn` (secondary/danger, sm) | Edit / Delete per `pending` row |
 
 #### Table Columns
 
 | Column | Style |
 |--------|-------|
-| Period | default |
-| Date | default |
+| Payment Code | mono red-600 bold |
+| Period | xs slate-500 mono |
+| Date | xs slate-500 |
 | Deliverer | bold |
-| Status | `Badge` (green/amber) |
-| Amount | right bold `฿` |
+| Status | `Badge` (amber=pending, green=paid, red=cancelled) |
+| Total | right bold mono `฿` |
+| Actions | Edit + Delete (pending only); `—` otherwise |
+
+#### State
+
+| Variable | Purpose |
+|----------|---------|
+| `editing` | `null` = list; row object = edit form (renders `DelivererPaymentView`) |
+| `rows` | Live joined payments |
+| `tick` | Re-fetch trigger |
+| `search` | Payment code / deliverer filter |
+| `statusFilter` | Status filter |
+
+#### CRUD
+- **Create:** "Create Payment" navigates to `payment_form` via `onNavigate`
+- **Edit:** Opens `DelivererPaymentView` inline (pending only) — `setEditing(row)`
+- **Delete:** `DELETE /api/v1/payments/{payment_code}` (pending only) → `refresh()`
 
 #### API
-- `GET /api/v1/payments`
+- `GET /api/v1/payments` · `GET /api/v1/deliveries` · `GET /api/v1/deliverers` · `GET /api/v1/profiles`
 
 ---
 
@@ -659,18 +705,28 @@ Footer: `Total Amount = Σ(amount)` — **frontend-calculated** — sent as `tot
 | `Btn` (secondary) | Load Orders |
 | `Btn` (primary, lg) | Confirm Payment |
 
+#### Modes
+
+| Prop | Behaviour |
+|------|-----------|
+| `data` absent (create) | Shows Deliverer LoV + delivery selection card; POSTs new payment |
+| `data` present (edit) | Shows payment code + status Select; delivery selection hidden; PUTs update |
+
+`onBack` / `onSaved` props used in edit mode (from `DelivererPaymentListView`).  
+`onNavigateBack` used in create mode (from `App.jsx`).
+
 #### Card 1 — Payment Header (grid 3-col)
 
-| Field | Type |
-|-------|------|
-| Payment Code | Input read-only mono (PAY-YYYY-NNNNNN) |
-| Deliverer* | LovInput |
-| Payment Date* | Input type=date |
-| Period Start | Input type=date |
-| Period End | Input type=date |
-| Status | Select (PENDING/PAID/CANCELLED) |
+| Field | Create | Edit |
+|-------|--------|------|
+| Deliverer | `LovInput` (required) | — (shown in subtitle) |
+| Payment Code | — | Input read-only mono |
+| Status | — (always `pending`) | Select: pending / paid / cancelled |
+| Payment Date | Input type=date (required) | Input type=date |
+| Period Start | Input type=date | Input type=date |
+| Period End | Input type=date | Input type=date |
 
-#### Card 2 — Unpaid Deliveries (selectable table)
+#### Card 2 — Deliveries (selectable, create mode only)
 
 | Column | Style |
 |--------|-------|
@@ -840,7 +896,7 @@ Blocked by API when customer has orders, reviews, or favourite stores.
 | Full Name | Yes | maps to profile.full_name |
 | Phone Number | Yes | maps to profile.phone |
 | Email | — | maps to profile.email |
-| Membership Level | Yes | Select: STANDARD / GOLD / PLATINUM |
+| Membership Level | Yes | Select: Bronze / Silver / Gold / Platinum |
 | Address | Yes | maps to address.address_line_1 |
 | City | Yes | maps to address.city (required by POST /addresses) |
 
@@ -887,7 +943,7 @@ Blocked by API when customer has orders, reviews, or favourite stores.
 useEffect([tick])
   → parallel: GET /deliverers, GET /profiles
   → join by profile_id using Map lookup
-  → STATUS_MAP: { AVAILABLE→'Active', BUSY→'Busy', OFFLINE→'Inactive' }
+  → STATUS_MAP: { available→'Active', busy→'Busy', offline→'Inactive' }
   → setRows([{id:deliverer_code, name, phone, license, type, status, rating, …}])
 ```
 
@@ -913,8 +969,8 @@ useEffect([tick])
 | License Plate | Yes | Input (auto-uppercased) |
 | Phone Number | Yes | Input |
 | Email | — | Input |
-| Vehicle Type | Yes | Select: MOTORCYCLE / CAR / BICYCLE / SCOOTER / VAN / TRUCK |
-| Status | — | 3-way toggle: Active (AVAILABLE) / Busy (BUSY) / Inactive (OFFLINE) |
+| Vehicle Type | Yes | Select: Motorcycle / Car / Bicycle / Scooter / Van / Truck |
+| Status | — | 3-way toggle: Active (available) / Busy (busy) / Inactive (offline) |
 
 #### API
 - `GET /api/v1/deliverers` + `GET /api/v1/profiles`
@@ -937,7 +993,7 @@ useEffect([tick])
 | Store Name | bold |
 | Category | `Badge` (gray) — displayed in Title Case |
 | Address | truncate max-w-[200px] slate-500 |
-| Status | `Badge` (green = ACTIVE, gray = INACTIVE, red = SUSPENDED) |
+| Status | `Badge (green=active, gray=inactive, red=suspended)) |
 | Actions | Edit / Delete |
 
 #### State
@@ -955,12 +1011,12 @@ useEffect([tick])
 useEffect([tick])
   → parallel: GET /stores, GET /addresses
   → join by address_id using Map lookup
-  → category displayed as Title Case (THAI_FOOD → "Thai food")
+  → category displayed as Title Case (e.g. thai_food → "Thai food")
   → setRows([{id:store_code, storeId, addressId, name, category, status, address, …}])
 ```
 
 #### Create Flow (new store)
-1. `POST /addresses` with `{address_name, address_type:'STORE', address_line_1, city, country_code:'TH'}` → `address_id`
+1. `POST /addresses` with `{address_name, address_type:'store', address_line_1, city, country_code:'TH'}` → `address_id`
 2. `POST /stores` with `{name, address_id, category, status}` — category stored as UPPER_SNAKE_CASE
 3. `onSaved()` → `refresh()`
 
@@ -979,7 +1035,7 @@ useEffect([tick])
 | Store Code | — | Read-only; shows predicted next code via `nextCode` |
 | Store Name | Yes | Input |
 | Category | Yes | Select: THAI_FOOD / JAPANESE / CHINESE / WESTERN / CAFE_DRINKS / FAST_FOOD / BAKERY / GROCERY / OTHER |
-| Status | — | Select: ACTIVE / INACTIVE / SUSPENDED |
+| Status | — | Select: active / inactive / suspended |
 | City | Yes | Input (maps to address.city) |
 | Address | Yes | Input (full-width, col-span-2 — maps to address.address_line_1) |
 
@@ -1007,7 +1063,7 @@ useEffect([tick])
 | Store | default slate-600 |
 | Product Name | bold |
 | Price | right bold mono `฿` |
-| Status | `Badge` (green = AVAILABLE, yellow = OUT_OF_STOCK, red = DISCONTINUED, gray = UNAVAILABLE) |
+| Status | `Badge` (green=available, amber=out_of_stock, red=discontinued, gray=unavailable) |
 | Actions | Edit / Delete |
 
 #### State
@@ -1050,7 +1106,7 @@ useEffect([tick])
 | Store | Yes (new only) | `LovInput` → `LovModal` (live store list from parent); read-only on edit |
 | Product Name | Yes | Input |
 | Unit Price (฿) | Yes | Input number (≥ 0, step 0.01) |
-| Status | — | Select: AVAILABLE / OUT_OF_STOCK / UNAVAILABLE / DISCONTINUED |
+| Status | — | Select: available / out_of_stock / unavailable / discontinued |
 
 > **Note:** `category` is not a field in Store_Products — it belongs to the store itself.  
 > Path param is **integer** `product_id`, not a business code.  
@@ -1078,7 +1134,7 @@ useEffect([tick])
 | Store | default (live join from `/stores`) |
 | Period | `start → end` xs |
 | Discount Type | default |
-| Status | `Badge` (green = ACTIVE, blue = UPCOMING, gray = EXPIRED) — computed client-side from current date vs. start/end |
+| Status | `Badge (green=active, blue=upcoming, gray=expired)) — computed client-side from current date vs. start/end |
 | Actions | Delete button |
 
 #### Data Loading Pipeline
@@ -1127,7 +1183,7 @@ useEffect([tick])
 | Campaign Code | — | Input read-only mono (PROMO-YYYY-NNN) |
 | Store | Yes | LovInput |
 | Campaign Name | Yes | Input |
-| Discount Type | Yes | Select (PERCENTAGE / FIXED_AMOUNT) |
+| Discount Type | Yes | Select: percentage / fixed_amount |
 | Start Date | Yes | Input type=date |
 | End Date | Yes | Input type=date (≥ start) |
 
@@ -1202,7 +1258,7 @@ Card → Table (results)
 
 **Table:** Order ID · Date · Customer · Store · Deliverer · Duration (right) · Total (right bold)
 
-**API:** `GET /api/v1/orders` with status=DELIVERED + date range
+**API:** `GET /api/v1/orders` with status=delivered + date range
 
 ---
 
@@ -1271,14 +1327,14 @@ Card → Table (results)
 | Date From | Input type=date |
 | Date To | Input type=date |
 | Total Amount | Input number |
-| Status | Select (All / SUBMITTED / DRAFT) |
+| Status | Select (All / submitted / draft) |
 | Search | `Btn` |
 
 **Above table:** `StatCard` (amber) — count of unapproved vouchers
 
 **Table:** Voucher ID · Deliverer · Date · Expense Items (Badge gray) · Total Amount · Status (Badge amber)
 
-**API:** `GET /api/v1/expense-vouchers` (filter out APPROVED/REJECTED on frontend)
+**API:** `GET /api/v1/expense-vouchers` (filter out approved/rejected on frontend)
 
 ---
 
@@ -1448,4 +1504,6 @@ Card → Table (results)
 | 6 | `CustomerOrderFormView` has `payment_method` | Not in `Order` table | Remove from UI or add to DB |
 | 7 | `payments.service.js` and `expense-vouchers.service.js` validated `delivery_code` | Server rejected valid POST bodies | **Fixed** — both services now validate `delivery_id` (positive integer); models updated to match |
 | 8 | `ExpenseFormView` included `PARKING` expense type | Not in API spec enum (FUEL/MAINTENANCE/TOLL/OTHER) | **Fixed** — PARKING removed from frontend type list |
-| 9 | `DelivererDispatchView` filtered `status === 'PREPARED'` | No such value in Order status enum | **Fixed** — filter now matches `CONFIRMED` or `PREPARING` |
+| 9 | `DelivererDispatchView` filtered `status === 'PREPARED'` | No such value in Order status enum | **Fixed** — filter now matches `confirmed` or `preparing` |
+| 10 | All service `VALID_*` arrays and model defaults used UPPERCASE | DB stores enum values in lowercase / Title Case — all validations and inserts failed on real data | **Fixed** — all service arrays, model defaults, and client Badge/filter maps updated to match real DB values |
+| 11 | `ExpenseListView` and `DelivererPaymentListView` had no Edit/Delete | `draft` vouchers and `pending` payments could not be mutated after creation | **Fixed** — both list views now render inline form (via `editing` state) for status-gated mutations |

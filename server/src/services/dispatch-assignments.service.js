@@ -1,7 +1,7 @@
 'use strict';
 const model = require('../models/dispatch-assignments.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
-const VALID_STATUS = ['PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'];
+const VALID_STATUS = ['pending', 'accepted', 'rejected', 'expired'];
 
 exports.list = (q) => model.findAll(q);
 
@@ -27,8 +27,8 @@ exports.update = async (id, data) => {
 exports.remove = async (id) => {
   const existing = await model.findById(id);
   if (!existing) throw new NotFoundError(`Dispatch Assignment ${id} not found`);
-  if (existing.status !== 'PENDING')
-    throw new ValidationError(`Dispatch Assignment ${id} can only be deleted when status is PENDING`);
+  if (existing.status !== 'pending')
+    throw new ValidationError(`Dispatch Assignment ${id} can only be deleted when status is pending`);
   await model.deleteById(id);
   return { message: `Dispatch Assignment ${id} deleted successfully` };
 };

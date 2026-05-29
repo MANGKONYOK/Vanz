@@ -1,8 +1,8 @@
 'use strict';
 const model = require('../models/payments.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
-const VALID_STATUS_SET = ['PENDING', 'PAID', 'CANCELLED', 'FAILED', 'PROCESSING', 'COMPLETED'];
-const MUTABLE = ['PENDING'];
+const VALID_STATUS_SET = ['pending', 'paid', 'cancelled', 'failed', 'processing', 'completed'];
+const MUTABLE = ['pending'];
 
 exports.list = (q) => model.findAll(q);
 
@@ -18,6 +18,8 @@ exports.create = async (data) => {
     fe.push({ field: 'requestBody.total_payment', reason: 'required (calculated by frontend)' });
   if (data.total_payment !== undefined && (isNaN(data.total_payment) || Number(data.total_payment) < 0))
     fe.push({ field: 'requestBody.total_payment', reason: 'must be >= 0' });
+  if (!data.payment_datetime)
+    fe.push({ field: 'requestBody.payment_datetime', reason: 'required' });
   if (!data.payment_items || !Array.isArray(data.payment_items) || data.payment_items.length === 0)
     fe.push({ field: 'requestBody.payment_items', reason: 'must have at least 1 item' });
   if (Array.isArray(data.payment_items)) {
@@ -36,10 +38,10 @@ exports.create = async (data) => {
 exports.update = async (code, data) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Payment ${code} not found`);
-  if (existing.status !== 'PENDING')
-    throw new ValidationError(`Payment ${code} can only be updated when status is PENDING`);
+  if (existing.status !== 'pending')
+    throw new ValidationError(`Payment ${code} can only be updated when status is pending`);
   const fe = [];
-  if (data.status !== undefined && !['PENDING', 'PAID', 'CANCELLED'].includes(data.status))
+  if (data.status !== undefined && !['pending', 'paid', 'cancelled'].includes(data.status))
     fe.push({ field: 'requestBody.status', reason: 'must be one of PENDING, PAID, CANCELLED' });
   if (data.total_payment !== undefined && (isNaN(data.total_payment) || Number(data.total_payment) < 0))
     fe.push({ field: 'requestBody.total_payment', reason: 'must be >= 0' });
@@ -59,8 +61,8 @@ exports.update = async (code, data) => {
 exports.remove = async (code) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Payment ${code} not found`);
-  if (existing.status !== 'PENDING')
-    throw new ValidationError(`Payment ${code} can only be deleted when status is PENDING`);
+  if (existing.status !== 'pending')
+    throw new ValidationError(`Payment ${code} can only be deleted when status is pending`);
   await model.deleteById(existing.payment_id);
   return { message: `Payment ${code} deleted successfully` };
 };

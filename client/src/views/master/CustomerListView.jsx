@@ -4,7 +4,7 @@ import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select,
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 import CustomerFormView from './CustomerFormView';
 
-const MEMBERSHIP_COLOR = { GOLD: 'amber', PLATINUM: 'blue', STANDARD: 'gray' };
+const MEMBERSHIP_COLOR = { Gold: 'amber', Platinum: 'blue', Silver: 'gray', Bronze: 'gray' };
 
 export default function CustomerListView({ showToast }) {
     const [editing, setEditing] = useState(null);
@@ -42,9 +42,11 @@ export default function CustomerListView({ showToast }) {
                     name:            prof.full_name || '—',
                     phone:           prof.phone || '—',
                     email:           prof.email || '',
-                    address:         addr.address_line_1 || '—',
+                    address:         addr.address_line_1 || '',
+                    address2:        addr.address_line_2 || '',
                     city:            addr.city || '',
-                    membership:      c.membership_level || 'STANDARD',
+                    province:        addr.province || '',
+                    membership:      c.membership_level || 'Bronze',
                     created:         c.created_at ? new Date(c.created_at).toLocaleDateString() : '—',
                 };
             });

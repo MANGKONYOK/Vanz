@@ -68,7 +68,7 @@ export default function ExpenseSummaryReportView({ showToast }) {
             <Card className="p-5">
                 <h3 className="font-bold text-slate-900 mb-3">Breakdown by Status</h3>
                 <div className="flex flex-col sm:flex-row gap-4">
-                    {['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].map(status => {
+                    {['draft', 'submitted', 'approved', 'rejected'].map(status => {
                         const colors = {
                             DRAFT:     { bg: 'bg-slate-50',   border: 'border-slate-200',  text: 'text-slate-600',  val: 'text-slate-800' },
                             SUBMITTED: { bg: 'bg-amber-50',   border: 'border-amber-100',  text: 'text-amber-600',  val: 'text-amber-700' },

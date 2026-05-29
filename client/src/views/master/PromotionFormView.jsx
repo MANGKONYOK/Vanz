@@ -15,7 +15,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
     const [name,         setName]         = useState(editData.name      || '');
     const [startDate,    setStartDate]    = useState(editData.startDate || '');
     const [endDate,      setEndDate]      = useState(editData.endDate   || '');
-    const [discountType, setDiscountType] = useState(editData.discountType || 'PERCENTAGE');
+    const [discountType, setDiscountType] = useState(editData.discountType || 'percentage');
     const [previewCode,  setPreviewCode]  = useState(editData.promotionCode || '…');
 
     // Line items
@@ -238,7 +238,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                 <Table
                     headers={[
                         { label: 'Product' },
-                        { label: `Discount Value ${discountType === 'PERCENTAGE' ? '(%)' : '(฿)'}`, right: true },
+                        { label: `Discount Value ${discountType === 'percentage' ? '(%)' : '(฿)'}`, right: true },
                         { label: '', center: true },
                     ]}
                     minWidth="500px"

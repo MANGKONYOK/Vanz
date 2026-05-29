@@ -20,7 +20,7 @@ CREATE TABLE public.customer (
   profile_id bigint NOT NULL,
   code character varying NOT NULL UNIQUE,
   address_id bigint NOT NULL,
-  membership_level character varying NOT NULL,
+  membership_level character varying NOT NULL DEFAULT 'Bronze'::character varying,
   total_spent numeric NOT NULL DEFAULT '0'::numeric,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT customer_pkey PRIMARY KEY (id),
@@ -33,8 +33,8 @@ CREATE TABLE public.deliverer (
   code character varying NOT NULL UNIQUE,
   vehicle_type character varying NOT NULL,
   license_plate character varying NOT NULL,
-  current_status character varying NOT NULL,
-  rating numeric NOT NULL,
+  current_status character varying NOT NULL DEFAULT 'offline'::character varying,
+  rating numeric NOT NULL DEFAULT '0'::numeric,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT deliverer_pkey PRIMARY KEY (id),
   CONSTRAINT Deliverer_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profile(id)
@@ -64,7 +64,7 @@ CREATE TABLE public.dispatch_assignment (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   order_id bigint NOT NULL,
   deliverer_id bigint NOT NULL,
-  status character varying NOT NULL,
+  status character varying NOT NULL DEFAULT 'pending'::character varying,
   assigned_at timestamp with time zone NOT NULL DEFAULT now(),
   responded_at timestamp with time zone,
   CONSTRAINT dispatch_assignment_pkey PRIMARY KEY (id),
@@ -76,9 +76,9 @@ CREATE TABLE public.expense_voucher (
   delivery_id bigint NOT NULL,
   code text NOT NULL UNIQUE,
   voucher_date text NOT NULL,
-  status text NOT NULL,
+  status text NOT NULL DEFAULT 'draft'::text,
   total_amount double precision NOT NULL,
-  updated_at timestamp with time zone NOT NULL,
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT expense_voucher_pkey PRIMARY KEY (id),
   CONSTRAINT Expense_Voucher_delivery_id_fkey FOREIGN KEY (delivery_id) REFERENCES public.delivery(id)
 );
@@ -107,7 +107,7 @@ CREATE TABLE public.order (
   code text NOT NULL UNIQUE,
   total_price numeric NOT NULL,
   address_snapshot text NOT NULL,
-  status text NOT NULL,
+  status text NOT NULL DEFAULT 'pending'::text,
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT order_pkey PRIMARY KEY (id),
   CONSTRAINT Order_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customer(id),
@@ -118,7 +118,7 @@ CREATE TABLE public.order_items (
   order_id bigint NOT NULL,
   product_id bigint NOT NULL,
   quantity numeric NOT NULL,
-  unit_price text NOT NULL,
+  unit_price numeric NOT NULL,
   extended_price numeric NOT NULL,
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT order_items_pkey PRIMARY KEY (id),
@@ -132,7 +132,7 @@ CREATE TABLE public.payment (
   payment_period_start date NOT NULL,
   payment_period_end date NOT NULL,
   total_payment numeric NOT NULL,
-  status character varying NOT NULL,
+  status character varying NOT NULL DEFAULT 'pending'::character varying,
   payment_datetime timestamp without time zone NOT NULL,
   CONSTRAINT payment_pkey PRIMARY KEY (id),
   CONSTRAINT Payment_delivery_id_fkey FOREIGN KEY (delivery_id) REFERENCES public.delivery(id)
@@ -169,7 +169,7 @@ CREATE TABLE public.promotion (
   CONSTRAINT Promotion_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.store(id)
 );
 CREATE TABLE public.promotion_items (
-  id bigint NOT NULL,
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   promotion_id bigint NOT NULL,
   product_id bigint NOT NULL,
   discount_value numeric NOT NULL,
@@ -183,8 +183,8 @@ CREATE TABLE public.store (
   code character varying NOT NULL UNIQUE,
   address_id bigint NOT NULL,
   category text NOT NULL,
-  rating numeric NOT NULL,
-  status character varying NOT NULL,
+  rating numeric NOT NULL DEFAULT '0'::numeric,
+  status character varying NOT NULL DEFAULT 'inactive'::character varying,
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT store_pkey PRIMARY KEY (id),
   CONSTRAINT Store_address_id_fkey FOREIGN KEY (address_id) REFERENCES public.address(id)

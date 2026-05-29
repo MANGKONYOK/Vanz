@@ -80,7 +80,7 @@ exports.create = async (data) => {
     // Insert header with all NOT NULL fields in one step
     const { rows: [hdr] } = await client.query(
       'INSERT INTO expense_voucher (id,delivery_id,voucher_date,status,total_amount,code,updated_at) VALUES ($1,$2,$3,$4,$5,$6,NOW()) RETURNING *',
-      [nextId, deliveryId, data.voucher_date, 'DRAFT', data.total_amount, code]
+      [nextId, deliveryId, data.voucher_date, 'draft', data.total_amount, code]
     );
 
     // expense_voucher_items.id is also plain bigint NOT NULL

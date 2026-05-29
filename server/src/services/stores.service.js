@@ -1,7 +1,7 @@
 'use strict';
 const model = require('../models/stores.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
-const VALID_STATUS = ['ACTIVE', 'INACTIVE', 'SUSPENDED'];
+const VALID_STATUS = ['active', 'inactive', 'suspended'];
 
 exports.list = (q) => model.findAll(q);
 
@@ -22,8 +22,6 @@ exports.update = async (code, data) => {
   const fe = [];
   if (data.status !== undefined && !VALID_STATUS.includes(data.status))
     fe.push({ field: 'requestBody.status', reason: `must be one of ${VALID_STATUS.join(', ')}` });
-  if (data.rating !== undefined && (isNaN(data.rating) || data.rating < 0 || data.rating > 5))
-    fe.push({ field: 'requestBody.rating', reason: 'must be between 0 and 5' });
   if (fe.length) throw new ValidationError('Invalid store input', fe);
   return model.update(existing.store_id, data);
 };

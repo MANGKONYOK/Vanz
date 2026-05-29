@@ -1,26 +1,28 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Save, CreditCard, RefreshCw } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, FormField, Input, LovInput, LovModal } from '../../components/ui';
-import { getJson, postJson, getApiErrorMessage } from '../../api/http';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
+import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 
 function extractCode(value) {
     return String(value || '').split(' – ')[0].trim();
 }
 
-export default function DelivererPaymentView({ showToast, onNavigateBack }) {
-    const onBack = onNavigateBack || (() => {});
+export default function DelivererPaymentView({ data, showToast, onNavigateBack, onBack: onBackProp, onSaved }) {
+    const isNew  = !data?.id;
+    const onBack = onBackProp || onNavigateBack || (() => {});
 
     const [deliverers,   setDeliverers]   = useState([]);
     const [deliverer,    setDeliverer]    = useState('');
     const [isLovOpen,    setIsLovOpen]    = useState(false);
-    const [paymentDate,  setPaymentDate]  = useState(() => new Date().toISOString().slice(0, 10));
-    const [startDate,    setStartDate]    = useState('');
-    const [endDate,      setEndDate]      = useState('');
+    const [paymentDate,  setPaymentDate]  = useState(() => data?.date || new Date().toISOString().slice(0, 10));
+    const [startDate,    setStartDate]    = useState(() => data?.periodStart || '');
+    const [endDate,      setEndDate]      = useState(() => data?.periodEnd   || '');
+    const [editStatus,   setEditStatus]   = useState(() => data?.status      || 'pending');
 
-    // Loaded delivery rows for the selected deliverer
-    const [deliveryRows, setDeliveryRows] = useState([]); // [{deliveryId, orderCode, date, fee, bonus, adjustment}]
+    // Loaded delivery rows for the selected deliverer (create mode only)
+    const [deliveryRows, setDeliveryRows] = useState([]);
     const [loadingRows,  setLoadingRows]  = useState(false);
-    const [selected,     setSelected]     = useState([]); // array of deliveryId
+    const [selected,     setSelected]     = useState([]);
     const [saving,       setSaving]       = useState(false);
 
     // Load deliverers LoV on mount
@@ -79,18 +81,45 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     const total         = selectedRows.reduce((s, r) => s + r.fee + r.bonus + r.adjustment, 0);
 
     const handleSave = async () => {
-        if (!deliverer)         return showToast('Please select a deliverer', 'error');
-        if (!paymentDate)       return showToast('Please specify a payment date', 'error');
+        if (!isNew) {
+            // Edit mode: update status/dates only
+            if (!paymentDate)  return showToast('Payment Date is required', 'error');
+            if (!startDate)    return showToast('Period Start is required', 'error');
+            if (!endDate)      return showToast('Period End is required', 'error');
+            if (new Date(endDate) < new Date(startDate))
+                return showToast('Period end cannot be before period start', 'error');
+            setSaving(true);
+            try {
+                await putJson(`/payments/${data.id}`, {
+                    status:               editStatus,
+                    payment_period_start: startDate,
+                    payment_period_end:   endDate,
+                    payment_datetime:     `${paymentDate}T00:00:00.000Z`,
+                });
+                showToast('Payment updated successfully!');
+                (onSaved || onBack)();
+            } catch (e) {
+                showToast(getApiErrorMessage(e, 'Unable to update payment'), 'error');
+            } finally {
+                setSaving(false);
+            }
+            return;
+        }
+        // Create mode
+        if (!deliverer)            return showToast('Please select a deliverer', 'error');
+        if (!paymentDate)          return showToast('Payment Date is required', 'error');
+        if (!startDate)            return showToast('Period Start is required', 'error');
+        if (!endDate)              return showToast('Period End is required', 'error');
         if (selected.length === 0) return showToast('Please select at least one delivery', 'error');
-        if (startDate && endDate && new Date(endDate) < new Date(startDate))
+        if (new Date(endDate) < new Date(startDate))
             return showToast('Period end cannot be before period start', 'error');
         setSaving(true);
         try {
             await postJson('/payments', {
                 delivery_id:          selectedRows[0].deliveryId,
-                payment_period_start: startDate || undefined,
-                payment_period_end:   endDate   || undefined,
-                payment_datetime:     paymentDate ? `${paymentDate}T00:00:00.000Z` : undefined,
+                payment_period_start: startDate,
+                payment_period_end:   endDate,
+                payment_datetime:     `${paymentDate}T00:00:00.000Z`,
                 total_payment:        total,
                 payment_items: selectedRows.map(r => ({
                     order_code:        r.orderCode,
@@ -122,29 +151,47 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
             <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium">
                 <ArrowLeft className="w-4 h-4" /> Back to Payments
             </button>
-            <PageHeader title="Deliverer Payment" subtitle="Process payments for completed deliverer trips" />
+            <PageHeader
+                title={isNew ? 'Deliverer Payment' : `Payment: ${data.id}`}
+                subtitle={isNew ? 'Process payments for completed deliverer trips' : `Deliverer: ${data.delivererName}`}
+            />
 
             {/* ── Payment Header ──────────────────────────────────────────── */}
             <Card className="p-5">
                 <h3 className="font-bold text-slate-900 mb-4">Payment Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <FormField label="Deliverer" required>
-                        <LovInput value={deliverer} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer…" />
-                    </FormField>
+                    {isNew ? (
+                        <FormField label="Deliverer" required>
+                            <LovInput value={deliverer} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer…" />
+                        </FormField>
+                    ) : (
+                        <>
+                            <FormField label="Payment Code">
+                                <Input value={data.id} readOnly className="bg-slate-50 font-mono text-xs font-bold text-red-600" />
+                            </FormField>
+                            <FormField label="Status">
+                                <Select value={editStatus} onChange={e => setEditStatus(e.target.value)}>
+                                    <option value="pending">pending</option>
+                                    <option value="paid">paid</option>
+                                    <option value="cancelled">cancelled</option>
+                                </Select>
+                            </FormField>
+                        </>
+                    )}
                     <FormField label="Payment Date" required>
                         <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
                     </FormField>
-                    <FormField label="Period Start">
+                    <FormField label="Period Start" required>
                         <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
                     </FormField>
-                    <FormField label="Period End">
+                    <FormField label="Period End" required>
                         <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
                     </FormField>
                 </div>
             </Card>
 
-            {/* ── Delivery Selection ──────────────────────────────────────── */}
-            <Card className="overflow-hidden">
+            {/* ── Delivery Selection (create mode only) ──────────────────── */}
+            {isNew && <Card className="overflow-hidden">
                 <CardHeader
                     title="Deliveries"
                     action={
@@ -217,7 +264,16 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                         </Btn>
                     </div>
                 </div>
-            </Card>
+            </Card>}
+
+            {/* ── Edit mode save footer ────────────────────────────────────── */}
+            {!isNew && (
+                <div className="flex justify-end">
+                    <Btn onClick={handleSave} size="lg" disabled={saving}>
+                        <Save className="w-4 h-4" /> {saving ? 'Saving…' : 'Save Changes'}
+                    </Btn>
+                </div>
+            )}
         </div>
     );
 }
