@@ -1,4 +1,4 @@
-import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
 
 export default function Table({ headers, children, minWidth = '500px', onSort, sortConfig }) {
     return (
@@ -11,9 +11,9 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                             const isSorted = sortConfig?.key === h.key;
                             
                             const textClass = isSorted 
-                                ? 'text-slate-900 font-extrabold' 
+                                ? 'text-slate-900 font-bold' 
                                 : isSortable 
-                                    ? 'text-slate-500 hover:text-slate-900 transition-colors duration-200' 
+                                    ? 'text-slate-500 hover:text-slate-800 transition-colors duration-200' 
                                     : 'text-slate-500';
 
                             return (
@@ -23,21 +23,23 @@ export default function Table({ headers, children, minWidth = '500px', onSort, s
                                     style={{ width: h.width }}
                                     className={`px-4 py-3 text-[11px] uppercase tracking-wide whitespace-nowrap group select-none
                                         ${h.right ? 'text-right' : ''} ${h.center ? 'text-center' : ''} 
-                                        ${isSortable ? 'cursor-pointer hover:bg-slate-200/50 transition-colors' : ''}
+                                        ${isSortable ? 'cursor-pointer' : ''}
                                         ${textClass}`}
                                 >
-                                    <div className={`flex items-center gap-1 ${h.right ? 'justify-end' : h.center ? 'justify-center' : ''}`}>
+                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 -ml-2.5 rounded-md transition-colors
+                                        ${isSorted ? 'bg-slate-200/70 shadow-sm' : isSortable ? 'group-hover:bg-slate-200/40' : ''}
+                                        ${h.right ? 'ml-auto mr-0 -mr-2.5 float-right' : h.center ? 'mx-auto' : ''}`}>
                                         <span>{h.label}</span>
                                         {isSortable && (
                                             <span className="inline-flex items-center min-h-[14px]">
                                                 {isSorted ? (
                                                     sortConfig.direction === 'asc' ? (
-                                                        <ArrowUp size={13} className="text-red-600 font-bold animate-bounce-subtle" />
+                                                        <ChevronUp size={14} className="text-slate-700" />
                                                     ) : (
-                                                        <ArrowDown size={13} className="text-red-600 font-bold animate-bounce-subtle" />
+                                                        <ChevronDown size={14} className="text-slate-700" />
                                                     )
                                                 ) : (
-                                                    <ArrowUpDown size={13} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-slate-400" />
+                                                    <ArrowUpDown size={14} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-slate-400" />
                                                 )}
                                             </span>
                                         )}
