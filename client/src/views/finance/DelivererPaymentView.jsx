@@ -1,33 +1,35 @@
 import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Save, CreditCard, RefreshCw, Search, Check } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { MOCK_DELIVERERS, INITIAL_ORDERS } from '../../data/mockData';
+import { paymentHeaderSchema } from '../../schemas/finance';
 
 export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     const onBack = onNavigateBack || (() => {});
     const [selected, setSelected] = useState([]);
-    const [deliverer, setDeliverer] = useState('');
     const [isLovOpen, setIsLovOpen] = useState(false);
-    const [paymentDate, setPaymentDate] = useState('2026-03-23');
-    const [startDate, setStartDate] = useState('2026-03-01');
-    const [endDate, setEndDate] = useState('2026-03-31');
     const [search, setSearch] = useState('');
-    const [status, setStatus] = useState('PENDING');
-
     const [paymentId, setPaymentId] = useState('');
     const [autoId, setAutoId] = useState(true);
 
+    const { control, register, handleSubmit, watch, reset, setValue, formState: { errors } } = useForm({
+        resolver: zodResolver(paymentHeaderSchema),
+        defaultValues: { deliverer: '', paymentDate: '2026-03-23', startDate: '2026-03-01', endDate: '2026-03-31', status: 'PENDING' },
+    });
+
     const displayPaymentId = autoId ? (paymentId || 'PAY-AUTO') : paymentId;
 
-    const handleSave = () => {
+    const watchedDeliverer = watch('deliverer');
+    const watchedStartDate = watch('startDate');
+    const watchedEndDate = watch('endDate');
+
+    const onSubmit = (headerData) => {
         if (!autoId && !paymentId.trim()) return showToast('Please enter a Payment ID', 'error');
-        if (!deliverer) return showToast('Please select a deliverer', 'error');
-        if (!paymentDate) return showToast('Please specify a payment date', 'error');
-        if (!startDate) return showToast('Please specify a period start date', 'error');
-        if (!endDate) return showToast('Please specify a period end date', 'error');
-        if (startDate && endDate && new Date(endDate) < new Date(startDate)) return showToast('Period end cannot be before period start', 'error');
+        if (headerData.startDate && headerData.endDate && new Date(headerData.endDate) < new Date(headerData.startDate)) return showToast('Period end cannot be before period start', 'error');
         if (selected.length === 0) return showToast('Please select at least one unpaid order', 'error');
-        showToast('Payment confirmed successfully!'); setSelected([]); setDeliverer(''); onBack();
+        showToast('Payment confirmed successfully!'); setSelected([]); reset(); onBack();
     };
 
     const handleLoadOrders = () => {
@@ -35,13 +37,13 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     };
 
     // Extract deliverer ID (e.g. 'D-001' from 'D-001 – Somchai J.')
-    const delivererId = deliverer ? deliverer.split(' – ')[0] : '';
+    const delivererId = watchedDeliverer ? watchedDeliverer.split(' – ')[0] : '';
 
     const filteredOrders = INITIAL_ORDERS.filter(o => {
         const matchesSearch = o.id.toLowerCase().includes(search.toLowerCase()) || o.date.includes(search);
         const matchesDeliverer = !delivererId || o.deliverer === delivererId;
-        const matchesStartDate = !startDate || o.date >= startDate;
-        const matchesEndDate = !endDate || o.date <= endDate;
+        const matchesStartDate = !watchedStartDate || o.date >= watchedStartDate;
+        const matchesEndDate = !watchedEndDate || o.date <= watchedEndDate;
         return matchesSearch && matchesDeliverer && matchesStartDate && matchesEndDate;
     });
 
@@ -50,9 +52,15 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
 
     return (
         <div className="fade-in space-y-5">
-            <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
-                columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Vehicle' }]}
-                data={MOCK_DELIVERERS} onSelect={r => { setDeliverer(`${r.id} – ${r.name}`); setSelected([]); setIsLovOpen(false); }} />
+            <Controller
+                name="deliverer"
+                control={control}
+                render={({ field }) => (
+                    <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
+                        columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Vehicle' }]}
+                        data={MOCK_DELIVERERS} onSelect={r => { field.onChange(`${r.id} – ${r.name}`); setSelected([]); setIsLovOpen(false); }} />
+                )}
+            />
             
             <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 transition-colors font-medium mb-2">
                 <ArrowLeft className="w-4 h-4" /> Back to Payments
@@ -90,24 +98,36 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                             <span className="text-sm font-bold text-slate-600 font-sans">Auto</span>
                         </label>
                     </div>
-                    <FormField label="Deliverer" required>
-                        <LovInput value={deliverer} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer..." />
+                    <FormField label="Deliverer" required error={errors.deliverer?.message}>
+                        <Controller
+                            name="deliverer"
+                            control={control}
+                            render={({ field }) => (
+                                <LovInput value={field.value} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer..." />
+                            )}
+                        />
                     </FormField>
-                    <FormField label="Date" required>
-                        <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
+                    <FormField label="Date" required error={errors.paymentDate?.message}>
+                        <Input type="date" {...register('paymentDate')} />
                     </FormField>
-                    <FormField label="Period Start" required>
-                        <Input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setSelected([]); }} />
+                    <FormField label="Period Start" required error={errors.startDate?.message}>
+                        <Input type="date" {...register('startDate', { onChange: () => setSelected([]) })} />
                     </FormField>
-                    <FormField label="Period End" required>
-                        <Input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setSelected([]); }} />
+                    <FormField label="Period End" required error={errors.endDate?.message}>
+                        <Input type="date" {...register('endDate', { onChange: () => setSelected([]) })} />
                     </FormField>
-                    <FormField label="Status">
-                        <Select value={status} onChange={e => setStatus(e.target.value)}>
-                            <option value="PENDING">PENDING</option>
-                            <option value="PAID">PAID</option>
-                            <option value="CANCELLED">CANCELLED</option>
-                        </Select>
+                    <FormField label="Status" error={errors.status?.message}>
+                        <Controller
+                            name="status"
+                            control={control}
+                            render={({ field }) => (
+                                <Select value={field.value} onChange={e => field.onChange(e.target.value)}>
+                                    <option value="PENDING">PENDING</option>
+                                    <option value="PAID">PAID</option>
+                                    <option value="CANCELLED">CANCELLED</option>
+                                </Select>
+                            )}
+                        />
                     </FormField>
                 </div>
             </Card>
@@ -165,7 +185,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                             <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Payment</p>
                             <p className="text-3xl font-black text-slate-900 mono">฿{total}</p>
                         </div>
-                        <Btn onClick={handleSave} size="lg">
+                        <Btn onClick={handleSubmit(onSubmit)} size="lg">
                             <CreditCard className="w-4 h-4" /> Confirm Payment
                         </Btn>
                     </div>

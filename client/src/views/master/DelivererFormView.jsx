@@ -1,21 +1,29 @@
 import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Save, Check } from 'lucide-react';
 import { FormField, Input, Card, Btn, Select } from '../../components/ui';
+import { delivererSchema } from '../../schemas/master';
 
 export default function DelivererFormView({ data, onBack, showToast }) {
     const isNew = !data.id;
     const [id, setId] = useState(data.id || '');
     const [autoId, setAutoId] = useState(isNew);
-    const [status, setStatus] = useState(data.status || 'Active');
-    const [name, setName] = useState(data.name || '');
-    const [license, setLicense] = useState(data.license || '');
-    const [phone, setPhone] = useState(data.phone || '');
-    const [type, setType] = useState(data.type || 'Motorcycle');
 
-    const handleSave = () => {
-        if (!name.trim() || !license.trim() || !phone.trim() || !type) {
-            return showToast('Please fill all required fields', 'error');
+    const { register, handleSubmit, formState: { errors }, control, watch, setValue } = useForm({
+        resolver: zodResolver(delivererSchema),
+        defaultValues: {
+            name: data.name || '',
+            license: data.license || '',
+            phone: data.phone || '',
+            type: data.type || 'Motorcycle',
+            status: data.status || 'Active',
         }
+    });
+
+    const status = watch('status');
+
+    const onSubmit = (formData) => {
         if (!autoId && !id.trim()) return showToast('Please enter a Deliverer ID', 'error');
         showToast('Deliverer saved!'); onBack();
     };
@@ -60,35 +68,41 @@ export default function DelivererFormView({ data, onBack, showToast }) {
                                 <span className="text-sm font-bold text-slate-600">Auto</span>
                             </label>
                         </div>
-                        <FormField label="Full Name" required>
-                            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Deliverer name" />
+                        <FormField label="Full Name" required error={errors.name?.message}>
+                            <Input {...register('name')} placeholder="Deliverer name" />
                         </FormField>
                     </div>
 
                     {/* Row 2: License Plate | Phone Number */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label="License Plate" required>
-                            <Input value={license} onChange={e => setLicense(e.target.value)} placeholder="e.g. 1กข 1234" />
+                        <FormField label="License Plate" required error={errors.license?.message}>
+                            <Input {...register('license')} placeholder="e.g. 1กข 1234" />
                         </FormField>
-                        <FormField label="Phone Number" required>
-                            <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="08x-xxx-xxxx" />
+                        <FormField label="Phone Number" required error={errors.phone?.message}>
+                            <Input {...register('phone')} placeholder="08x-xxx-xxxx" />
                         </FormField>
                     </div>
 
                     {/* Row 3: Vehicle Type | Status Switch */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label="Vehicle Type" required>
-                            <Select value={type} onChange={e => setType(e.target.value)}>
-                                <option>Motorcycle</option>
-                                <option>Car</option>
-                                <option>Truck</option>
-                            </Select>
+                        <FormField label="Vehicle Type" required error={errors.type?.message}>
+                            <Controller
+                                name="type"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select value={field.value} onChange={field.onChange}>
+                                        <option>Motorcycle</option>
+                                        <option>Car</option>
+                                        <option>Truck</option>
+                                    </Select>
+                                )}
+                            />
                         </FormField>
-                        <FormField label="Status">
+                        <FormField label="Status" error={errors.status?.message}>
                             <div className="bg-slate-100 p-1 rounded-xl flex w-full max-w-[240px] border border-slate-200/50 mt-1">
                                 <button
                                     type="button"
-                                    onClick={() => setStatus('Active')}
+                                    onClick={() => setValue('status', 'Active')}
                                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
                                         status === 'Active'
                                             ? 'bg-red-500 text-white shadow-sm font-extrabold'
@@ -99,7 +113,7 @@ export default function DelivererFormView({ data, onBack, showToast }) {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setStatus('Inactive')}
+                                    onClick={() => setValue('status', 'Inactive')}
                                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
                                         status === 'Inactive'
                                             ? 'bg-slate-400 text-white shadow-sm font-extrabold'
@@ -115,7 +129,7 @@ export default function DelivererFormView({ data, onBack, showToast }) {
 
                 <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
                     <Btn variant="secondary" onClick={onBack}>Cancel</Btn>
-                    <Btn onClick={handleSave}><Save className="w-4 h-4" /> Save Deliverer</Btn>
+                    <Btn onClick={handleSubmit(onSubmit)}><Save className="w-4 h-4" /> Save Deliverer</Btn>
                 </div>
             </Card>
         </div>

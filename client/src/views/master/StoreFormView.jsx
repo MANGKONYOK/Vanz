@@ -1,22 +1,28 @@
 import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Save, Check } from 'lucide-react';
 import { FormField, Input, Card, Btn, Select } from '../../components/ui';
+import { storeSchema } from '../../schemas/master';
 
 export default function StoreFormView({ data, onBack, showToast }) {
     const isNew = !data.id;
     const [id, setId] = useState(data.id || '');
     const [autoId, setAutoId] = useState(isNew);
-    const [name, setName] = useState(data.name || '');
-    const [category, setCategory] = useState(data.category || 'Thai Food');
-    const [phone, setPhone] = useState(data.phone || '');
-    const [open, setOpen] = useState(data.open || '');
-    const [address, setAddress] = useState(data.address || '');
-    const [description, setDescription] = useState(data.description || '');
 
-    const handleSave = () => {
-        if (!name.trim() || !category || !phone.trim() || !address.trim()) {
-            return showToast('Please fill all required fields', 'error');
+    const { register, handleSubmit, formState: { errors }, control } = useForm({
+        resolver: zodResolver(storeSchema),
+        defaultValues: {
+            name: data.name || '',
+            category: data.category || 'Thai Food',
+            phone: data.phone || '',
+            address: data.address || '',
+            open: data.open || '',
+            description: data.description || '',
         }
+    });
+
+    const onSubmit = (formData) => {
         if (!autoId && !id.trim()) return showToast('Please enter a Store ID', 'error');
         showToast('Store saved!'); onBack();
     };
@@ -56,22 +62,28 @@ export default function StoreFormView({ data, onBack, showToast }) {
                             <span className="text-sm font-bold text-slate-600">Auto</span>
                         </label>
                     </div>
-                    <FormField label="Store Name" required><Input value={name} onChange={e => setName(e.target.value)} placeholder="Restaurant name" /></FormField>
-                    <FormField label="Category" required>
-                        <Select value={category} onChange={e => setCategory(e.target.value)}><option>Thai Food</option><option>Japanese</option><option>Cafe & Drinks</option><option>Fast Food</option><option>Other</option></Select>
+                    <FormField label="Store Name" required error={errors.name?.message}><Input {...register('name')} placeholder="Restaurant name" /></FormField>
+                    <FormField label="Category" required error={errors.category?.message}>
+                        <Controller
+                            name="category"
+                            control={control}
+                            render={({ field }) => (
+                                <Select value={field.value} onChange={field.onChange}><option>Thai Food</option><option>Japanese</option><option>Cafe & Drinks</option><option>Fast Food</option><option>Other</option></Select>
+                            )}
+                        />
                     </FormField>
-                    <FormField label="Phone Number" required><Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="02-xxx-xxxx" /></FormField>
-                    <FormField label="Address" required><Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Full address" /></FormField>
-                    <FormField label="Operating Hours"><Input value={open} onChange={e => setOpen(e.target.value)} placeholder="09:00-21:00" /></FormField>
+                    <FormField label="Phone Number" required error={errors.phone?.message}><Input {...register('phone')} placeholder="02-xxx-xxxx" /></FormField>
+                    <FormField label="Address" required error={errors.address?.message}><Input {...register('address')} placeholder="Full address" /></FormField>
+                    <FormField label="Operating Hours" error={errors.open?.message}><Input {...register('open')} placeholder="09:00-21:00" /></FormField>
                     <div className="md:col-span-2 mt-2">
-                        <FormField label="Description">
-                            <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter details or notes about the store..." />
+                        <FormField label="Description" error={errors.description?.message}>
+                            <Input {...register('description')} placeholder="Enter details or notes about the store..." />
                         </FormField>
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
                     <Btn variant="secondary" onClick={onBack}>Cancel</Btn>
-                    <Btn onClick={handleSave}><Save className="w-4 h-4" /> Save Store</Btn>
+                    <Btn onClick={handleSubmit(onSubmit)}><Save className="w-4 h-4" /> Save Store</Btn>
                 </div>
             </Card>
         </div>
