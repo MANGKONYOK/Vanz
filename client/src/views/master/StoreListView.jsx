@@ -124,7 +124,7 @@ export default function StoreListView({ showToast }) {
                     }
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-slate-400">
+                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}–{end} of {filtered.length} stores
                             </span>
                             <Select
@@ -157,12 +157,12 @@ export default function StoreListView({ showToast }) {
                         <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">No stores found</Td></Tr>
                     ) : paginated.map(s => (
                         <Tr key={s.storeCode}>
-                            <Td mono className="text-xs text-slate-500 font-bold whitespace-nowrap">{s.storeCode}</Td>
+                            <Td mono className="text-xs text-slate-500 dark:text-gray-300 font-bold whitespace-nowrap">{s.storeCode}</Td>
                             <Td bold className="whitespace-nowrap">{s.name}</Td>
                             <Td className="whitespace-nowrap">
                                 <Badge color="gray">{toTitleCase(s.category)}</Badge>
                             </Td>
-                            <Td className="max-w-[220px] truncate whitespace-nowrap text-slate-500" title={s.address}>
+                            <Td className="max-w-[220px] truncate whitespace-nowrap text-slate-500 dark:text-gray-300" title={s.address}>
                                 {s.address}{s.city ? `, ${s.city}` : ''}
                             </Td>
                             <Td center className="whitespace-nowrap">

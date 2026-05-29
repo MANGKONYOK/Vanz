@@ -4,60 +4,81 @@ A high-performance logistics and marketplace management system. Vanz streamlines
 
 ## 🚀 Technology Stack
 
-- **Frontend**: React 18 with Vite
-- **Styling**: Tailwind CSS (Modern, Clean, Professional UI)
+**Frontend**
+- **Core**: React 19 with Vite (utilizing the new React Compiler for performance optimization)
+- **Routing**: React Router v6
+- **Forms & Validation**: React Hook Form with Zod (strict client-side validation)
+- **Styling**: Tailwind CSS v4 (Modern, Clean, Professional UI)
 - **Icons**: Lucide React
-- **Animations**: CSS Fade-in transitions
+- **Notifications**: React Toastify
 
-## 🏗️ UI Architecture Standards
+**Backend**
+- **Core**: Node.js & Express.js
+- **Database**: PostgreSQL (hosted via Supabase) mapped via `pg` (node-postgres)
+- **Validation**: Zod (strict server-side schema validation)
+- **Logging**: Winston (Console, Error, and Combined file transports)
+- **Security**: JWT-based Authentication (jsonwebtoken) & CORS
 
-The project follows a strict UI consistency pattern to ensure a professional user experience.
+## 🏗️ Architecture Standards
 
-### Standard List View Pattern
-Every data list (Customers, Orders, Deliverers, etc.) must implement the **Advanced List View** layout:
+The project follows strict UI consistency patterns and robust server-side data validations to ensure a professional user experience.
 
-1.  **PageHeader**: Title, subtitle, and primary CTA (e.g., "Add New").
-2.  **Card Header**:
-    *   **Left**: Global Search bar (Input with Search icon).
-    *   **Right**: Pagination Info (`start-end of total`) and Items per page Selector (`10 / page`).
-3.  **Table**:
-    *   Professional Slate-based borders and text.
-    *   Sorted columns with neutralized (Slate-400) indicators.
-    *   Consistent Action column (Edit/Delete buttons).
-4.  **Pagination (Bottom Right)**:
-    *   Numbered page buttons (`[1] [2] [3]...`).
-    *   Chevron navigation for first/last and prev/next.
-    *   Strict right-alignment.
+### Client-Side Features
+1. **Advanced List Views**: Unified headers, global search, pagination (start-end of total), and strictly formatted data tables.
+2. **Form Management**: All forms utilize `useForm` natively, integrating custom components (LoV Modals, Selects, Toggles) via `Controller`. Validation errors are elegantly displayed in-line.
+3. **Design Principles**: Neutral Slate/Indigo palettes, auto-ID systems, and responsive grid layouts.
 
-### Design Principles
-- **Neutral Colors**: Shifted from high-contrast accents (like red sorting icons) to a professional slate/indigo palette.
-- **Auto-ID System**: Support for both manual ID entry and auto-generated sequences in forms.
-- **Responsive Layout**: Flexbox and Grid based layouts that adapt to screen size.
+### Server-Side Features
+1. **Service Layer Validation**: 100% of incoming data payloads across all 15 API resources are strictly validated using `schemas.safeParse()` before any business logic is executed.
+2. **Centralized Error Handling**: Unified `ValidationError` and `NotFoundError` wrappers provide consistent API responses.
+3. **Structured Logging**: Application state is tracked efficiently with Winston's structured file transports.
 
 ## 📁 Project Structure
 
 - `client/`: The React-based administrative dashboard.
-  - `src/components/ui/`: Core design primitives (Card, Table, Btn, etc.).
-  - `src/views/`: Feature-specific modules (Operations, Master, Finance).
-  - `src/data/`: Mock data for rapid prototyping.
-- `backend/`: (Planned) Node.js API services.
+  - `src/api/`: HTTP client interceptors (`axios`).
+  - `src/components/ui/`: Core design primitives (Card, Table, FormField, LovModal).
+  - `src/schemas/`: Zod validation definitions (Master, Operations, Finance).
+  - `src/views/`: Feature-specific modules.
+- `server/`: The Express.js REST API.
+  - `src/controllers/`: Route handlers.
+  - `src/services/`: Core business logic and DB transactions.
+  - `src/schemas/`: Server-side Zod definitions for all 15 resources.
+  - `src/utils/`: Middleware for Authentication, Errors, and Logging.
 
 ## 🛠️ Getting Started
 
 ### Prerequisites
-- Node.js (Latest LTS recommended)
-- npm or yarn
+- Node.js (v18+ recommended)
+- PostgreSQL (Supabase recommended)
 
-### Installation & Execution
+### 1. Server Setup
+```bash
+cd server
+npm install
+
+# Copy the environment template and fill in your Supabase DB URL and JWT Secret
+cp .env.example .env
+
+# Run the development server
+npm run dev
+```
+
+### 2. Client Setup
 ```bash
 cd client
 npm install
+
+# Run the Vite development server
 npm run dev
 ```
 
 ## 📋 Roadmap
 - [x] UI Modernization (Unified Header/Pagination)
 - [x] Standardized List View Patterns
-- [ ] Backend API Integration
-- [ ] React Hook Form & Zod Validation
+- [x] Backend API Database Integration (PostgreSQL)
+- [x] React Hook Form & Zod Validation (Full Stack)
+- [x] Structured Winston Logging 
+- [ ] Connect Frontend Dropdowns to Live APIs (Remove Mock Data)
+- [ ] Implement Real Authentication Flow (Login Page)
 - [ ] Real-time Delivery Tracking

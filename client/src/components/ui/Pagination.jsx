@@ -25,19 +25,19 @@ export default function Pagination({
     };
 
     return (
-        <div className="px-5 py-3 bg-white border-t border-slate-100 flex items-center justify-between">
+        <div className="px-5 py-3 bg-white dark:bg-transparent border-t border-slate-100 dark:border-red-900/50 flex items-center justify-between transition-colors duration-300">
             {showSummary && (
-                <div className="hidden sm:block text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <div className="hidden sm:block text-xs font-medium text-slate-500 dark:text-gray-300 uppercase tracking-wider">
                     Total {totalItems} {itemLabel}
                 </div>
             )}
             
             <div className={`flex items-center gap-1.5 ${showSummary ? 'ml-auto' : 'w-full justify-end'}`}>
-                <button onClick={() => onPageChange(1)} disabled={currentPage === 1} className="p-1.5 rounded-lg border border-slate-100 hover:bg-slate-50 disabled:opacity-20 transition-colors">
-                    <ChevronsLeft size={14} className="text-slate-600" />
+                <button onClick={() => onPageChange(1)} disabled={currentPage === 1} className="p-1.5 rounded-lg border border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-white/10 disabled:opacity-20 transition-colors">
+                    <ChevronsLeft size={14} className="text-slate-500 dark:text-gray-300" />
                 </button>
-                <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="p-1.5 rounded-lg border border-slate-100 hover:bg-slate-50 disabled:opacity-20 transition-colors">
-                    <ChevronLeft size={14} className="text-slate-600" />
+                <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="p-1.5 rounded-lg border border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-white/10 disabled:opacity-20 transition-colors">
+                    <ChevronLeft size={14} className="text-slate-500 dark:text-gray-300" />
                 </button>
 
                 {getPageNumbers().map(p => (
@@ -46,18 +46,18 @@ export default function Pagination({
                         onClick={() => onPageChange(p)}
                         className={`min-w-[32px] h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all
                             ${currentPage === p 
-                                ? 'bg-indigo-600 text-white shadow-sm' 
-                                : 'text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-200'}`}
+                                ? 'bg-red-700 text-white shadow-sm' 
+                                : 'text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-gray-600'}`}
                     >
                         {p}
                     </button>
                 ))}
 
-                <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-1.5 rounded-lg border border-slate-100 hover:bg-slate-50 disabled:opacity-20 transition-colors">
-                    <ChevronRight size={14} className="text-slate-600" />
+                <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-1.5 rounded-lg border border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-white/10 disabled:opacity-20 transition-colors">
+                    <ChevronRight size={14} className="text-slate-500 dark:text-gray-300" />
                 </button>
-                <button onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages} className="p-1.5 rounded-lg border border-slate-100 hover:bg-slate-50 disabled:opacity-20 transition-colors">
-                    <ChevronsRight size={14} className="text-slate-600" />
+                <button onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages} className="p-1.5 rounded-lg border border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-white/10 disabled:opacity-20 transition-colors">
+                    <ChevronsRight size={14} className="text-slate-500 dark:text-gray-300" />
                 </button>
             </div>
         </div>

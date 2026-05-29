@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal } from '../../components/ui';
 import { INITIAL_ORDERS } from '../../data/mockData';
 
 export default function CustomerOrderListView({ onNavigate, showToast }) {
@@ -9,11 +9,13 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
     const [sort, setSort] = useState({ key: 'date', direction: 'desc' });
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-    const handleDelete = (id) => {
-        if (window.confirm(`Are you sure you want to delete order ${id}?`)) {
-            setOrders(prev => prev.filter(o => o.id !== id));
-            showToast(`Order ${id} deleted successfully`, 'error');
+    const confirmDelete = () => {
+        if (confirmDeleteId) {
+            setOrders(prev => prev.filter(o => o.id !== confirmDeleteId));
+            showToast(`Order ${confirmDeleteId} deleted successfully`, 'error');
+            setConfirmDeleteId(null);
         }
     };
 
@@ -52,13 +54,13 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
 
             <Card className="overflow-hidden">
                 <CardHeader
-                    search={<Input icon={Search} placeholder="Search ID, customer, store..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    search={<Input icon={Search} placeholder="Search ID, customer, store..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="h-10 shadow-sm" />}
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-slate-400">
+                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}-{end} of {filtered.length} orders
                             </span>
-                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 border-slate-200 bg-white shadow-sm w-24">
+                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-24">
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
                         </div>
@@ -79,18 +81,18 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                 >
                     {paginated.map(o => (
                         <Tr key={o.id}>
-                            <Td mono className="text-xs font-bold text-red-600">{o.id}</Td>
+                            <Td mono className="text-xs font-bold text-slate-900 dark:text-slate-100">{o.id}</Td>
                             <Td>{o.date}</Td>
                             <Td bold>{o.customer}</Td>
                             <Td>{o.store}</Td>
                             <Td right bold>฿{o.total?.toLocaleString()}</Td>
                             <Td center><Badge color={o.status === 'Paid' ? 'green' : o.status === 'Cancelled' ? 'red' : 'amber'}>{o.status}</Badge></Td>
-                            <td className="px-4 py-3 text-right">
+                            <Td right>
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(o)}><Edit2 className="w-3 h-3" /> Edit</Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(o.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
+                                    <Btn size="sm" variant="danger" onClick={() => setConfirmDeleteId(o.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
                                 </div>
-                            </td>
+                            </Td>
                         </Tr>
                     ))}
                 </Table>
@@ -104,6 +106,14 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                     itemLabel="orders"
                 />
             </Card>
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete Customer Order"
+                message={`Are you sure you want to delete order ${confirmDeleteId}? This action will permanently remove the order record from the system.`}
+                onConfirm={confirmDelete}
+            />
         </div>
     );
 }

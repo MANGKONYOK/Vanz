@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal } from '../../components/ui';
 
 const INITIAL_PAYMENTS = [
     { id: 'PAY-2026-000456', period: 'Mar 2026', date: '2026-03-24', delivererName: 'Somchai Jaidee', status: 'PAID', amount: 2450 },
@@ -14,11 +14,13 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
     const [sort, setSort] = useState({ key: 'date', direction: 'desc' });
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-    const handleDelete = (id) => {
-        if (window.confirm(`Are you sure you want to delete payment ${id}?`)) {
-            setPayments(prev => prev.filter(p => p.id !== id));
-            showToast(`Payment ${id} deleted successfully`, 'error');
+    const confirmDelete = () => {
+        if (confirmDeleteId) {
+            setPayments(prev => prev.filter(p => p.id !== confirmDeleteId));
+            showToast(`Payment ${confirmDeleteId} deleted successfully`, 'error');
+            setConfirmDeleteId(null);
         }
     };
 
@@ -58,13 +60,13 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
 
             <Card className="overflow-hidden">
                 <CardHeader
-                    search={<Input icon={Search} placeholder="Search ID, deliverer, status..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="bg-white border-slate-200 h-10 shadow-sm" />}
+                    search={<Input icon={Search} placeholder="Search ID, deliverer, status..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="h-10 shadow-sm" />}
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-slate-400">
+                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}-{end} of {filtered.length} payments
                             </span>
-                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 border-slate-200 bg-white shadow-sm w-24">
+                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-24">
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
                         </div>
@@ -84,7 +86,7 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                 >
                     {paginated.map(p => (
                         <Tr key={p.id}>
-                            <Td mono className="text-xs font-bold text-red-600">{p.id}</Td>
+                            <Td mono className="text-xs font-bold text-slate-900 dark:text-slate-100">{p.id}</Td>
                             <Td>{p.date}</Td>
                             <Td bold>{p.delivererName}</Td>
                             <Td right bold>฿{p.amount?.toLocaleString()}</Td>
@@ -93,12 +95,12 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                                     {p.status}
                                 </Badge>
                             </Td>
-                            <td className="px-4 py-3 text-right">
+                            <Td right>
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(p)}><Edit2 className="w-3 h-3" /> Edit</Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(p.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
+                                    <Btn size="sm" variant="danger" onClick={() => setConfirmDeleteId(p.id)}><Trash2 className="w-3 h-3" /> Delete</Btn>
                                 </div>
-                            </td>
+                            </Td>
                         </Tr>
                     ))}
                 </Table>
@@ -112,6 +114,14 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                     itemLabel="payments"
                 />
             </Card>
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete Deliverer Payment"
+                message={`Are you sure you want to delete payment record ${confirmDeleteId}? This action will permanently remove the payment log from the system.`}
+                onConfirm={confirmDelete}
+            />
         </div>
     );
 }

@@ -93,14 +93,14 @@ export default function UnapprovedVouchersReportView({ showToast }) {
             )}
             <Card>
                 {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Loading vouchers…</div>
+                    <div className="py-12 text-center text-slate-500 dark:text-gray-300 text-sm">Loading vouchers…</div>
                 ) : (
                     <Table headers={[
                         { label: 'Voucher ID' }, { label: 'Deliverer' }, { label: 'Voucher Date' },
                         { label: 'Items', center: true }, { label: 'Total Amount', right: true }, { label: 'Status', center: true },
                     ]}>
                         {unapproved.length === 0 ? (
-                            <tr><td colSpan={6} className="py-10 text-center text-slate-400 text-sm">No unapproved vouchers found</td></tr>
+                            <tr><td colSpan={6} className="py-10 text-center text-slate-500 dark:text-gray-300 text-sm">No unapproved vouchers found</td></tr>
                         ) : unapproved.map(v => (
                             <Tr key={v.id}>
                                 <Td bold mono className="text-xs">{v.id}</Td>

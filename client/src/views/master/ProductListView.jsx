@@ -133,7 +133,7 @@ export default function ProductListView({ showToast }) {
                     }
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-slate-400">
+                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}–{end} of {filtered.length} products
                             </span>
                             <Select
@@ -166,9 +166,9 @@ export default function ProductListView({ showToast }) {
                         <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">No products found</Td></Tr>
                     ) : paginated.map(p => (
                         <Tr key={p.productId}>
-                            <Td mono className="text-xs text-slate-400 font-bold whitespace-nowrap">{p.productId}</Td>
+                            <Td mono className="text-xs text-slate-500 dark:text-gray-300 font-bold whitespace-nowrap">{p.productId}</Td>
                             <Td bold className="whitespace-nowrap">{p.name}</Td>
-                            <Td className="text-slate-600 whitespace-nowrap">{p.storeName}</Td>
+                            <Td className="text-slate-600 dark:text-gray-300 whitespace-nowrap">{p.storeName}</Td>
                             <Td right bold mono className="whitespace-nowrap">฿{parseFloat(p.price).toFixed(2)}</Td>
                             <Td center className="whitespace-nowrap">
                                 <Badge color={STATUS_COLOR[p.status] || 'gray'}>{p.status}</Badge>

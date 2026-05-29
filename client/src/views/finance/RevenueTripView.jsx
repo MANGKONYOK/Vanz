@@ -88,7 +88,7 @@ export default function RevenueTripView({ showToast }) {
                             placeholder="Search date, notes..." 
                             value={search} 
                             onChange={e => setSearch(e.target.value)} 
-                            className="bg-white border-slate-200 h-10 shadow-sm" 
+                            className="h-10 shadow-sm" 
                         />
                     }
                 />
@@ -108,7 +108,7 @@ export default function RevenueTripView({ showToast }) {
                                     type="date" 
                                     value={r.date} 
                                     onChange={e => handleUpdateRate(r.id, 'date', e.target.value)}
-                                    className="font-mono bg-white border-slate-200 focus:border-red-400" 
+                                    className="font-mono" 
                                 />
                             </Td>
                             <Td right>
@@ -116,7 +116,7 @@ export default function RevenueTripView({ showToast }) {
                                     type="number" 
                                     value={r.revenue} 
                                     onChange={e => handleUpdateRate(r.id, 'revenue', Number(e.target.value))}
-                                    className="text-right font-bold bg-white border-slate-200 focus:border-red-400" 
+                                    className="text-right font-bold" 
                                     placeholder="0"
                                 />
                             </Td>
@@ -125,7 +125,6 @@ export default function RevenueTripView({ showToast }) {
                                     value={r.notes} 
                                     onChange={e => handleUpdateRate(r.id, 'notes', e.target.value)}
                                     placeholder="write..." 
-                                    className="bg-white border-slate-200 focus:border-red-400"
                                 />
                             </Td>
                             <Td center>
@@ -134,14 +133,14 @@ export default function RevenueTripView({ showToast }) {
                                         size="sm" 
                                         variant="secondary" 
                                         onClick={() => handleSaveRate(r)}
-                                        className="hover:bg-slate-100 hover:text-emerald-600 transition-colors"
+                                        className="hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                                         title="Save Rate"
                                     >
                                         <Save className="w-3.5 h-3.5" />
                                     </Btn>
                                     <button 
                                         onClick={() => handleDeleteRate(r.id)} 
-                                        className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                        className="p-1.5 text-slate-300 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-all duration-200"
                                         title="Delete Rate"
                                     >
                                         <Trash2 className="w-4 h-4" />
@@ -152,7 +151,7 @@ export default function RevenueTripView({ showToast }) {
                     ))}
                     {displayRates.length === 0 && (
                         <Tr>
-                            <td colSpan={4} className="px-4 py-8 text-center text-slate-400 font-medium">
+                            <td colSpan={4} className="px-4 py-8 text-center text-slate-500 dark:text-gray-300 font-medium">
                                 No rate records found.
                             </td>
                         </Tr>

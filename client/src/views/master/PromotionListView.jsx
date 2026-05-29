@@ -117,7 +117,7 @@ export default function PromotionListView({ onNavigate, showToast }) {
                     }
                     filter={
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-slate-400">
+                            <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}–{end} of {filtered.length} promotions
                             </span>
                             <Select

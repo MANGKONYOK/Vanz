@@ -100,13 +100,13 @@ export default function ProductFormView({ data = {}, stores: initStores = [], on
 
             <button
                 onClick={onBack}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"
             >
                 <ArrowLeft className="w-4 h-4" /> Back to Products
             </button>
 
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 text-lg mb-6">
+                <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-6">
                     {isNew ? 'New Product' : `Edit: ${data.name}`}
                 </h3>
 
@@ -117,7 +117,7 @@ export default function ProductFormView({ data = {}, stores: initStores = [], on
                             <Input
                                 value={isNew ? '(assigned by server)' : String(data.productId)}
                                 readOnly
-                                className="bg-slate-50 text-slate-400 font-mono"
+                                className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
                             />
                         </FormField>
                         <FormField label="Status">
@@ -143,7 +143,7 @@ export default function ProductFormView({ data = {}, stores: initStores = [], on
                                 <Input
                                     value={storeDisplay || data.storeName}
                                     readOnly
-                                    className="bg-slate-50 text-slate-500"
+                                    className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300"
                                     title="Store cannot be changed after creation"
                                 />
                             )}

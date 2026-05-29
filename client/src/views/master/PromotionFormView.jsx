@@ -175,14 +175,14 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
 
             <button
                 onClick={onNavigateBack}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium"
+                className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"
             >
                 <ArrowLeft className="w-4 h-4" /> Back to Promotions
             </button>
 
             {/* Campaign Details Card */}
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-4">
+                <h3 className="font-bold text-slate-900 dark:text-white mb-4">
                     {isNew ? 'New Campaign' : `Edit: ${editData.name}`}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -191,7 +191,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                         <Input
                             value={previewCode}
                             readOnly
-                            className="bg-slate-50 text-slate-500 font-mono"
+                            className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
                             title="Code is assigned by server on save"
                         />
                     </FormField>
