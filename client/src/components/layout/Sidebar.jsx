@@ -48,10 +48,10 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, currentView, 
             <div className="h-16 flex items-center justify-between px-4 border-b border-red-900/50 shrink-0 w-[240px] bg-red-900/50 overflow-hidden">
                 <div className="flex items-center gap-2.5 text-white ml-1">
                     <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                        <ShoppingBag className="w-4 h-4 text-white fill-current" />
+                        <img src="/favicon.svg?v=4" className="w-5 h-5" alt="logo" />
                     </div>
                     <span className="text-xl font-black tracking-tight text-white">Vanz</span>
-                    <span className="text-[10px] font-bold text-white/70 bg-white/20 text-white px-1.5 py-0.5 rounded mt-0.5">ADMIN</span>
+                    <span className="text-[10px] font-bold text-white/70 bg-white/20 text-white px-1.5 py-0.5 rounded mt-0.5">ERP</span>
                 </div>
                 <button onClick={() => setIsSidebarOpen(false)} className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors">
                     <ChevronLeft className="w-4 h-4" />
