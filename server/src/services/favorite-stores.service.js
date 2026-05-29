@@ -1,22 +1,26 @@
 'use strict';
 const model = require('../models/favorite-stores.model');
 const { ValidationError, NotFoundError } = require('../utils/errors');
+const { schemas } = require('../schemas');
+
+function toFieldErrors(zodError) {
+  return zodError.issues.map(issue => ({
+    field: `requestBody.${issue.path.join('.')}`,
+    reason: issue.message,
+  }));
+}
 
 exports.list = (q) => model.findAll(q);
 
 exports.create = async (data) => {
-  const fe = [];
-  if (!data.customer_code) fe.push({ field: 'requestBody.customer_code', reason: 'required' });
-  if (!data.store_code)    fe.push({ field: 'requestBody.store_code',    reason: 'required' });
-  if (fe.length) throw new ValidationError('Invalid input', fe);
+  const result = schemas.favoriteStoreCreate.safeParse(data);
+  if (!result.success) throw new ValidationError('Invalid input', toFieldErrors(result.error));
   return model.create(data);
 };
 
 exports.update = async (customerCode, storeCode, data) => {
-  const fe = [];
-  if (!data.new_customer_code) fe.push({ field: 'requestBody.new_customer_code', reason: 'required' });
-  if (!data.new_store_code)    fe.push({ field: 'requestBody.new_store_code',    reason: 'required' });
-  if (fe.length) throw new ValidationError('Invalid input', fe);
+  const result = schemas.favoriteStoreUpdate.safeParse(data);
+  if (!result.success) throw new ValidationError('Invalid input', toFieldErrors(result.error));
   return model.update(customerCode, storeCode, data);
 };
 

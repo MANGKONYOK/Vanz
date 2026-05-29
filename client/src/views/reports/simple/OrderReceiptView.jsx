@@ -26,7 +26,7 @@ export default function OrderReceiptView() {
                 <Card className="p-6">
                     <div className="text-center mb-6">
                         <div className="flex items-center justify-center gap-2 text-red-600 mb-1">
-                            <ShoppingBag className="w-5 h-5 fill-current" /><span className="text-xl font-black">VANz</span>
+                            <img src="/favicon.svg?v=4" className="w-6 h-6 -mt-1" alt="logo" /><span className="text-xl font-black">Vanz</span>
                         </div>
                         <p className="text-xs text-slate-400 mono">ORD-2026-008001 · 2026-03-21 14:32</p>
                     </div>

@@ -19,10 +19,22 @@ function authenticate(req, res, next) {
       field_errors: [],
     });
   }
-  // TODO: verify token signature when auth service is integrated
-  // const jwt = require('jsonwebtoken');
-  // try { req.user = jwt.verify(token, process.env.JWT_SECRET); }
-  // catch (e) { return res.status(401).json({ error_code: 'UNAUTHORIZED', ... }); }
+  const jwt = require('jsonwebtoken');
+  
+  if (process.env.JWT_SECRET) {
+    try {
+      req.user = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return res.status(401).json({
+        error_code: 'UNAUTHORIZED',
+        message: 'Invalid or expired token',
+        field_errors: [],
+      });
+    }
+  } else {
+    console.warn('JWT_SECRET is not set. Token signature verification is skipped.');
+  }
+
   req.token = token;
   return next();
 }

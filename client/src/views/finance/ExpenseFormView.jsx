@@ -1,31 +1,28 @@
 import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Save, Plus, Trash2, Search, Check } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, Td, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { MOCK_DELIVERERS } from '../../data/mockData';
+import { expenseHeaderSchema } from '../../schemas/finance';
 
 export default function ExpenseFormView({ onNavigateBack, showToast }) {
     const [items, setItems] = useState([{ id: 1, type: 'Toll', desc: 'Expressway', amount: 50, receipt: 'RC-9901' }]);
-    const [delivererId, setDelivererId] = useState('');
     const [isLovOpen, setIsLovOpen] = useState(false);
     const [search, setSearch] = useState('');
-    
-    // Header states
-    const [voucherDate, setVoucherDate] = useState('2026-03-23');
-    const [status, setStatus] = useState('DRAFT');
-    const [approvedBy, setApprovedBy] = useState('');
-
     const [voucherId, setVoucherId] = useState('');
     const [autoId, setAutoId] = useState(true);
 
-    const displayVoucherId = autoId ? (voucherId || 'EXP-AUTO') : voucherId;
+    const { control, register, handleSubmit, reset, formState: { errors } } = useForm({
+        resolver: zodResolver(expenseHeaderSchema),
+        defaultValues: { delivererId: '', voucherDate: '2026-03-23', status: 'DRAFT', approvedBy: '' },
+    });
 
+    const displayVoucherId = autoId ? (voucherId || 'EXP-AUTO') : voucherId;
     const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
 
-    const handleSave = () => {
+    const onSubmit = (headerData) => {
         if (!autoId && !voucherId.trim()) return showToast('Please enter a Voucher ID', 'error');
-        if (!delivererId) return showToast('Please select a deliverer', 'error');
-        if (!voucherDate) return showToast('Please specify a voucher date', 'error');
-        if (!approvedBy.trim()) return showToast('Please specify who approved this voucher', 'error');
         if (items.length === 0) return showToast('Voucher must contain at least one expense item', 'error');
         if (items.some(i => i.amount <= 0)) return showToast('All expense amounts must be greater than zero', 'error');
         if (items.some(i => !i.desc.trim())) return showToast('Please provide descriptions for all expense items', 'error');
@@ -40,9 +37,15 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
 
     return (
         <div className="fade-in space-y-5">
-            <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
-                columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Vehicle' }]}
-                data={MOCK_DELIVERERS} onSelect={r => { setDelivererId(`${r.id} – ${r.name}`); setIsLovOpen(false); }} />
+            <Controller
+                name="delivererId"
+                control={control}
+                render={({ field }) => (
+                    <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
+                        columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Vehicle' }]}
+                        data={MOCK_DELIVERERS} onSelect={r => { field.onChange(`${r.id} – ${r.name}`); setIsLovOpen(false); }} />
+                )}
+            />
             
             <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 transition-colors font-medium">
                 <ArrowLeft className="w-4 h-4" /> Back to Vouchers
@@ -78,22 +81,34 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                             <span className="text-sm font-bold text-slate-600 font-sans">Auto</span>
                         </label>
                     </div>
-                    <FormField label="Deliverer" required>
-                        <LovInput value={delivererId} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer..." />
+                    <FormField label="Deliverer" required error={errors.delivererId?.message}>
+                        <Controller
+                            name="delivererId"
+                            control={control}
+                            render={({ field }) => (
+                                <LovInput value={field.value} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer..." />
+                            )}
+                        />
                     </FormField>
-                    <FormField label="Date" required>
-                        <Input type="date" value={voucherDate} onChange={e => setVoucherDate(e.target.value)} />
+                    <FormField label="Date" required error={errors.voucherDate?.message}>
+                        <Input type="date" {...register('voucherDate')} />
                     </FormField>
-                    <FormField label="Status">
-                        <Select value={status} onChange={e => setStatus(e.target.value)}>
-                            <option value="DRAFT">DRAFT</option>
-                            <option value="SUBMITTED">SUBMITTED</option>
-                            <option value="APPROVED">APPROVED</option>
-                            <option value="REJECTED">REJECTED</option>
-                        </Select>
+                    <FormField label="Status" error={errors.status?.message}>
+                        <Controller
+                            name="status"
+                            control={control}
+                            render={({ field }) => (
+                                <Select value={field.value} onChange={e => field.onChange(e.target.value)}>
+                                    <option value="DRAFT">DRAFT</option>
+                                    <option value="SUBMITTED">SUBMITTED</option>
+                                    <option value="APPROVED">APPROVED</option>
+                                    <option value="REJECTED">REJECTED</option>
+                                </Select>
+                            )}
+                        />
                     </FormField>
-                    <FormField label="Approved By" required>
-                        <Input placeholder="e.g. Anutin Ch." value={approvedBy} onChange={e => setApprovedBy(e.target.value)} />
+                    <FormField label="Approved By" required error={errors.approvedBy?.message}>
+                        <Input placeholder="e.g. Anutin Ch." {...register('approvedBy')} />
                     </FormField>
                 </div>
             </Card>
@@ -172,7 +187,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                         <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Expense</p>
                         <p className="text-3xl font-black text-slate-900 mono">฿{totalAmount}</p>
                     </div>
-                    <Btn onClick={handleSave} size="lg"><Save className="w-4 h-4" /> Save Voucher</Btn>
+                    <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> Save Voucher</Btn>
                 </div>
             </Card>
         </div>
