@@ -32,11 +32,11 @@ export default function DelivererFormView({ data, onBack, showToast }) {
 
     return (
         <div className="fade-in space-y-5">
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-900 font-medium transition-colors">
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-current/75 hover:text-current font-bold transition-colors">
                 <ArrowLeft className="w-4 h-4" /> Back to Deliverers
             </button>
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-6">{isNew ? 'New Deliverer' : `Edit: ${data.name}`}</h3>
+                <h3 className="font-bold text-current mb-6 text-lg">{isNew ? 'New Deliverer' : `Edit: ${data.name}`}</h3>
                 
                 <div className="space-y-5">
                     {/* Row 1: Deliverer ID | Full Name */}
@@ -49,7 +49,7 @@ export default function DelivererFormView({ data, onBack, showToast }) {
                                         onChange={e => setId(e.target.value.toUpperCase())}
                                         placeholder="D-001"
                                         readOnly={autoId}
-                                        className={autoId ? 'bg-slate-50 text-slate-500 font-mono' : 'font-mono'}
+                                        className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-current/60 font-mono' : 'font-mono'}
                                     />
                                 </FormField>
                             </div>
@@ -61,11 +61,11 @@ export default function DelivererFormView({ data, onBack, showToast }) {
                                         onChange={e => setAutoId(e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-5 h-5 border-2 border-slate-200 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
+                                    <div className="w-5 h-5 border-2 border-slate-200 dark:border-slate-700 rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
                                         <Check size={12} strokeWidth={4} className={autoId ? 'scale-100' : 'scale-0'} />
                                     </div>
                                 </div>
-                                <span className="text-sm font-bold text-slate-600">Auto</span>
+                                <span className="text-sm font-bold text-current/75">Auto</span>
                             </label>
                         </div>
                         <FormField label="Full Name" required error={errors.name?.message}>
@@ -99,14 +99,14 @@ export default function DelivererFormView({ data, onBack, showToast }) {
                             />
                         </FormField>
                         <FormField label="Status" error={errors.status?.message}>
-                            <div className="bg-slate-100 p-1 rounded-xl flex w-full max-w-[240px] border border-slate-200/50 mt-1">
+                            <div className="bg-slate-100 dark:bg-black/20 p-1 rounded-xl flex w-full max-w-[240px] border border-slate-200/50 dark:border-red-900/30 mt-1">
                                 <button
                                     type="button"
                                     onClick={() => setValue('status', 'Active')}
                                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
                                         status === 'Active'
                                             ? 'bg-red-500 text-white shadow-sm font-extrabold'
-                                            : 'text-slate-500 hover:text-slate-800'
+                                            : 'text-current/60 hover:text-current'
                                     }`}
                                 >
                                     Active
@@ -116,8 +116,8 @@ export default function DelivererFormView({ data, onBack, showToast }) {
                                     onClick={() => setValue('status', 'Inactive')}
                                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
                                         status === 'Inactive'
-                                            ? 'bg-slate-400 text-white shadow-sm font-extrabold'
-                                            : 'text-slate-500 hover:text-slate-800'
+                                            ? 'bg-slate-400 dark:bg-slate-600 text-white shadow-sm font-extrabold'
+                                            : 'text-current/60 hover:text-current'
                                     }`}
                                 >
                                     Inactive
@@ -127,7 +127,7 @@ export default function DelivererFormView({ data, onBack, showToast }) {
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-current/10">
                     <Btn variant="secondary" onClick={onBack}>Cancel</Btn>
                     <Btn onClick={handleSubmit(onSubmit)}><Save className="w-4 h-4" /> Save Deliverer</Btn>
                 </div>

@@ -106,14 +106,14 @@ export default function ReportTopProductsView({ showToast }) {
             </FilterBar>
             <Card>
                 {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Calculating top products…</div>
+                    <div className="py-12 text-center text-current/60 text-sm">Calculating top products…</div>
                 ) : (
                     <Table headers={[
                         { label: 'Rank', center: true }, { label: 'Store' }, { label: 'Product' },
                         { label: 'Qty Sold', right: true }, { label: 'Revenue', right: true },
                     ]}>
                         {rows.length === 0 ? (
-                            <tr><td colSpan={5} className="py-10 text-center text-slate-400 text-sm">
+                            <tr><td colSpan={5} className="py-10 text-center text-current/50 text-sm">
                                 {generated ? 'No sales data found' : 'Set filters and click Generate'}
                             </td></tr>
                         ) : rows.map(p => (
@@ -122,7 +122,7 @@ export default function ReportTopProductsView({ showToast }) {
                                 <Td>{p.store}</Td>
                                 <Td bold>{p.name}</Td>
                                 <Td right bold>{p.qty.toLocaleString()}</Td>
-                                <Td right bold className="text-emerald-700">฿{p.revenue.toLocaleString()}</Td>
+                                <Td right bold className="text-emerald-700 dark:text-emerald-400">฿{p.revenue.toLocaleString()}</Td>
                             </Tr>
                         ))}
                     </Table>

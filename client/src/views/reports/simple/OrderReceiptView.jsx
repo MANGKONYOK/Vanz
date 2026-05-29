@@ -28,9 +28,9 @@ export default function OrderReceiptView() {
                         <div className="flex items-center justify-center gap-2 text-red-600 mb-1">
                             <img src="/favicon.svg?v=4" className="w-6 h-6 -mt-1" alt="logo" /><span className="text-xl font-black">Vanz</span>
                         </div>
-                        <p className="text-xs text-slate-400 mono">ORD-2026-008001 · 2026-03-21 14:32</p>
+                        <p className="text-xs text-current/50 mono">ORD-2026-008001 · 2026-03-21 14:32</p>
                     </div>
-                    <div className="text-xs text-slate-500 mb-3">
+                    <div className="text-xs text-current/60 mb-3">
                         <p><span className="font-semibold">Customer:</span> Adisak Mongkolsuwan</p>
                         <p><span className="font-semibold">Store:</span> Somchai Kitchen</p>
                         <p><span className="font-semibold">Deliverer:</span> Somchai Jaidee</p>
@@ -38,15 +38,15 @@ export default function OrderReceiptView() {
                     <div className="border-t border-dashed border-slate-200 pt-3 mb-3">
                         {MOCK_RECEIPT_ITEMS.map(i => (
                             <div key={i.id} className="flex justify-between items-start py-1.5">
-                                <div><p className="text-sm font-semibold text-slate-800">{i.name}</p><p className="text-xs text-slate-400">x{i.qty} @ ฿{i.price}</p></div>
-                                <span className="text-sm font-bold text-slate-900 mono">฿{i.total}</span>
+                                <div><p className="text-sm font-semibold text-current">{i.name}</p><p className="text-xs text-current/50">x{i.qty} @ ฿{i.price}</p></div>
+                                <span className="text-sm font-bold text-current font-bold mono">฿{i.total}</span>
                             </div>
                         ))}
                     </div>
                     <div className="border-t border-dashed border-slate-200 pt-3 space-y-1">
-                        <div className="flex justify-between text-sm text-slate-600"><span>Subtotal</span><span className="mono">฿{subtotal}</span></div>
-                        <div className="flex justify-between text-sm text-slate-600"><span>Delivery Fee</span><span className="mono">฿{delivery}</span></div>
-                        <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-200"><span>Total</span><span className="mono">฿{subtotal + delivery}</span></div>
+                        <div className="flex justify-between text-sm text-current/75"><span>Subtotal</span><span className="mono">฿{subtotal}</span></div>
+                        <div className="flex justify-between text-sm text-current/75"><span>Delivery Fee</span><span className="mono">฿{delivery}</span></div>
+                        <div className="flex justify-between text-base font-black text-current font-bold pt-2 border-t border-slate-200"><span>Total</span><span className="mono">฿{subtotal + delivery}</span></div>
                     </div>
                     <Btn className="w-full mt-5" onClick={() => { }}><Printer className="w-4 h-4" /> Print Receipt</Btn>
                 </Card>

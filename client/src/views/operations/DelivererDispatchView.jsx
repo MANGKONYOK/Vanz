@@ -128,7 +128,7 @@ export default function DelivererDispatchView({ showToast }) {
 
             {/* ── Assign Form ─────────────────────────────────────────────── */}
             <Card className="p-5">
-                <h3 className="font-bold text-slate-900 mb-4">Assign Deliverer</h3>
+                <h3 className="font-extrabold text-current text-lg mb-4">Assign Deliverer</h3>
                 <div className="flex flex-col md:flex-row gap-4 items-end">
                     <div className="flex-1 min-w-0">
                         <FormField label="Prepared Order" required>
@@ -160,9 +160,9 @@ export default function DelivererDispatchView({ showToast }) {
                     title={`Prepared Orders Queue (${queue.length})`}
                     action={
                         loadingQ ? (
-                            <span className="text-xs text-slate-400">Loading…</span>
+                            <span className="text-xs text-current/50">Loading…</span>
                         ) : (
-                            <span className="text-xs text-slate-400">{queue.length} order(s) awaiting dispatch</span>
+                            <span className="text-xs text-current/50">{queue.length} order(s) awaiting dispatch</span>
                         )
                     }
                 />
@@ -175,21 +175,21 @@ export default function DelivererDispatchView({ showToast }) {
                 ]}>
                     {queue.length === 0 ? (
                         <tr>
-                            <td colSpan={5} className="py-10 text-center text-slate-400 text-sm">
+                            <td colSpan={5} className="py-10 text-center text-current/50 text-sm">
                                 {loadingQ ? 'Loading prepared orders…' : 'No prepared orders — all caught up!'}
                             </td>
                         </tr>
                     ) : queue.map(o => (
                         <Tr key={o.id}>
-                            <Td mono className="text-xs font-bold text-red-600">{o.id}</Td>
+                            <Td mono className="text-xs font-bold text-slate-900 dark:text-slate-100">{o.id}</Td>
                             <Td>{o.store}</Td>
                             <Td bold>{o.customer}</Td>
                             <Td right mono className="text-sm">฿{o.total.toLocaleString()}</Td>
-                            <td className="px-4 py-3 text-right">
+                            <Td right>
                                 <Btn size="sm" onClick={() => setOrderId(o.id)}>
                                     <Truck className="w-3.5 h-3.5" /> Select
                                 </Btn>
-                            </td>
+                            </Td>
                         </Tr>
                     ))}
                 </Table>

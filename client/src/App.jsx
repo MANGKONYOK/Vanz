@@ -1,8 +1,9 @@
 import './App.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import AppHeader from './components/layout/AppHeader';
+import ParticleBackground from './components/ui/ParticleBackground';
 import {
     DashboardView,
     CustomerOrderListView, CustomerOrderFormView, DelivererDispatchView,
@@ -19,6 +20,16 @@ export default function App() {
     const [expandedNav, setExpandedNav] = useState({ simple: true, analytics: true });
     const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
     const [promotionEditData, setPromotionEditData] = useState(null);
+    const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+
+    useEffect(() => {
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }, [isDarkMode]);
 
     const showToast = (message, type = 'success') => {
         setToast({ visible: true, message, type });
@@ -26,7 +37,7 @@ export default function App() {
     };
 
     return (
-        <div className="h-screen w-full bg-slate-50 flex font-sans text-slate-800 overflow-hidden overscroll-none">
+        <div className={`h-screen w-full bg-slate-50 dark:bg-slate-950 flex font-sans text-slate-900 dark:text-slate-100 overflow-hidden overscroll-none transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
             {/* Toast */}
             {toast.visible && (
                 <div className={`fixed top-5 right-5 z-[999] flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-xl border toast-in ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
@@ -43,10 +54,15 @@ export default function App() {
             />
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 bg-slate-100 relative">
-                <AppHeader isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+            <main 
+                className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-slate-900 bg-grid-pattern relative transition-colors duration-300"
+            >
+                {/* Custom Canvas Particle Effect */}
+                <ParticleBackground isDarkMode={isDarkMode} />
 
-                <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 main-scrollbar">
+                <AppHeader isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 main-scrollbar relative z-10">
                     <div className="max-w-5xl mx-auto">
 
                         {currentView === 'dashboard' && <DashboardView onNavigate={setCurrentView} />}

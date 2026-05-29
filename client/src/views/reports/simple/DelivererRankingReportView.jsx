@@ -82,20 +82,20 @@ export default function DelivererRankingReportView({ showToast }) {
             </FilterBar>
             <Card>
                 {loading ? (
-                    <div className="py-12 text-center text-slate-500 text-sm">Loading deliverers…</div>
+                    <div className="py-12 text-center text-current/60 text-sm">Loading deliverers…</div>
                 ) : (
                     <Table headers={[
                         { label: 'Rank', center: true }, { label: 'Deliverer Name' }, { label: 'Vehicle Type' },
                         { label: 'Status' }, { label: 'Rating', right: true },
                     ]}>
                         {filtered.length === 0 ? (
-                            <tr><td colSpan={5} className="py-10 text-center text-slate-400 text-sm">No deliverers found</td></tr>
+                            <tr><td colSpan={5} className="py-10 text-center text-current/50 text-sm">No deliverers found</td></tr>
                         ) : filtered.map((d, i) => (
                             <Tr key={d.id}>
                                 <Td center><RankBadge rank={i + 1} /></Td>
                                 <Td bold>{d.name}</Td>
                                 <Td>{d.type}</Td>
-                                <Td><span className="text-xs font-semibold text-slate-500">{d.status}</span></Td>
+                                <Td><span className="text-xs font-semibold text-current/60">{d.status}</span></Td>
                                 <td className="px-4 py-3 text-right">
                                     <span className="flex items-center justify-end gap-1 font-bold text-amber-600">
                                         <Star className="w-4 h-4 fill-amber-400 text-amber-400" />{d.rating.toFixed(1)}
