@@ -91,20 +91,21 @@ export default function App() {
                         {currentView === 'promotion_form' && <PromotionFormView data={promotionEditData} onNavigateBack={() => { setPromotionEditData(null); setCurrentView('promotion_list'); }} showToast={showToast} />}
 
                         {/* Simple Reports */}
-                        {currentView === 'report_delivered_orders' && <DeliveredOrdersReportView />}
-                        {currentView === 'report_order_receipt' && <OrderReceiptView />}
-                        {currentView === 'report_store_products' && <StoreProductsReportView />}
-                        {currentView === 'report_fav_stores' && <FavStoresReportView />}
-                        {currentView === 'report_unapproved_vouchers' && <UnapprovedVouchersReportView />}
-                        {currentView === 'report_deliverer_ranking' && <DelivererRankingReportView />}
-                        {currentView === 'report_deliverer_history' && <DelivererHistoryReportView />}
-                        {currentView === 'report_category_products' && <CategoryProductsReportView />}
+                        {currentView === 'report_delivered_orders' && <DeliveredOrdersReportView showToast={showToast} />}
+                        {currentView === 'report_order_receipt' && <OrderReceiptView showToast={showToast} />}
+                        {currentView === 'report_store_products' && <StoreProductsReportView showToast={showToast} />}
+                        {currentView === 'report_fav_stores' && <FavStoresReportView showToast={showToast} />}
+                        {currentView === 'report_unapproved_vouchers' && <UnapprovedVouchersReportView showToast={showToast} />}
+                        {currentView === 'report_deliverer_ranking' && <DelivererRankingReportView showToast={showToast} />}
+                        {currentView === 'report_deliverer_history' && <DelivererHistoryReportView showToast={showToast} />}
+                        {currentView === 'report_category_products' && <CategoryProductsReportView showToast={showToast} />}
 
                         {/* Analytics Reports */}
-                        {currentView === 'report_top_products' && <ReportTopProductsView />}
-                        {currentView === 'report_top_deliverers' && <TopDeliverersReportView />}
-                        {currentView === 'report_expense_summary' && <ExpenseSummaryReportView />}
-                        {currentView === 'report_promo_perf' && <PromoPerfReportView />}
+                        {currentView === 'report_top_products' && <ReportTopProductsView showToast={showToast} />}
+                        {currentView === 'report_top_deliverers' && <TopDeliverersReportView showToast={showToast} />}
+                        {currentView === 'report_expense_summary' && <ExpenseSummaryReportView showToast={showToast} />}
+                        {currentView === 'report_promo_perf' && <PromoPerfReportView showToast={showToast} />}
+
 
                     </div>
                 </div>

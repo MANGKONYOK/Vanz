@@ -16,6 +16,7 @@ export default function ExpenseSummaryReportView({ showToast }) {
         getJson('/expense-vouchers').then(data => {
             if (cancelled) return;
             let result = Array.isArray(data) ? data : [];
+            result = result.map(v => ({ ...v, status: (v.status || 'DRAFT').toUpperCase() }));
             if (dateFrom) result = result.filter(v => String(v.voucher_date || '').slice(0, 10) >= dateFrom);
             if (dateTo)   result = result.filter(v => String(v.voucher_date || '').slice(0, 10) <= dateTo);
             setVouchers(result);
@@ -24,6 +25,7 @@ export default function ExpenseSummaryReportView({ showToast }) {
         }).finally(() => {
             if (!cancelled) setLoading(false);
         });
+
         return () => { cancelled = true; };
     }, [tick]); // eslint-disable-line react-hooks/exhaustive-deps
 

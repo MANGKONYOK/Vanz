@@ -19,7 +19,7 @@ exports.findAll = async (f) => {
   let q = 'SELECT * FROM deliverer WHERE 1=1';
   const p = [];
   if (f.deliverer_code)  { p.push(f.deliverer_code);            q += ` AND code = $${p.length}`; }
-  if (f.current_status)  { p.push(f.current_status);            q += ` AND current_status = $${p.length}`; }
+  if (f.current_status)  { p.push(String(f.current_status).toLowerCase()); q += ` AND current_status = $${p.length}`; }
   if (f.vehicle_type)    { p.push(`%${f.vehicle_type}%`);       q += ` AND vehicle_type ILIKE $${p.length}`; }
   q += ' ORDER BY id';
   const { rows } = await pool.query(q, p);

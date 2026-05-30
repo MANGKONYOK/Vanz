@@ -48,7 +48,7 @@ exports.findAll = async (f) => {
   const p = [];
   if (f.order_code)  { p.push(f.order_code);  q += ` AND code = $${p.length}`; }
   if (f.customer_id) { p.push(f.customer_id); q += ` AND customer_id = $${p.length}`; }
-  if (f.status)      { p.push(f.status);       q += ` AND status = $${p.length}`; }
+  if (f.status)      { p.push(String(f.status).toLowerCase()); q += ` AND status = $${p.length}`; }
   q += ' ORDER BY id DESC';
   const { rows } = await pool.query(q, p);
   return attachItemsBatch(rows.map(fmtHeader));

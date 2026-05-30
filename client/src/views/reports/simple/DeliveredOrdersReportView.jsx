@@ -14,28 +14,28 @@ export default function DeliveredOrdersReportView({ showToast }) {
         setLoading(true);
         setGenerated(true);
         Promise.all([
-            getJson('/orders', { status: 'DELIVERED' }).catch(() => []),
+            getJson('/orders', { status: 'delivered' }).catch(() => []),
             getJson('/customers').catch(() => []),
             getJson('/profiles').catch(() => []),
             getJson('/stores').catch(() => []),
             getJson('/deliveries').catch(() => []),
             getJson('/deliverers').catch(() => []),
         ]).then(([orders, customers, profiles, stores, deliveries, deliverers]) => {
-            const profileMap   = new Map(profiles.map(p => [p.profile_id, p]));
-            const custMap      = new Map(customers.map(c => [c.customer_id, c]));
-            const storeMap     = new Map(stores.map(s => [s.store_id, s]));
-            const deliveryMap  = new Map(deliveries.map(d => [d.order_id, d]));
-            const delivererMap = new Map(deliverers.map(d => [d.deliverer_id, d]));
+            const profileMap   = new Map(profiles.map(p => [String(p.profile_id), p]));
+            const custMap      = new Map(customers.map(c => [String(c.customer_id), c]));
+            const storeMap     = new Map(stores.map(s => [String(s.store_id), s]));
+            const deliveryMap  = new Map(deliveries.map(d => [String(d.order_id), d]));
+            const delivererMap = new Map(deliverers.map(d => [String(d.deliverer_id), d]));
 
             let result = (orders || [])
-                .filter(o => o.status === 'DELIVERED')
+                .filter(o => o.status?.toUpperCase() === 'DELIVERED')
                 .map(o => {
-                    const cust     = custMap.get(o.customer_id) || {};
-                    const prof     = profileMap.get(cust.profile_id) || {};
-                    const store    = storeMap.get(o.store_id) || {};
-                    const delivery = deliveryMap.get(o.order_id) || {};
-                    const dlv      = delivererMap.get(delivery.deliverer_id) || {};
-                    const dlvProf  = profileMap.get(dlv.profile_id) || {};
+                    const cust     = custMap.get(String(o.customer_id)) || {};
+                    const prof     = profileMap.get(String(cust.profile_id)) || {};
+                    const store    = storeMap.get(String(o.store_id)) || {};
+                    const delivery = deliveryMap.get(String(o.order_id)) || {};
+                    const dlv      = delivererMap.get(String(delivery.deliverer_id)) || {};
+                    const dlvProf  = profileMap.get(String(dlv.profile_id)) || {};
 
                     const pickupMs   = delivery.pickup_time   ? new Date(delivery.pickup_time).getTime()   : null;
                     const deliveryMs = delivery.delivery_time ? new Date(delivery.delivery_time).getTime() : null;
@@ -52,6 +52,7 @@ export default function DeliveredOrdersReportView({ showToast }) {
                         total:     Number(o.total_price || 0),
                     };
                 });
+
 
             if (dateFrom) result = result.filter(r => r.date >= dateFrom);
             if (dateTo)   result = result.filter(r => r.date <= dateTo);
