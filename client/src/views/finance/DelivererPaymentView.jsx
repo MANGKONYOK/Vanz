@@ -26,10 +26,14 @@ const getEffectiveRate = (orderDateStr) => {
         if (stored) {
             const rates = JSON.parse(stored);
             if (Array.isArray(rates) && rates.length > 0) {
-                // Filter valid rate entries and sort chronologically (oldest first)
+                // Filter valid rate entries and sort chronologically (oldest first), secondary sort by id/timestamp ascending
                 const sorted = [...rates]
                     .filter(r => r.date && r.revenue !== undefined && r.revenue >= 0)
-                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+                    .sort((a, b) => {
+                        const dateDiff = new Date(a.date) - new Date(b.date);
+                        if (dateDiff !== 0) return dateDiff;
+                        return a.id - b.id; // Newest id/timestamp last
+                    });
                 
                 // Find the latest rate that became effective on or before orderDateStr
                 let matchedRate = null;

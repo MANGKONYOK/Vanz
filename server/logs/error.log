@@ -253,3 +253,13 @@
     at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:154:9)
     at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:45:3)
     at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)
+[2026-05-30T16:20:06.351Z] [ERROR] update or delete on table "deliverer" violates foreign key constraint "DeliveryPerson_Location_Log_deliverer_id_fkey" on table "deliverer_location_log" error: update or delete on table "deliverer" violates foreign key constraint "DeliveryPerson_Location_Log_deliverer_id_fkey" on table "deliverer_location_log"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\deliverers.service.js:36:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\deliverers.controller.js:25:25)
+[2026-05-30T16:20:10.314Z] [ERROR] update or delete on table "deliverer" violates foreign key constraint "DeliveryPerson_Location_Log_deliverer_id_fkey" on table "deliverer_location_log" error: update or delete on table "deliverer" violates foreign key constraint "DeliveryPerson_Location_Log_deliverer_id_fkey" on table "deliverer_location_log"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\deliverers.service.js:36:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\deliverers.controller.js:25:25)

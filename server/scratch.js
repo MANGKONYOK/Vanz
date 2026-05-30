@@ -1,2 +1,2 @@
 const pool = require('./src/db/pool');
-pool.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'expense_voucher_items'").then(res => { console.log(res.rows); pool.end(); });
+pool.query("SELECT DISTINCT membership_level FROM customer").then(res => { console.log(res.rows); pool.end(); });

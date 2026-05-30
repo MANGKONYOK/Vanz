@@ -4,7 +4,25 @@ import { FormField, Input, Card, Btn, Select } from '../../components/ui';
 import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 import { nextCode } from '../../api/codeGen';
 
-const MEMBERSHIP_OPTIONS = ['STANDARD', 'GOLD', 'PLATINUM'];
+const MEMBERSHIP_OPTIONS = ['Bronze', 'Silver', 'Gold', 'Platinum'];
+
+function formatPhoneForDb(phone) {
+    let cleaned = phone.replace(/[^\d+]/g, '');
+    if (cleaned.startsWith('+66')) {
+        cleaned = '0' + cleaned.slice(3);
+    }
+    if (cleaned.startsWith('0') && cleaned.length === 10) {
+        return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+    }
+    if (cleaned.startsWith('0') && cleaned.length === 9) {
+        if (cleaned.startsWith('02')) {
+            return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 5)}-${cleaned.slice(5)}`;
+        } else {
+            return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+        }
+    }
+    return phone.trim();
+}
 
 export default function CustomerFormView({ data = {}, onBack, onSaved, showToast }) {
     const isNew = !data.customerCode;
@@ -15,7 +33,7 @@ export default function CustomerFormView({ data = {}, onBack, onSaved, showToast
     const [email,      setEmail]      = useState(data.email      || '');
     const [address,    setAddress]    = useState(data.address    || '');
     const [city,       setCity]       = useState(data.city       || '');
-    const [membership, setMembership] = useState(data.membership || 'STANDARD');
+    const [membership, setMembership] = useState(data.membership || 'Bronze');
 
     // Predicted next code (preview only — real code is assigned by server unless custom)
     const [previewCode, setPreviewCode] = useState(data.customerCode || '…');
@@ -37,11 +55,15 @@ export default function CustomerFormView({ data = {}, onBack, onSaved, showToast
     const validate = () => {
         if (isNew && !isAuto) {
             const trimmed = customCode.trim();
-            if (!trimmed) return 'Custom Customer Code is required when Auto is unchecked';
-            if (!/^CUST-\d{6}$/.test(trimmed)) return 'Customer Code must be in the format CUST-000000 (CUST- followed by 6 digits)';
+            if (!trimmed) return 'Custom ID is required when Auto is unchecked';
+            if (!/^CUST-\d{6}$/.test(trimmed)) return 'ID must be in the format CUST-000000 (CUST- followed by 6 digits)';
         }
         if (!name.trim())    return 'Full Name is required';
         if (!phone.trim())   return 'Phone Number is required';
+        const cleanedPhone = phone.replace(/[^\d]/g, '');
+        if (cleanedPhone.length < 9 || cleanedPhone.length > 11) {
+            return 'Please enter a valid Phone Number';
+        }
         if (!address.trim()) return 'Address is required';
         if (!city.trim())    return 'City is required';
         return null;
@@ -52,12 +74,13 @@ export default function CustomerFormView({ data = {}, onBack, onSaved, showToast
         if (err) return showToast(err, 'error');
 
         setSaving(true);
+        const formattedPhone = formatPhoneForDb(phone);
         try {
             if (isNew) {
                 // 1. Create profile
                 const profile = await postJson('/profiles', {
                     full_name: name.trim(),
-                    phone:     phone.trim(),
+                    phone:     formattedPhone,
                     email:     email.trim() || undefined,
                 });
                 // 2. Create address
@@ -81,7 +104,7 @@ export default function CustomerFormView({ data = {}, onBack, onSaved, showToast
                 await Promise.all([
                     putJson(`/profiles/${data.profileId}`, {
                         full_name: name.trim(),
-                        phone:     phone.trim(),
+                        phone:     formattedPhone,
                         email:     email.trim() || undefined,
                     }),
                     putJson(`/addresses/${data.addressId}`, {
@@ -121,7 +144,7 @@ export default function CustomerFormView({ data = {}, onBack, onSaved, showToast
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {/* Customer Code — Auto/Custom input */}
-                    <FormField label="Customer Code" required>
+                    <FormField label="ID" required>
                         <div className="flex items-center gap-2 mt-1">
                             <Input
                                 value={isNew ? (isAuto ? previewCode : customCode) : previewCode}

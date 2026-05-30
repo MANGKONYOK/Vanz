@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
-import { Btn, Card, CardHeader, Table, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
+import { Btn, Card, CardHeader, Table, Tr, Td, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 import { nextCode } from '../../api/codeGen';
 
@@ -273,14 +273,14 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                     minWidth="500px"
                 >
                     {items.map((it, i) => (
-                        <tr key={it.uid} className="hover:bg-slate-50">
-                            <td className="px-4 py-3">
-                                <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-red-400">
+                        <Tr key={it.uid}>
+                            <Td>
+                                <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 focus-within:border-red-400 dark:focus-within:border-red-500">
                                     <input
                                         readOnly
                                         value={it.productName || (it.productId ? `Product #${it.productId}` : '')}
                                         placeholder="Select product…"
-                                        className="flex-1 min-w-0 px-3 py-1.5 text-sm outline-none bg-white"
+                                        className="flex-1 min-w-0 px-3 py-1.5 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                                     />
                                     <button
                                         onClick={() => openProductLov(i)}
@@ -289,8 +289,8 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                                         LoV
                                     </button>
                                 </div>
-                            </td>
-                            <td className="px-4 py-3 text-right">
+                            </Td>
+                            <Td right>
                                 <input
                                     type="number"
                                     min="0"
@@ -301,21 +301,21 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                                         next[i] = { ...next[i], discount: e.target.value };
                                         setItems(next);
                                     }}
-                                    className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 text-right w-24"
+                                    className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 dark:focus:border-red-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-right w-24"
                                 />
-                            </td>
-                            <td className="px-4 py-3 text-center">
+                            </Td>
+                            <Td center>
                                 <button
                                     onClick={() => setItems(items.filter(x => x.uid !== it.uid))}
-                                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    className="p-1.5 text-slate-350 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
-                            </td>
-                        </tr>
+                            </Td>
+                        </Tr>
                     ))}
                 </Table>
-                <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <div className="px-5 py-4 bg-slate-50/50 dark:bg-black/20 border-t border-slate-100 dark:border-red-900/30 flex justify-end">
                     <Btn onClick={handleSave} size="lg" disabled={saving}>
                         <Save className="w-4 h-4" />
                         {saving ? 'Saving…' : 'Save Campaign'}

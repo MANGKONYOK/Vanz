@@ -33,11 +33,11 @@ const profileUpdate = z.object({
 const customerCreate = z.object({
   profile_id:       z.union([z.string().min(1, 'required'), z.number()]),
   address_id:       z.union([z.string().min(1, 'required'), z.number()]),
-  membership_level: z.enum(['STANDARD', 'GOLD', 'PLATINUM'], { errorMap: () => ({ message: 'must be one of STANDARD, GOLD, PLATINUM' }) }),
+  membership_level: z.enum(['Bronze', 'Silver', 'Gold', 'Platinum'], { errorMap: () => ({ message: 'must be one of Bronze, Silver, Gold, Platinum' }) }),
 }).passthrough();
 
 const customerUpdate = z.object({
-  membership_level: z.enum(['STANDARD', 'GOLD', 'PLATINUM'], { errorMap: () => ({ message: 'must be one of STANDARD, GOLD, PLATINUM' }) }).optional(),
+  membership_level: z.enum(['Bronze', 'Silver', 'Gold', 'Platinum'], { errorMap: () => ({ message: 'must be one of Bronze, Silver, Gold, Platinum' }) }).optional(),
 }).passthrough();
 
 // ── Deliverers ───────────────────────────────────────────────

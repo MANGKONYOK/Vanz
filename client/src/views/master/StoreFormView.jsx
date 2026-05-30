@@ -117,7 +117,7 @@ export default function StoreFormView({ data = {}, onBack, onSaved, showToast })
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {/* Store Code — Auto/Custom input */}
-                    <FormField label="Store Code" required>
+                    <FormField label="ID" required>
                         <div className="flex items-center gap-2 mt-1">
                             <Input
                                 value={isNew ? (isAuto ? previewCode : customCode) : previewCode}
@@ -143,7 +143,7 @@ export default function StoreFormView({ data = {}, onBack, onSaved, showToast })
                     {/* Status */}
                     <FormField label="Status">
                         <Select value={status} onChange={e => setStatus(e.target.value)}>
-                            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>)}
                         </Select>
                     </FormField>
 

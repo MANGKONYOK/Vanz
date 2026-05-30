@@ -38,8 +38,8 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
     const validate = () => {
         if (isNew && !isAuto) {
             const trimmed = customCode.trim();
-            if (!trimmed) return 'Custom Deliverer Code is required when Auto is unchecked';
-            if (!/^DLV-\d{6}$/.test(trimmed)) return 'Deliverer Code must be in the format DLV-000000 (DLV- followed by 6 digits)';
+            if (!trimmed) return 'Custom ID is required when Auto is unchecked';
+            if (!/^DLV-\d{6}$/.test(trimmed)) return 'ID must be in the format DLV-000000 (DLV- followed by 6 digits)';
         }
         if (!name.trim())    return 'Full Name is required';
         if (!phone.trim())   return 'Phone Number is required';
@@ -110,7 +110,7 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
                 <div className="space-y-5">
                     {/* Row 1: Code preview | Status */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label="Deliverer Code" required>
+                        <FormField label="ID" required>
                             <div className="flex items-center gap-2 mt-1">
                                 <Input
                                     value={isNew ? (isAuto ? previewCode : customCode) : previewCode}
@@ -133,22 +133,11 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
                             </div>
                         </FormField>
                         <FormField label="Status">
-                            <div className="bg-slate-100 p-1 rounded-xl flex w-full max-w-[280px] border border-slate-200/50 mt-1">
+                            <Select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)}>
                                 {STATUS_OPTIONS.map(opt => (
-                                    <button
-                                        key={opt.value}
-                                        type="button"
-                                        onClick={() => setCurrentStatus(opt.value)}
-                                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
-                                            currentStatus === opt.value
-                                                ? 'bg-red-500 text-white shadow-sm'
-                                                : 'text-slate-500 dark:text-gray-300 hover:text-slate-800 dark:hover:text-white'
-                                        }`}
-                                    >
-                                        {opt.label}
-                                    </button>
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                                 ))}
-                            </div>
+                            </Select>
                         </FormField>
                     </div>
 

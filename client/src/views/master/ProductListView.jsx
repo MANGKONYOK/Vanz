@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 import ProductFormView from './ProductFormView';
 
@@ -23,6 +23,8 @@ export default function ProductListView({ showToast }) {
     const [filters, setFilters] = useState([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+    const [confirmDeleteName, setConfirmDeleteName] = useState('');
 
     const refresh = () => {
         setLoading(true);
@@ -72,14 +74,16 @@ export default function ProductListView({ showToast }) {
         return () => { cancelled = true; };
     }, [tick, showToast]);
 
-    const handleDelete = async (p) => {
-        if (!window.confirm(`Delete product "${p.name}"?`)) return;
+    const handleDelete = async () => {
+        if (!confirmDeleteId) return;
         try {
-            await deleteJson(`/store-products/${p.productId}`);
-            showToast(`Product "${p.name}" deleted`);
+            await deleteJson(`/store-products/${confirmDeleteId}`);
+            showToast(`Product "${confirmDeleteName}" deleted`);
+            setConfirmDeleteId(null);
             refresh();
         } catch (err) {
             showToast(getApiErrorMessage(err, 'Delete failed'), 'error');
+            setConfirmDeleteId(null);
         }
     };
 
@@ -96,7 +100,7 @@ export default function ProductListView({ showToast }) {
     }
 
      const columns = [
-        { key: 'productId', label: 'Product ID', type: 'number' },
+        { key: 'productId', label: 'No.', type: 'number' },
         { key: 'name', label: 'Name', type: 'text' },
         { key: 'storeName', label: 'Store Name', type: 'text' },
         { key: 'price', label: 'Price', type: 'number' },
@@ -152,7 +156,7 @@ export default function ProductListView({ showToast }) {
                             <Select
                                 value={pageSize}
                                 onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
-                                className="h-9 border-slate-200 bg-white shadow-sm w-28"
+                                className="w-28 h-9"
                             >
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
@@ -211,14 +215,14 @@ export default function ProductListView({ showToast }) {
                             <Td className="text-slate-600 dark:text-gray-300 whitespace-nowrap">{p.storeName}</Td>
                             <Td right bold mono className="whitespace-nowrap">฿{parseFloat(p.price).toFixed(2)}</Td>
                             <Td center className="whitespace-nowrap">
-                                <Badge color={STATUS_COLOR[p.status?.toUpperCase()] || 'gray'}>{p.status}</Badge>
+                                <Badge color={STATUS_COLOR[p.status?.toUpperCase()] || 'gray'}>{p.status.replace(/_/g, ' ')}</Badge>
                             </Td>
                             <Td right className="whitespace-nowrap">
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => setEditing(p)}>
                                         <Edit2 className="w-3 h-3" /> Edit
                                     </Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(p)}>
+                                    <Btn size="sm" variant="danger" onClick={() => { setConfirmDeleteId(p.productId); setConfirmDeleteName(p.name); }}>
                                         <Trash2 className="w-3 h-3" /> Delete
                                     </Btn>
                                 </div>
@@ -236,6 +240,14 @@ export default function ProductListView({ showToast }) {
                     itemLabel="products"
                 />
             </Card>
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete Product"
+                message={`Are you sure you want to delete product "${confirmDeleteName}"? This action cannot be undone and will remove this item from the store listing.`}
+                onConfirm={handleDelete}
+            />
         </div>
     );
 }

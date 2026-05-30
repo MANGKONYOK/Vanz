@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 import StoreFormView from './StoreFormView';
 
@@ -21,6 +21,7 @@ export default function StoreListView({ showToast }) {
     const [filters, setFilters] = useState([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
     const refresh = () => {
         setLoading(true);
@@ -63,14 +64,16 @@ export default function StoreListView({ showToast }) {
         return () => { cancelled = true; };
     }, [tick, showToast]);
 
-    const handleDelete = async (s) => {
-        if (!window.confirm(`Delete store ${s.storeCode}?`)) return;
+    const handleDelete = async () => {
+        if (!confirmDeleteId) return;
         try {
-            await deleteJson(`/stores/${s.storeCode}`);
-            showToast(`Store ${s.storeCode} deleted`);
+            await deleteJson(`/stores/${confirmDeleteId}`);
+            showToast(`Store ${confirmDeleteId} deleted`);
+            setConfirmDeleteId(null);
             refresh();
         } catch (err) {
             showToast(getApiErrorMessage(err, 'Delete failed'), 'error');
+            setConfirmDeleteId(null);
         }
     };
 
@@ -85,8 +88,8 @@ export default function StoreListView({ showToast }) {
         );
     }
 
-     const columns = [
-        { key: 'storeCode', label: 'Store Code', type: 'text' },
+    const columns = [
+        { key: 'storeCode', label: 'ID', type: 'text' },
         { key: 'name', label: 'Store Name', type: 'text' },
         { key: 'category', label: 'Category', type: 'text' },
         { key: 'address', label: 'Address', type: 'text' },
@@ -143,7 +146,7 @@ export default function StoreListView({ showToast }) {
                             <Select
                                 value={pageSize}
                                 onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
-                                className="h-9 border-slate-200 bg-white shadow-sm w-28"
+                                className="w-28 h-9"
                             >
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
@@ -171,7 +174,7 @@ export default function StoreListView({ showToast }) {
 
                 <Table
                     headers={[
-                        { label: 'CODE',     key: 'storeCode', sortable: true, width: '10%' },
+                        { label: 'ID',       key: 'storeCode', sortable: true, width: '10%' },
                         { label: 'NAME',     key: 'name',      sortable: true, width: '22%' },
                         { label: 'CATEGORY', key: 'category',  sortable: true, width: '14%' },
                         { label: 'ADDRESS',  key: 'address',                   width: '28%' },
@@ -206,14 +209,14 @@ export default function StoreListView({ showToast }) {
                                 {s.address}{s.city ? `, ${s.city}` : ''}
                             </Td>
                             <Td center className="whitespace-nowrap">
-                                <Badge color={STATUS_COLOR[s.status?.toUpperCase()] || 'gray'}>{s.status}</Badge>
+                                <Badge color={STATUS_COLOR[s.status?.toUpperCase()] || 'gray'}>{toTitleCase(s.status)}</Badge>
                             </Td>
                             <Td right className="whitespace-nowrap">
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => setEditing(s)}>
                                         <Edit2 className="w-3 h-3" /> Edit
                                     </Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(s)}>
+                                    <Btn size="sm" variant="danger" onClick={() => setConfirmDeleteId(s.storeCode)}>
                                         <Trash2 className="w-3 h-3" /> Delete
                                     </Btn>
                                 </div>
@@ -231,6 +234,14 @@ export default function StoreListView({ showToast }) {
                     itemLabel="stores"
                 />
             </Card>
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete Store"
+                message={`Are you sure you want to delete store ${confirmDeleteId}? All associated menu items and promotions will also be affected.`}
+                onConfirm={handleDelete}
+            />
         </div>
     );
 }

@@ -4,7 +4,8 @@ import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, StatCard, Input } fro
 import { MOCK_REVENUE_PER_TRIP } from '../../data/mockData';
 
 export default function RevenueTripView({ showToast }) {
-    const [rates, setRates] = useState(() => {
+    // 1. Officially saved/applied rates
+    const [savedRates, setSavedRates] = useState(() => {
         const stored = localStorage.getItem('revenue_per_trip_rates');
         if (stored) {
             try {
@@ -16,8 +17,36 @@ export default function RevenueTripView({ showToast }) {
         return MOCK_REVENUE_PER_TRIP;
     });
 
+    // 2. Row input states currently being edited
+    const [rates, setRates] = useState(() => {
+        const storedEditing = localStorage.getItem('revenue_per_trip_editing_rates');
+        if (storedEditing) {
+            try {
+                return JSON.parse(storedEditing);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        // Fallback to saved/applied rates
+        const stored = localStorage.getItem('revenue_per_trip_rates');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        return MOCK_REVENUE_PER_TRIP;
+    });
+
+    // Save savedRates to localStorage whenever they are applied
     useEffect(() => {
-        localStorage.setItem('revenue_per_trip_rates', JSON.stringify(rates));
+        localStorage.setItem('revenue_per_trip_rates', JSON.stringify(savedRates));
+    }, [savedRates]);
+
+    // Save rates editing state to localStorage so they don't lose typed progress on refresh
+    useEffect(() => {
+        localStorage.setItem('revenue_per_trip_editing_rates', JSON.stringify(rates));
     }, [rates]);
 
     const [search, setSearch] = useState('');
@@ -35,11 +64,12 @@ export default function RevenueTripView({ showToast }) {
             notes: ''
         };
         setRates([newRate, ...rates]);
-        showToast('New rate row added!', 'success');
+        showToast('New rate row added (Unsaved Draft)!', 'info');
     };
 
     const handleDeleteRate = (id) => {
         setRates(prev => prev.filter(r => r.id !== id));
+        setSavedRates(prev => prev.filter(r => r.id !== id));
         showToast('Rate record deleted.', 'info');
     };
 
@@ -50,7 +80,24 @@ export default function RevenueTripView({ showToast }) {
         if (rate.revenue < 0) {
             return showToast('Rate cannot be negative', 'error');
         }
-        showToast(`Rate of ฿${rate.revenue} saved successfully!`, 'success');
+        
+        // Save/Apply this specific rate to savedRates
+        setSavedRates(prev => {
+            const exists = prev.some(r => r.id === rate.id);
+            if (exists) {
+                return prev.map(r => r.id === rate.id ? rate : r);
+            } else {
+                return [rate, ...prev];
+            }
+        });
+
+        showToast(`Rate of ฿${rate.revenue} saved and applied successfully!`, 'success');
+    };
+
+    const isRowSaved = (rate) => {
+        const saved = savedRates.find(r => r.id === rate.id);
+        if (!saved) return false;
+        return saved.date === rate.date && saved.revenue === rate.revenue && saved.notes === rate.notes;
     };
 
     // Filter rates
@@ -59,21 +106,20 @@ export default function RevenueTripView({ showToast }) {
         r.notes.toLowerCase().includes(search.toLowerCase())
     );
 
-    // Calculate current rate by sorting chronologically
-    const sortedRates = [...rates].sort((a, b) => new Date(a.date) - new Date(b.date));
-    const currentRate = sortedRates[sortedRates.length - 1];
+    // Calculate current rate from SAVED rates only (sorted chronologically, secondary sort by id/timestamp ascending)
+    const sortedSavedRates = [...savedRates].sort((a, b) => {
+        const dateDiff = new Date(a.date) - new Date(b.date);
+        if (dateDiff !== 0) return dateDiff;
+        return a.id - b.id; // Newest id/timestamp last
+    });
+    const currentRate = sortedSavedRates[sortedSavedRates.length - 1];
 
-    // Sort rates for display in descending order (most recent first)
-    const displayRates = [...filteredRates].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    // Check for duplicate dates in active rates list
-    const dateCounts = rates.reduce((acc, curr) => {
-        if (curr.date) {
-            acc[curr.date] = (acc[curr.date] || 0) + 1;
-        }
-        return acc;
-    }, {});
-    const hasDuplicateDates = Object.values(dateCounts).some(count => count > 1);
+    // Sort rates for display in descending order (most recent first, secondary sort by id descending)
+    const displayRates = [...filteredRates].sort((a, b) => {
+        const dateDiff = new Date(b.date) - new Date(a.date);
+        if (dateDiff !== 0) return dateDiff;
+        return b.id - a.id; // Newest id/timestamp first
+    });
 
     return (
         <div className="fade-in space-y-5">
@@ -97,7 +143,7 @@ export default function RevenueTripView({ showToast }) {
                 />
                 <StatCard 
                     label="Rate Changes" 
-                    value={rates.length} 
+                    value={savedRates.length} 
                     icon={<History size={18} />} 
                     sub="Total adjustments" 
                     color="blue" 
@@ -116,12 +162,6 @@ export default function RevenueTripView({ showToast }) {
                         />
                     }
                 />
-                {hasDuplicateDates && (
-                    <div className="mx-5 mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 rounded-lg text-xs font-semibold flex items-center gap-2">
-                        <span className="text-base">⚠️</span>
-                        <span>Duplicate dates detected in the table! There should only be one active effective rate per unique date. Please use distinct dates for each rate to prevent system ambiguity.</span>
-                    </div>
-                )}
                 <Table 
                     headers={[
                         { label: <>Effective Date <span className="text-red-500 ml-0.5">*</span></>, width: '25%' }, 
@@ -161,10 +201,13 @@ export default function RevenueTripView({ showToast }) {
                                 <div className="flex items-center justify-center gap-1.5">
                                     <Btn 
                                         size="sm" 
-                                        variant="secondary" 
+                                        variant={isRowSaved(r) ? "secondary" : "primary"} 
                                         onClick={() => handleSaveRate(r)}
-                                        className="hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-                                        title="Save Rate"
+                                        className={isRowSaved(r) 
+                                            ? "hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-650 dark:hover:text-slate-400 transition-colors" 
+                                            : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md border-none"
+                                        }
+                                        title={isRowSaved(r) ? "Saved (No Changes)" : "Unsaved Changes — Click to Save & Apply"}
                                     >
                                         <Save className="w-3.5 h-3.5" />
                                     </Btn>

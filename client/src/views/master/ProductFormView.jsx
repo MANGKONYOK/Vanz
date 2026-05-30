@@ -111,26 +111,15 @@ export default function ProductFormView({ data = {}, stores: initStores = [], on
                 </h3>
 
                 <div className="space-y-5">
-                    {/* Row 1: Product ID (read-only) | Status */}
+                    {/* Row 1: Product Name | Store */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <FormField label="Product ID">
+                        <FormField label="Product Name" required>
                             <Input
-                                value={isNew ? '(assigned by server)' : String(data.productId)}
-                                readOnly
-                                className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
+                                value={name}
+                                onChange={e => setName(e.target.value)}
+                                placeholder="Menu item name"
                             />
                         </FormField>
-                        <FormField label="Status">
-                            <Select value={status} onChange={e => setStatus(e.target.value)}>
-                                {STATUS_OPTIONS.map(opt => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </Select>
-                        </FormField>
-                    </div>
-
-                    {/* Row 2: Store (LoV) | Product Name */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <FormField label="Store" required>
                             {isNew ? (
                                 <LovInput
@@ -148,18 +137,18 @@ export default function ProductFormView({ data = {}, stores: initStores = [], on
                                 />
                             )}
                         </FormField>
-                        <FormField label="Product Name" required>
-                            <Input
-                                value={name}
-                                onChange={e => setName(e.target.value)}
-                                placeholder="Menu item name"
-                            />
-                        </FormField>
                     </div>
 
-                    {/* Row 3: Unit Price */}
+                    {/* Row 2: Status | Unit Price */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <FormField label="Unit Price (฿)" required>
+                        <FormField label="Status">
+                            <Select value={status} onChange={e => setStatus(e.target.value)}>
+                                {STATUS_OPTIONS.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </Select>
+                        </FormField>
+                        <FormField label="Unit Price" required>
                             <Input
                                 type="number"
                                 min="0"

@@ -1,10 +1,37 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 import CustomerFormView from './CustomerFormView';
 
-const MEMBERSHIP_COLOR = { GOLD: 'amber', PLATINUM: 'blue', STANDARD: 'gray' };
+const MEMBERSHIP_COLOR = {
+    Bronze: 'bronze',
+    Silver: 'silver',
+    Gold: 'gold',
+    Platinum: 'platinum',
+    STANDARD: 'gray',
+    GOLD: 'gold',
+    PLATINUM: 'platinum'
+};
+
+function formatPhone(phone) {
+    if (!phone) return '—';
+    let cleaned = phone.replace(/[^\d+]/g, '');
+    if (cleaned.startsWith('+66')) {
+        cleaned = '0' + cleaned.slice(3);
+    }
+    if (cleaned.startsWith('0') && cleaned.length === 10) {
+        return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+    }
+    if (cleaned.startsWith('0') && cleaned.length === 9) {
+        if (cleaned.startsWith('02')) {
+            return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 5)}-${cleaned.slice(5)}`;
+        } else {
+            return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+        }
+    }
+    return phone;
+}
 
 export default function CustomerListView({ showToast }) {
     const [editing, setEditing] = useState(null);
@@ -17,6 +44,7 @@ export default function CustomerListView({ showToast }) {
     const [filters, setFilters] = useState([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
     const refresh = () => {
         setLoading(true);
@@ -49,7 +77,7 @@ export default function CustomerListView({ showToast }) {
                     email:           prof.email || '',
                     address:         addr.address_line_1 || '—',
                     city:            addr.city || '',
-                    membership:      c.membership_level || 'STANDARD',
+                    membership:      c.membership_level || 'Bronze',
                     created:         c.created_at ? new Date(c.created_at).toLocaleDateString() : '—',
                 };
             });
@@ -65,14 +93,16 @@ export default function CustomerListView({ showToast }) {
         return () => { cancelled = true; };
     }, [tick, showToast]);
 
-    const handleDelete = async (c) => {
-        if (!window.confirm(`Delete customer ${c.customerCode}?`)) return;
+    const handleDelete = async () => {
+        if (!confirmDeleteId) return;
         try {
-            await deleteJson(`/customers/${c.customerCode}`);
-            showToast(`Customer ${c.customerCode} deleted`);
+            await deleteJson(`/customers/${confirmDeleteId}`);
+            showToast(`Customer ${confirmDeleteId} deleted`);
+            setConfirmDeleteId(null);
             refresh();
         } catch (err) {
             showToast(getApiErrorMessage(err, 'Delete failed'), 'error');
+            setConfirmDeleteId(null);
         }
     };
 
@@ -88,11 +118,11 @@ export default function CustomerListView({ showToast }) {
     }
 
      const columns = [
-        { key: 'customerCode', label: 'Customer Code', type: 'text' },
+        { key: 'customerCode', label: 'ID', type: 'text' },
         { key: 'name', label: 'Name', type: 'text' },
         { key: 'phone', label: 'Phone', type: 'text' },
         { key: 'address', label: 'Address', type: 'text' },
-        { key: 'membership', label: 'Membership', type: 'enum', options: ['GOLD', 'PLATINUM', 'STANDARD'] },
+        { key: 'membership', label: 'Membership', type: 'enum', options: ['Bronze', 'Silver', 'Gold', 'Platinum'] },
         { key: 'created', label: 'Joined Date', type: 'date' }
     ];
 
@@ -144,7 +174,7 @@ export default function CustomerListView({ showToast }) {
                             <Select
                                 value={pageSize}
                                 onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
-                                className="h-9 border-slate-200 bg-white shadow-sm w-28"
+                                className="w-28 h-9"
                             >
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                              </Select>
@@ -171,7 +201,7 @@ export default function CustomerListView({ showToast }) {
                 )}
                 <Table
                     headers={[
-                        { label: 'CODE', key: 'customerCode', sortable: true, width: '12%' },
+                        { label: 'ID', key: 'customerCode', sortable: true, width: '12%' },
                         { label: 'NAME', key: 'name', sortable: true, width: '22%' },
                         { label: 'PHONE', key: 'phone', sortable: true, width: '16%' },
                         { label: 'ADDRESS', key: 'address', width: '22%' },
@@ -200,7 +230,7 @@ export default function CustomerListView({ showToast }) {
                         <Tr key={c.customerCode}>
                             <Td mono className="text-xs text-slate-500 dark:text-gray-300 font-bold whitespace-nowrap">{c.customerCode}</Td>
                             <Td bold className="whitespace-nowrap">{c.name}</Td>
-                            <Td mono className="text-xs whitespace-nowrap">{c.phone}</Td>
+                            <Td mono className="text-xs whitespace-nowrap">{formatPhone(c.phone)}</Td>
                             <Td className="max-w-[180px] truncate whitespace-nowrap" title={c.address}>{c.address}</Td>
                             <Td className="whitespace-nowrap">
                                 <Badge color={MEMBERSHIP_COLOR[c.membership] || 'gray'}>
@@ -213,7 +243,7 @@ export default function CustomerListView({ showToast }) {
                                     <Btn size="sm" variant="secondary" onClick={() => setEditing(c)}>
                                         <Edit2 className="w-3 h-3" /> Edit
                                     </Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(c)}>
+                                    <Btn size="sm" variant="danger" onClick={() => setConfirmDeleteId(c.customerCode)}>
                                         <Trash2 className="w-3 h-3" /> Delete
                                     </Btn>
                                 </div>
@@ -231,6 +261,14 @@ export default function CustomerListView({ showToast }) {
                     itemLabel="customers"
                 />
             </Card>
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete Customer"
+                message={`Are you sure you want to delete customer ${confirmDeleteId}? This action cannot be undone and will remove their profile and address references.`}
+                onConfirm={handleDelete}
+            />
         </div>
     );
 }

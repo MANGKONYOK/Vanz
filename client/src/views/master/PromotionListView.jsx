@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 
 function computeStatus(startDate, endDate) {
@@ -14,7 +14,17 @@ function computeStatus(startDate, endDate) {
 
 const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
 
- export default function PromotionListView({ onNavigate, showToast }) {
+function formatShortDate(dateStr) {
+    if (!dateStr) return '—';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`;
+}
+
+export default function PromotionListView({ onNavigate, showToast }) {
     const [rows,     setRows]     = useState([]);
     const [loading,  setLoading]  = useState(true);
     const [error,    setError]    = useState(null);
@@ -24,6 +34,7 @@ const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
     const [filters,  setFilters]  = useState([]);
     const [page,     setPage]     = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
     const refresh = () => {
         setLoading(true);
@@ -67,18 +78,20 @@ const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
         return () => { cancelled = true; };
     }, [tick, showToast]);
 
-    const handleDelete = async (p) => {
-        if (!window.confirm(`Delete promotion ${p.promotionCode}?`)) return;
+    const handleDelete = async () => {
+        if (!confirmDeleteId) return;
         try {
-            await deleteJson(`/promotions/${p.promotionCode}`);
-            showToast(`Promotion ${p.promotionCode} deleted`);
+            await deleteJson(`/promotions/${confirmDeleteId}`);
+            showToast(`Promotion ${confirmDeleteId} deleted`);
+            setConfirmDeleteId(null);
             refresh();
         } catch (err) {
             showToast(getApiErrorMessage(err, 'Delete failed'), 'error');
+            setConfirmDeleteId(null);
         }
     };
 
-     const columns = [
+         const columns = [
         { key: 'promotionCode', label: 'Code', type: 'text' },
         { key: 'name', label: 'Campaign', type: 'text' },
         { key: 'storeName', label: 'Store Name', type: 'text' },
@@ -136,7 +149,7 @@ const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
                             <Select
                                 value={pageSize}
                                 onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
-                                className="h-9 border-slate-200 bg-white shadow-sm w-28"
+                                className="w-28 h-9"
                             >
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
@@ -165,11 +178,11 @@ const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
                 <Table
                     onSort={handleSort}
                     sortConfig={sort}
-                    minWidth="900px"
+                    minWidth="700px"
                     headers={[
                         { label: 'CODE',     key: 'promotionCode', sortable: true, width: '14%' },
                         { label: 'CAMPAIGN', key: 'name',          sortable: true, width: '20%' },
-                        { label: 'STORE',    key: 'storeName',     sortable: true, width: '16%' },
+                        { label: 'STORE',    key: 'storeName',     sortable: true, width: '18%' },
                         { label: 'PERIOD',                                          width: '20%' },
                         { label: 'TYPE',     key: 'discountType',  sortable: true, width: '14%' },
                         { label: 'STATUS',   key: 'status',        sortable: true, center: true, width: '10%' },
@@ -191,11 +204,11 @@ const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
                         <Tr><Td colSpan={7} center className="text-slate-400 py-8">No promotions found</Td></Tr>
                     ) : paginated.map(p => (
                         <Tr key={p.promotionCode}>
-                            <Td mono className="text-xs text-red-600 font-bold whitespace-nowrap">{p.promotionCode}</Td>
+                            <Td mono className="text-xs text-red-650 font-bold whitespace-nowrap">{p.promotionCode}</Td>
                             <Td bold className="whitespace-nowrap">{p.name}</Td>
                             <Td className="whitespace-nowrap">{p.storeName}</Td>
-                            <Td className="text-xs whitespace-nowrap">{p.startDate} → {p.endDate}</Td>
-                            <Td className="whitespace-nowrap"><Badge color="gray">{p.discountType}</Badge></Td>
+                            <Td className="text-xs whitespace-nowrap">{formatShortDate(p.startDate)} - {formatShortDate(p.endDate)}</Td>
+                            <Td className="whitespace-nowrap"><Badge color="gray">{p.discountType.replace(/_/g, ' ')}</Badge></Td>
                             <Td center className="whitespace-nowrap">
                                 <Badge color={STATUS_COLOR[p.status?.toUpperCase()] || 'gray'}>{p.status}</Badge>
                             </Td>
@@ -204,7 +217,7 @@ const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(p)}>
                                         <Edit2 className="w-3 h-3" /> Edit
                                     </Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(p)}>
+                                    <Btn size="sm" variant="danger" onClick={() => setConfirmDeleteId(p.promotionCode)}>
                                         <Trash2 className="w-3 h-3" /> Delete
                                     </Btn>
                                 </div>
@@ -222,6 +235,14 @@ const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
                     itemLabel="promotions"
                 />
             </Card>
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete Promotion"
+                message={`Are you sure you want to delete promotion ${confirmDeleteId}? This action cannot be undone.`}
+                onConfirm={handleDelete}
+            />
         </div>
     );
 }
