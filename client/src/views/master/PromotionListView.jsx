@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 
@@ -177,9 +177,9 @@ const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
                     ]}
                 >
                     {loading ? (
-                        <Tr><Td colSpan={7} className="text-center text-slate-400 py-8">Loading…</Td></Tr>
+                        <Tr><Td colSpan={7} center className="text-slate-400 py-8">Loading…</Td></Tr>
                     ) : error ? (
-                        <Tr><Td colSpan={7} className="text-center py-8">
+                        <Tr><Td colSpan={7} center className="py-8">
                             <div className="flex flex-col items-center justify-center text-red-500 gap-2">
                                 <AlertCircle className="w-8 h-8 text-red-500 animate-bounce" />
                                 <span className="font-semibold text-sm">Network Error: Failed to fetch data from server</span>
@@ -188,7 +188,7 @@ const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
                             </div>
                         </Td></Tr>
                     ) : paginated.length === 0 ? (
-                        <Tr><Td colSpan={7} className="text-center text-slate-400 py-8">No promotions found</Td></Tr>
+                        <Tr><Td colSpan={7} center className="text-slate-400 py-8">No promotions found</Td></Tr>
                     ) : paginated.map(p => (
                         <Tr key={p.promotionCode}>
                             <Td mono className="text-xs text-red-600 font-bold whitespace-nowrap">{p.promotionCode}</Td>
@@ -200,9 +200,14 @@ const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
                                 <Badge color={STATUS_COLOR[p.status?.toUpperCase()] || 'gray'}>{p.status}</Badge>
                             </Td>
                             <Td right className="whitespace-nowrap">
-                                <Btn size="sm" variant="danger" onClick={() => handleDelete(p)}>
-                                    <Trash2 className="w-3 h-3" /> Delete
-                                </Btn>
+                                <div className="flex justify-end gap-2">
+                                    <Btn size="sm" variant="secondary" onClick={() => onNavigate(p)}>
+                                        <Edit2 className="w-3 h-3" /> Edit
+                                    </Btn>
+                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(p)}>
+                                        <Trash2 className="w-3 h-3" /> Delete
+                                    </Btn>
+                                </div>
                             </Td>
                         </Tr>
                     ))}

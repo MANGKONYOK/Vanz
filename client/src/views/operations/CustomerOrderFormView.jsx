@@ -3,11 +3,11 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Save, Plus, Trash2, Search } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Td, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
-import { getJson, postJson, getApiErrorMessage } from '../../api/http';
+import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 import { orderHeaderSchema } from '../../schemas/operations';
 import { nextCode } from '../../api/codeGen';
 
-export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
+export default function CustomerOrderFormView({ data, showToast, onNavigateBack }) {
     const onBack = onNavigateBack || (() => {});
     const [customers, setCustomers] = useState([]);
     const [stores, setStores] = useState([]);
@@ -15,32 +15,44 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
     const [items, setItems] = useState([{ id: 1, productId: '', productName: '', qty: 1, price: 0 }]);
     const [activeLov, setActiveLov] = useState(null);
     const [search, setSearch] = useState('');
+    const [addressSnapshot, setAddressSnapshot] = useState('');
 
     const [previewCode, setPreviewCode] = useState('…');
     const [isAuto, setIsAuto] = useState(true);
     const [customCode, setCustomCode] = useState('');
 
-    const { control, register, handleSubmit, setValue, formState: { errors } } = useForm({
+    const { control, register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
         resolver: zodResolver(orderHeaderSchema),
-        defaultValues: { customer: '', store: '', deliveryAddress: '123 Sukhumvit Road', status: 'PENDING' },
+        defaultValues: { customer: '', store: '', deliveryAddress: '', status: 'PENDING' },
     });
 
+    const isNew = !data;
+
     useEffect(() => {
-        // Fetch customers, profiles, stores, and products from real db
+        const orderPromise = data ? getJson(`/orders?order_code=${data.id}`) : Promise.resolve([]);
+        // Fetch customers, profiles, stores, products, and addresses from real db
         Promise.all([
             getJson('/customers'),
             getJson('/profiles'),
             getJson('/stores'),
             getJson('/store-products'),
             getJson('/orders').catch(() => []),
-        ]).then(([custs, profs, strs, prods, ords]) => {
+            getJson('/addresses').catch(() => []),
+            orderPromise,
+        ]).then(([custs, profs, strs, prods, ords, addressesRes, orderRes]) => {
             const profileMap = new Map(profs.map(p => [p.profile_id, p]));
+            const addressMap = new Map((addressesRes || []).map(a => [a.address_id, a]));
             setCustomers(custs.map(c => {
                 const prof = profileMap.get(c.profile_id) || {};
+                const addr = addressMap.get(c.address_id) || {};
+                const formattedAddr = addr.address_line_1 
+                    ? `${addr.address_line_1}${addr.address_line_2 ? ', ' + addr.address_line_2 : ''}, ${addr.city}, ${addr.province || ''}, ${addr.country_code}`.replace(/,\s*,/g, ',').trim()
+                    : '';
                 return {
                     id: c.customer_code,
                     name: prof.full_name || '—',
-                    phone: prof.phone || '—'
+                    phone: prof.phone || '—',
+                    address: formattedAddr
                 };
             }));
             setStores(strs.map(s => ({
@@ -56,16 +68,53 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
 
             const codes = ords.map(o => o.order_code);
             setPreviewCode(nextCode(codes, 'ORD-', 6));
+
+            if (data && orderRes.length > 0) {
+                const fullOrder = orderRes[0];
+                
+                // Find store code and name
+                const matchingStore = strs.find(s => s.store_id === fullOrder.store_id);
+                const storeVal = matchingStore ? `${matchingStore.store_code} – ${matchingStore.name}` : '';
+                
+                // Find customer code and name
+                const matchingCust = custs.find(c => c.customer_id === fullOrder.customer_id);
+                const prof = matchingCust ? profileMap.get(matchingCust.profile_id) : null;
+                const custVal = matchingCust ? `${matchingCust.customer_code} – ${prof?.full_name || '—'}` : '';
+
+                reset({
+                    customer: custVal,
+                    store: storeVal,
+                    deliveryAddress: fullOrder.address_snapshot || '',
+                    status: fullOrder.status || 'PENDING',
+                });
+                
+                setAddressSnapshot(fullOrder.address_snapshot || '');
+
+                // Load items
+                const mappedItems = (fullOrder.order_items || []).map((it, index) => {
+                    const prod = prods.find(p => String(p.product_id) === String(it.product_id));
+                    return {
+                        id: it.order_item_id || index,
+                        productId: it.product_id,
+                        productName: prod ? prod.name : '—',
+                        qty: it.quantity,
+                        price: parseFloat(it.unit_price || 0),
+                    };
+                });
+                setItems(mappedItems);
+                setIsAuto(false);
+                setPreviewCode(fullOrder.order_code);
+            }
         }).catch(err => {
             console.error('Failed to load master records for order form:', err);
             showToast('Failed to load master records', 'error');
         });
-    }, [showToast]);
+    }, [data, showToast, reset]);
 
     const total = items.reduce((s, i) => s + (i.qty * i.price), 0);
 
     const onSubmit = async (headerData) => {
-        if (!isAuto) {
+        if (isNew && !isAuto) {
             const trimmed = customCode.trim();
             if (!trimmed) return showToast('Custom Order ID is required when Auto is unchecked', 'error');
             if (!/^ORD-\d{6}$/.test(trimmed)) return showToast('Order ID must be in the format ORD-000000 (ORD- followed by 6 digits)', 'error');
@@ -78,7 +127,6 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
 
         const roundedTotal = Math.round((total + Number.EPSILON) * 100) / 100;
         const payload = {
-            code: isAuto ? previewCode : customCode.trim(),
             customer_code: customerCode,
             store_code: storeCode,
             address_snapshot: headerData.deliveryAddress,
@@ -97,11 +145,17 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
         };
 
         try {
-            await postJson('/orders', payload);
-            showToast('Order saved successfully!');
+            if (isNew) {
+                payload.code = isAuto ? previewCode : customCode.trim();
+                await postJson('/orders', payload);
+                showToast('Order saved successfully!');
+            } else {
+                await putJson(`/orders/${data.id}`, payload);
+                showToast('Order updated successfully!');
+            }
             onBack();
         } catch (err) {
-            showToast(getApiErrorMessage(err, 'Failed to place order'), 'error');
+            showToast(getApiErrorMessage(err, isNew ? 'Failed to place order' : 'Failed to update order'), 'error');
         }
     };
 
@@ -118,32 +172,42 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                 onSelect={r => {
                     if (activeLov.type === 'product') { const n = [...items]; n[activeLov.index].productName = r.name; n[activeLov.index].price = r.price || 0; n[activeLov.index].productId = r.id; setItems(n); }
                     else if (activeLov.type === 'store') { setValue('store', `${r.id} – ${r.name}`); }
-                    else { setValue('customer', `${r.id} – ${r.name}`); }
+                    else { 
+                        setValue('customer', `${r.id} – ${r.name}`); 
+                        if (isNew) {
+                            setValue('deliveryAddress', r.address || '');
+                        }
+                    }
                     setActiveLov(null);
                 }} />
             <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-bold transition-colors mb-2"><ArrowLeft className="w-4 h-4" /> Back to Orders</button>
-            <PageHeader title="Customer Order" subtitle="Create a new order for a customer from a specific store" />
+            <PageHeader 
+                title={isNew ? "Customer Order" : `Edit Order: ${data.id}`} 
+                subtitle={isNew ? "Create a new order for a customer from a specific store" : "Modify details of an existing customer order"} 
+            />
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-4">Order Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField label="Order ID" required>
                         <div className="flex items-center gap-2 mt-1">
                             <Input
-                                value={isAuto ? previewCode : customCode}
+                                value={isNew ? (isAuto ? previewCode : customCode) : previewCode}
                                 onChange={e => setCustomCode(e.target.value)}
-                                readOnly={isAuto}
-                                className={`font-mono flex-1 ${isAuto ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300' : ''}`}
+                                readOnly={!isNew || isAuto}
+                                className={`font-mono flex-1 ${(!isNew || isAuto) ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300' : ''}`}
                                 placeholder="ORD-000001"
                             />
-                            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-gray-300 select-none cursor-pointer shrink-0 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/55 transition-colors h-9">
-                                <input
-                                    type="checkbox"
-                                    checked={isAuto}
-                                    onChange={e => setIsAuto(e.target.checked)}
-                                    className="rounded accent-red-650 cursor-pointer"
-                                />
-                                <span>Auto</span>
-                            </label>
+                            {isNew && (
+                                <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-gray-300 select-none cursor-pointer shrink-0 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/55 transition-colors h-9">
+                                    <input
+                                        type="checkbox"
+                                        checked={isAuto}
+                                        onChange={e => setIsAuto(e.target.checked)}
+                                        className="rounded accent-red-650 cursor-pointer"
+                                    />
+                                    <span>Auto</span>
+                                </label>
+                            )}
                         </div>
                     </FormField>
                     <FormField label="Customer" required error={errors.customer?.message}>
@@ -165,10 +229,10 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                         />
                     </FormField>
                     <FormField label="Delivery Address" required error={errors.deliveryAddress?.message}>
-                        <Input {...register('deliveryAddress')} placeholder="123 Sukhumvit Road" />
+                        <Input {...register('deliveryAddress')} placeholder="Enter delivery address..." />
                     </FormField>
                     <FormField label="Delivery Address Snapshot">
-                        <textarea readOnly defaultValue="123 Sukhumvit Road" className="w-full min-w-0 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 outline-none resize-none h-10" />
+                        <textarea readOnly value={isNew ? "No snapshot saved yet (will be recorded on place)" : addressSnapshot} className="w-full min-w-0 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 outline-none resize-none h-16" />
                     </FormField>
                     <FormField label="Status" required error={errors.status?.message}>
                         <Controller
@@ -219,7 +283,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                         <p className="text-xs text-slate-500 dark:text-gray-300 font-bold uppercase tracking-wide">Total Order</p>
                         <p className="text-3xl font-black text-current font-bold mono">฿{total.toFixed(2)}</p>
                     </div>
-                    <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> Place Order</Btn>
+                    <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> {isNew ? 'Place Order' : 'Save Changes'}</Btn>
                 </div>
             </Card>
         </div>

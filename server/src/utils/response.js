@@ -6,6 +6,23 @@ function success(res, data, status = 200) {
 }
 
 function handleError(res, err) {
+  if (err.code === '23505') {
+    let msg = 'A record with this unique identifier already exists.';
+    if (err.detail) {
+      const match = err.detail.match(/Key \(([^)]+)\)=\(([^)]+)\) already exists/);
+      if (match) {
+        const field = match[1];
+        const val = match[2];
+        const fieldLabel = field === 'code' ? 'ID' : field;
+        msg = `Duplicate record: A record with ${fieldLabel} "${val}" already exists.`;
+      }
+    }
+    return res.status(400).json({
+      error_code: 'VALIDATION_ERROR',
+      message: msg,
+      field_errors: [{ field: 'code', reason: msg }],
+    });
+  }
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       error_code: 'VALIDATION_ERROR',

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
-import { getJson, postJson, getApiErrorMessage } from '../../api/http';
+import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 import { nextCode } from '../../api/codeGen';
 
 export default function PromotionFormView({ data, onNavigateBack, showToast }) {
@@ -131,7 +131,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
         if (err) return showToast(err, 'error');
         setSaving(true);
         try {
-            await postJson('/promotions', {
+            const payload = {
                 store_code:    storeCode,
                 name:          name.trim(),
                 start_date:    startDate,
@@ -141,9 +141,16 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                     product_id:     Number(i.productId),
                     discount_value: Number(i.discount),
                 })),
-                code:          isAuto ? previewCode : customCode.trim(),
-            });
-            showToast('Promotion created successfully!');
+            };
+
+            if (isNew) {
+                payload.code = isAuto ? previewCode : customCode.trim();
+                await postJson('/promotions', payload);
+                showToast('Promotion created successfully!');
+            } else {
+                await putJson(`/promotions/${editData.promotionCode}`, payload);
+                showToast('Promotion updated successfully!');
+            }
             onNavigateBack();
         } catch (err) {
             showToast(getApiErrorMessage(err, 'Save failed'), 'error');

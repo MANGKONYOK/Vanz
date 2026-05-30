@@ -41,3 +41,9 @@ input::-webkit-calendar-picker-indicator,
     color-scheme: dark !important;
 }
 
+/* Always Dark/Black theme for Number Input Spin Buttons (number scrolls) */
+input[type="number"] {
+    color-scheme: dark !important;
+}
+
+

@@ -1,0 +1,195 @@
+[2026-05-30T05:39:11.794Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:12.883Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:14.472Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:14.655Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:14.886Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:15.139Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:15.312Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:15.537Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:15.782Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:15.918Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:16.121Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:16.511Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:16.550Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:16.743Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:16.953Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:17.429Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:17.647Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:17.797Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:18.092Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:18.188Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:18.395Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:18.639Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:18.698Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:18.903Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:18.959Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:19.152Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:19.303Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:19.412Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:19.592Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:19.659Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:19.922Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:20.012Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:20.169Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:20.436Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:20.550Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:21.920Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:22.694Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:24.166Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T05:39:28.800Z] [ERROR] duplicate key value violates unique constraint "Order_code_key" error: duplicate key value violates unique constraint "Order_code_key"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
+    at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)

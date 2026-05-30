@@ -160,9 +160,9 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                     ]}
                 >
                     {loading ? (
-                        <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">Loading…</Td></Tr>
+                        <Tr><Td colSpan={6} center className="text-slate-400 py-8">Loading…</Td></Tr>
                     ) : error ? (
-                        <Tr><Td colSpan={6} className="text-center py-8">
+                        <Tr><Td colSpan={6} center className="py-8">
                             <div className="flex flex-col items-center justify-center text-red-500 gap-2">
                                 <AlertCircle className="w-8 h-8 text-red-500 animate-bounce" />
                                 <span className="font-semibold text-sm">Network Error: Failed to fetch data from server</span>
@@ -171,7 +171,7 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                             </div>
                         </Td></Tr>
                     ) : paginated.length === 0 ? (
-                        <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">No payments found</Td></Tr>
+                        <Tr><Td colSpan={6} center className="text-slate-400 py-8">No payments found</Td></Tr>
                     ) : paginated.map(p => (
                         <Tr key={p.id}>
                             <Td mono className="text-xs font-bold text-slate-950 dark:text-slate-100">{p.id}</Td>

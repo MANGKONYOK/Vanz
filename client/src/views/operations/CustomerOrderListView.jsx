@@ -97,7 +97,7 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
     return (
         <div className="fade-in space-y-5">
             <PageHeader title="Customer Orders" subtitle="Manage all customer orders and tracking"
-                action={<Btn onClick={onNavigate}><Plus className="w-4 h-4" /> Create Order</Btn>} />
+                action={<Btn onClick={() => onNavigate()}><Plus className="w-4 h-4" /> Create Order</Btn>} />
 
              <Card className="overflow-hidden">
                 <CardHeader
@@ -162,9 +162,9 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                     ]}
                 >
                     {loading ? (
-                        <Tr><Td colSpan={7} className="text-center text-slate-400 py-8">Loading…</Td></Tr>
+                        <Tr><Td colSpan={7} center className="text-slate-400 py-8">Loading…</Td></Tr>
                     ) : error ? (
-                        <Tr><Td colSpan={7} className="text-center py-8">
+                        <Tr><Td colSpan={7} center className="py-8">
                             <div className="flex flex-col items-center justify-center text-red-500 gap-2">
                                 <AlertCircle className="w-8 h-8 text-red-500 animate-bounce" />
                                 <span className="font-semibold text-sm">Network Error: Failed to fetch data from server</span>
@@ -173,7 +173,7 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                             </div>
                         </Td></Tr>
                     ) : paginated.length === 0 ? (
-                        <Tr><Td colSpan={7} className="text-center text-slate-400 py-8">No orders found</Td></Tr>
+                        <Tr><Td colSpan={7} center className="text-slate-400 py-8">No orders found</Td></Tr>
                     ) : paginated.map(o => (
                         <Tr key={o.id}>
                             <Td mono className="text-xs font-bold text-slate-950 dark:text-slate-100">{o.id}</Td>
