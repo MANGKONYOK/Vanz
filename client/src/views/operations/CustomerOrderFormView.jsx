@@ -99,7 +99,7 @@ export default function CustomerOrderFormView({ data, showToast, onNavigateBack 
                         id: it.order_item_id || index,
                         productId: it.product_id,
                         productName: prod ? prod.name : '—',
-                        qty: it.quantity,
+                        qty: parseInt(it.quantity, 10) || 1,
                         price: parseFloat(it.unit_price || 0),
                     };
                 });
@@ -135,12 +135,12 @@ export default function CustomerOrderFormView({ data, showToast, onNavigateBack 
             address_snapshot: formValues.deliveryAddress || '',
             total_price: roundedTotal,
             status: formValues.status || 'PENDING',
-            order_items: items.map(i => {
+             order_items: items.map(i => {
                 const itemPrice = Math.round((parseFloat(i.price) + Number.EPSILON) * 100) / 100;
-                const extPrice = Math.round(((i.qty * itemPrice) + Number.EPSILON) * 100) / 100;
+                const extPrice = Math.round(((parseInt(i.qty, 10) * itemPrice) + Number.EPSILON) * 100) / 100;
                 return {
                     product_id: parseInt(i.productId, 10) || i.productId,
-                    quantity: i.qty,
+                    quantity: parseInt(i.qty, 10) || 1,
                     unit_price: itemPrice,
                     extend_price: extPrice
                 };

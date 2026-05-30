@@ -32,15 +32,30 @@ exports.findAll = async (f) => {
 };
 
 exports.create = async (data) => {
-  const { rows: [o] } = await pool.query('SELECT id FROM "order" WHERE code=$1', [data.order_code]);
-  if (!o) throw Object.assign(new Error(`Order ${data.order_code} not found`), { name: 'NotFoundError' });
-  const { rows: [dlv] } = await pool.query('SELECT id FROM deliverer WHERE code=$1', [data.deliverer_code]);
-  if (!dlv) throw Object.assign(new Error(`Deliverer ${data.deliverer_code} not found`), { name: 'NotFoundError' });
-  const { rows: [r] } = await pool.query(
-    'INSERT INTO dispatch_assignment (order_id,deliverer_id,status) VALUES ($1,$2,$3) RETURNING id,order_id,deliverer_id,status,assigned_at,responded_at',
-    [o.id, dlv.id, 'PENDING']
-  );
-  return fmt({ ...r, order_code: data.order_code, deliverer_code: data.deliverer_code });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows: [o] } = await client.query('SELECT id FROM "order" WHERE code=$1 FOR UPDATE', [data.order_code]);
+    if (!o) throw Object.assign(new Error(`Order ${data.order_code} not found`), { name: 'NotFoundError' });
+    const { rows: [dlv] } = await client.query('SELECT id FROM deliverer WHERE code=$1', [data.deliverer_code]);
+    if (!dlv) throw Object.assign(new Error(`Deliverer ${data.deliverer_code} not found`), { name: 'NotFoundError' });
+    
+    const { rows: [r] } = await client.query(
+      'INSERT INTO dispatch_assignment (order_id,deliverer_id,status) VALUES ($1,$2,$3) RETURNING id,order_id,deliverer_id,status,assigned_at,responded_at',
+      [o.id, dlv.id, 'PENDING']
+    );
+    
+    // Update order status to DISPATCHED so it leaves the prepared queue
+    await client.query('UPDATE "order" SET status = $1 WHERE id = $2', ['DISPATCHED', o.id]);
+    
+    await client.query('COMMIT');
+    return fmt({ ...r, order_code: data.order_code, deliverer_code: data.deliverer_code });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 };
 
 exports.findById = async (id) => {

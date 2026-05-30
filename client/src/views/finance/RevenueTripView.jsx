@@ -1,10 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Save, Trash2, DollarSign, History, Search } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, StatCard, Input } from '../../components/ui';
 import { MOCK_REVENUE_PER_TRIP } from '../../data/mockData';
 
 export default function RevenueTripView({ showToast }) {
-    const [rates, setRates] = useState(MOCK_REVENUE_PER_TRIP);
+    const [rates, setRates] = useState(() => {
+        const stored = localStorage.getItem('revenue_per_trip_rates');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        return MOCK_REVENUE_PER_TRIP;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('revenue_per_trip_rates', JSON.stringify(rates));
+    }, [rates]);
+
     const [search, setSearch] = useState('');
 
     const handleUpdateRate = (id, field, value) => {
@@ -51,6 +66,15 @@ export default function RevenueTripView({ showToast }) {
     // Sort rates for display in descending order (most recent first)
     const displayRates = [...filteredRates].sort((a, b) => new Date(b.date) - new Date(a.date));
 
+    // Check for duplicate dates in active rates list
+    const dateCounts = rates.reduce((acc, curr) => {
+        if (curr.date) {
+            acc[curr.date] = (acc[curr.date] || 0) + 1;
+        }
+        return acc;
+    }, {});
+    const hasDuplicateDates = Object.values(dateCounts).some(count => count > 1);
+
     return (
         <div className="fade-in space-y-5">
             <PageHeader 
@@ -92,6 +116,12 @@ export default function RevenueTripView({ showToast }) {
                         />
                     }
                 />
+                {hasDuplicateDates && (
+                    <div className="mx-5 mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 rounded-lg text-xs font-semibold flex items-center gap-2">
+                        <span className="text-base">⚠️</span>
+                        <span>Duplicate dates detected in the table! There should only be one active effective rate per unique date. Please use distinct dates for each rate to prevent system ambiguity.</span>
+                    </div>
+                )}
                 <Table 
                     headers={[
                         { label: <>Effective Date <span className="text-red-500 ml-0.5">*</span></>, width: '25%' }, 

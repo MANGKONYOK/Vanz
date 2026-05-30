@@ -279,10 +279,10 @@ export default function ExpenseFormView({ data, onNavigateBack, showToast }) {
                                     disabled={!isEditable}
                                     className={`border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full ${!isEditable ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 cursor-not-allowed' : 'focus:border-red-400'}`}
                                 >
-                                    <option value="TOLL">TOLL</option>
-                                    <option value="FUEL">FUEL</option>
-                                    <option value="MAINTENANCE">MAINTENANCE</option>
-                                    <option value="OTHER">OTHER</option>
+                                    <option value="TOLL">Toll</option>
+                                    <option value="FUEL">Fuel</option>
+                                    <option value="MAINTENANCE">Maintenance</option>
+                                    <option value="OTHER">Other</option>
                                 </select>
                             </Td>
                             <Td>

@@ -20,6 +20,37 @@ const safeIsoDate = (dateVal) => {
     return new Date().toISOString().split('T')[0];
 };
 
+const getEffectiveRate = (orderDateStr) => {
+    try {
+        const stored = localStorage.getItem('revenue_per_trip_rates');
+        if (stored) {
+            const rates = JSON.parse(stored);
+            if (Array.isArray(rates) && rates.length > 0) {
+                // Filter valid rate entries and sort chronologically (oldest first)
+                const sorted = [...rates]
+                    .filter(r => r.date && r.revenue !== undefined && r.revenue >= 0)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // Find the latest rate that became effective on or before orderDateStr
+                let matchedRate = null;
+                const orderDate = new Date(orderDateStr);
+                for (const r of sorted) {
+                    if (new Date(r.date) <= orderDate) {
+                        matchedRate = r;
+                    }
+                }
+                if (matchedRate) return parseFloat(matchedRate.revenue);
+                
+                // Fallback to the earliest overall rate if order date is before any effective date
+                if (sorted.length > 0) return parseFloat(sorted[0].revenue);
+            }
+        }
+    } catch (e) {
+        console.error('Error reading effective rate:', e);
+    }
+    return 40; // Default fallback if no rates exist
+};
+
 export default function DelivererPaymentView({ data, showToast, onNavigateBack }) {
     const onBack = onNavigateBack || (() => {});
     const isNew = !data;
@@ -164,7 +195,7 @@ export default function DelivererPaymentView({ data, showToast, onNavigateBack }
                     id: o.order_code,
                     date: o.order_date ? o.order_date.split('T')[0] : '—',
                     deliveryId: deliv.delivery_id,
-                    fee: parseFloat(deliv.delivery_fee || 40),
+                    fee: parseFloat(deliv.delivery_fee || getEffectiveRate(o.order_date ? o.order_date.split('T')[0] : '')),
                     bonus: 0,
                     adjustment: 0,
                     status: 'PENDING',
