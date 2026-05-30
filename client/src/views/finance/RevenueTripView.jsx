@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Plus, Save, Trash2, DollarSign, History, Search } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, StatCard, Input } from '../../components/ui';
-import { MOCK_REVENUE_PER_TRIP } from '../../data/mockData';
+
+const INITIAL_REVENUE_PER_TRIP = [
+    { id: 1, date: '2026-01-01', revenue: 40, notes: 'Initial rate' },
+    { id: 2, date: '2026-03-01', revenue: 45, notes: 'Q1 adjustment' },
+];
 
 export default function RevenueTripView({ showToast }) {
     // 1. Officially saved/applied rates
@@ -14,7 +18,7 @@ export default function RevenueTripView({ showToast }) {
                 console.error(e);
             }
         }
-        return MOCK_REVENUE_PER_TRIP;
+        return INITIAL_REVENUE_PER_TRIP;
     });
 
     // 2. Row input states currently being edited
@@ -36,7 +40,7 @@ export default function RevenueTripView({ showToast }) {
                 console.error(e);
             }
         }
-        return MOCK_REVENUE_PER_TRIP;
+        return INITIAL_REVENUE_PER_TRIP;
     });
 
     // Save savedRates to localStorage whenever they are applied

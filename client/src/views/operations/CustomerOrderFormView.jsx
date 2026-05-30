@@ -7,6 +7,25 @@ import { getJson, postJson, putJson, getApiErrorMessage } from '../../api/http';
 import { orderHeaderSchema } from '../../schemas/operations';
 import { nextCode } from '../../api/codeGen';
 
+function formatPhone(phone) {
+    if (!phone) return '—';
+    let cleaned = phone.replace(/[^\d+]/g, '');
+    if (cleaned.startsWith('+66')) {
+        cleaned = '0' + cleaned.slice(3);
+    }
+    if (cleaned.startsWith('0') && cleaned.length === 10) {
+        return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+    }
+    if (cleaned.startsWith('0') && cleaned.length === 9) {
+        if (cleaned.startsWith('02')) {
+            return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 5)}-${cleaned.slice(5)}`;
+        } else {
+            return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+        }
+    }
+    return phone;
+}
+
 export default function CustomerOrderFormView({ data, showToast, onNavigateBack }) {
     const onBack = onNavigateBack || (() => {});
     const [customers, setCustomers] = useState([]);
@@ -53,7 +72,7 @@ export default function CustomerOrderFormView({ data, showToast, onNavigateBack 
                 return {
                     id: c.customer_code,
                     name: prof.full_name || '—',
-                    phone: prof.phone || '—',
+                    phone: formatPhone(prof.phone),
                     address: formattedAddr
                 };
             }));

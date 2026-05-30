@@ -120,7 +120,10 @@ export default function PromoPerfReportView({ showToast }) {
                             <Tr key={p.id}>
                                 <Td bold>{p.name}</Td>
                                 <Td>{p.store}</Td>
-                                <Td className="text-xs">{p.startDate} → {p.endDate}</Td>
+                                <Td className="text-xs py-1.5 whitespace-nowrap">
+                                    <div className="font-semibold text-slate-800 dark:text-slate-200">{p.startDate}</div>
+                                    <div className="text-slate-400 dark:text-gray-400 font-medium">{p.endDate}</div>
+                                </Td>
                                 <Td>{p.discountType}</Td>
                                 <Td right bold className="text-emerald-600 dark:text-emerald-400">{p.orders}</Td>
                                 <Td right bold>{p.products}</Td>
