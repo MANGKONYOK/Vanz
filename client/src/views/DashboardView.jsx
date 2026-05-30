@@ -302,7 +302,13 @@ export default function DashboardView({ onNavigate }) {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                         <p className="text-sm font-bold text-red-950 dark:text-red-50">{o.id}</p>
-                                        <Badge color={o.status === 'CONFIRMED' ? 'blue' : 'amber'}>{o.status}</Badge>
+                                        <Badge color={
+                                            o.status === 'DELIVERED' || o.status === 'COMPLETED' ? 'green' :
+                                            o.status === 'CANCELLED' || o.status === 'FAILED' ? 'red' :
+                                            o.status === 'PENDING' ? 'gray' :
+                                            o.status === 'CONFIRMED' ? 'blue' :
+                                            'amber'
+                                        }>{o.status}</Badge>
                                     </div>
                                     <p className="text-xs text-slate-500 dark:text-gray-300 truncate mt-0.5">{o.store} · {o.customer}</p>
                                 </div>
@@ -413,7 +419,13 @@ export default function DashboardView({ onNavigate }) {
                                             </p>
                                             <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{a.id} · {a.time}</p>
                                         </div>
-                                        <Badge color={a.status === 'DELIVERED' ? 'green' : a.status === 'CONFIRMED' ? 'blue' : 'amber'}>{a.status}</Badge>
+                                        <Badge color={
+                                            a.status === 'DELIVERED' || a.status === 'COMPLETED' ? 'green' :
+                                            a.status === 'CANCELLED' || a.status === 'FAILED' ? 'red' :
+                                            a.status === 'PENDING' ? 'gray' :
+                                            a.status === 'CONFIRMED' ? 'blue' :
+                                            'amber'
+                                        }>{a.status}</Badge>
                                     </div>
                                 ))}
                             </div>

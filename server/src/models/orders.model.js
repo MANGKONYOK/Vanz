@@ -75,7 +75,7 @@ exports.create = async (data) => {
     }
     const { rows: [ins] } = await client.query(
       'INSERT INTO "order" (customer_id,store_id,total_price,address_snapshot,status,code) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
-      [cust.id, store.id, data.total_price, data.address_snapshot, 'PENDING', code]
+      [cust.id, store.id, data.total_price, data.address_snapshot, data.status || 'PENDING', code]
     );
     let hdr;
     if (!data.code || typeof data.code !== 'string' || !data.code.trim()) {

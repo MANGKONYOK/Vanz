@@ -182,7 +182,13 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                             <Td>{o.store}</Td>
                             <Td right bold>฿{o.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Td>
                             <Td center>
-                                <Badge color={o.status?.toUpperCase() === 'DELIVERED' || o.status?.toUpperCase() === 'COMPLETED' ? 'green' : o.status?.toUpperCase() === 'CANCELLED' || o.status?.toUpperCase() === 'FAILED' ? 'red' : 'amber'}>
+                                <Badge color={
+                                    o.status?.toUpperCase() === 'DELIVERED' || o.status?.toUpperCase() === 'COMPLETED' ? 'green' : 
+                                    o.status?.toUpperCase() === 'CANCELLED' || o.status?.toUpperCase() === 'FAILED' ? 'red' : 
+                                    o.status?.toUpperCase() === 'PENDING' ? 'gray' : 
+                                    o.status?.toUpperCase() === 'CONFIRMED' ? 'blue' : 
+                                    'amber'
+                                }>
                                     {o.status}
                                 </Badge>
                             </Td>

@@ -20,9 +20,9 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
     const [isAuto, setIsAuto] = useState(true);
     const [customCode, setCustomCode] = useState('');
 
-    const { control, register, handleSubmit, formState: { errors } } = useForm({
+    const { control, register, handleSubmit, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(orderHeaderSchema),
-        defaultValues: { customer: '', store: '', deliveryAddress: '123 Sukhumvit Road' },
+        defaultValues: { customer: '', store: '', deliveryAddress: '123 Sukhumvit Road', status: 'PENDING' },
     });
 
     useEffect(() => {
@@ -83,6 +83,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
             store_code: storeCode,
             address_snapshot: headerData.deliveryAddress,
             total_price: roundedTotal,
+            status: headerData.status || 'PENDING',
             order_items: items.map(i => {
                 const itemPrice = Math.round((parseFloat(i.price) + Number.EPSILON) * 100) / 100;
                 const extPrice = Math.round(((i.qty * itemPrice) + Number.EPSILON) * 100) / 100;
@@ -111,27 +112,15 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
 
     return (
         <div className="fade-in space-y-5">
-            <Controller
-                name="customer"
-                control={control}
-                render={({ field }) => (
-                    <Controller
-                        name="store"
-                        control={control}
-                        render={({ field: storeField }) => (
-                            <LovModal isOpen={!!activeLov} onClose={() => setActiveLov(null)} title={activeLov?.type === 'product' ? 'Product' : activeLov?.type === 'store' ? 'Store' : 'Customer'}
-                                columns={activeLov?.type === 'product' ? [{ key: 'id', label: 'ID' }, { key: 'name', label: 'Product' }, { key: 'price', label: 'Price' }] : activeLov?.type === 'store' ? [{ key: 'id', label: 'ID' }, { key: 'name', label: 'Store Name' }, { key: 'category', label: 'Category' }] : [{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'phone', label: 'Phone' }]}
-                                data={activeLov?.type === 'product' ? products : activeLov?.type === 'store' ? stores : customers}
-                                onSelect={r => {
-                                    if (activeLov.type === 'product') { const n = [...items]; n[activeLov.index].productName = r.name; n[activeLov.index].price = r.price || 0; n[activeLov.index].productId = r.id; setItems(n); }
-                                    else if (activeLov.type === 'store') { storeField.onChange(`${r.id} – ${r.name}`); }
-                                    else { field.onChange(`${r.id} – ${r.name}`); }
-                                    setActiveLov(null);
-                                }} />
-                        )}
-                    />
-                )}
-            />
+            <LovModal isOpen={!!activeLov} onClose={() => setActiveLov(null)} title={activeLov?.type === 'product' ? 'Product' : activeLov?.type === 'store' ? 'Store' : 'Customer'}
+                columns={activeLov?.type === 'product' ? [{ key: 'id', label: 'ID' }, { key: 'name', label: 'Product' }, { key: 'price', label: 'Price' }] : activeLov?.type === 'store' ? [{ key: 'id', label: 'ID' }, { key: 'name', label: 'Store Name' }, { key: 'category', label: 'Category' }] : [{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'phone', label: 'Phone' }]}
+                data={activeLov?.type === 'product' ? products : activeLov?.type === 'store' ? stores : customers}
+                onSelect={r => {
+                    if (activeLov.type === 'product') { const n = [...items]; n[activeLov.index].productName = r.name; n[activeLov.index].price = r.price || 0; n[activeLov.index].productId = r.id; setItems(n); }
+                    else if (activeLov.type === 'store') { setValue('store', `${r.id} – ${r.name}`); }
+                    else { setValue('customer', `${r.id} – ${r.name}`); }
+                    setActiveLov(null);
+                }} />
             <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-bold transition-colors mb-2"><ArrowLeft className="w-4 h-4" /> Back to Orders</button>
             <PageHeader title="Customer Order" subtitle="Create a new order for a customer from a specific store" />
             <Card className="p-5">
@@ -181,8 +170,22 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                     <FormField label="Delivery Address Snapshot">
                         <textarea readOnly defaultValue="123 Sukhumvit Road" className="w-full min-w-0 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 outline-none resize-none h-10" />
                     </FormField>
-                    <FormField label="Payment Method" required>
-                        <Select><option>Cash</option><option>PromptPay</option><option>Credit Card</option></Select>
+                    <FormField label="Status" required error={errors.status?.message}>
+                        <Controller
+                            name="status"
+                            control={control}
+                            render={({ field }) => (
+                                <Select value={field.value} onChange={e => field.onChange(e.target.value)}>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="PREPARING">Preparing</option>
+                                    <option value="DISPATCHED">Dispatched</option>
+                                    <option value="DELIVERED">Delivered</option>
+                                    <option value="COMPLETED">Completed</option>
+                                    <option value="CANCELLED">Cancelled</option>
+                                    <option value="FAILED">Failed</option>
+                                </Select>
+                            )}
+                        />
                     </FormField>
                 </div>
             </Card>
@@ -214,7 +217,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                 <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex flex-col sm:flex-row justify-end items-center gap-4">
                     <div className="text-right">
                         <p className="text-xs text-slate-500 dark:text-gray-300 font-bold uppercase tracking-wide">Total Order</p>
-                        <p className="text-3xl font-black text-current font-bold mono">฿{total}</p>
+                        <p className="text-3xl font-black text-current font-bold mono">฿{total.toFixed(2)}</p>
                     </div>
                     <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> Place Order</Btn>
                 </div>
