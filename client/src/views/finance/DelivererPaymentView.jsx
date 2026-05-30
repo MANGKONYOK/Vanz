@@ -113,7 +113,11 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     };
 
     const onSubmit = async (headerData) => {
-        if (!isAuto && !customCode.trim()) return showToast('Custom Payment ID is required when Auto is unchecked', 'error');
+        if (!isAuto) {
+            const trimmed = customCode.trim();
+            if (!trimmed) return showToast('Custom Payment ID is required when Auto is unchecked', 'error');
+            if (!/^PAY-\d{6}$/.test(trimmed)) return showToast('Payment ID must be in the format PAY-000000 (PAY- followed by 6 digits)', 'error');
+        }
         if (headerData.startDate && headerData.endDate && new Date(headerData.endDate) < new Date(headerData.startDate)) return showToast('Period end cannot be before period start', 'error');
         if (selected.length === 0) return showToast('Please select at least one unpaid order', 'error');
 
@@ -162,7 +166,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                         data={deliverersList} onSelect={r => { field.onChange(`${r.id} – ${r.name}`); setSelected([]); setUnpaidOrders([]); setIsLovOpen(false); }} />
                 )}
             />
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors mb-2">
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-bold transition-colors mb-2">
                 <ArrowLeft className="w-4 h-4" /> Back to Payments
             </button>
             
@@ -171,7 +175,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-4">Payment Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField label="Payment ID">
+                    <FormField label="Payment ID" required>
                         <div className="flex items-center gap-2 mt-1">
                             <Input
                                 value={isAuto ? previewCode : customCode}

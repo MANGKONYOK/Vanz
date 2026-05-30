@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 
 export default function ExpenseListView({ onNavigate, showToast }) {
     const [vouchers, setVouchers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [tick, setTick] = useState(0);
+     const [tick, setTick] = useState(0);
     const [search, setSearch] = useState('');
-    const [sort, setSort] = useState({ key: 'date', direction: 'desc' });
+    const [sort, setSort] = useState({ key: '', direction: 'asc' });
+    const [filters, setFilters] = useState([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -73,27 +74,18 @@ export default function ExpenseListView({ onNavigate, showToast }) {
         }
     };
 
-    // 1. Filter
-    const filtered = vouchers.filter(v =>
-        v.id.toLowerCase().includes(search.toLowerCase()) ||
-        v.delivererName.toLowerCase().includes(search.toLowerCase()) ||
-        v.status.toLowerCase().includes(search.toLowerCase()) ||
-        v.items.toLowerCase().includes(search.toLowerCase())
-    );
+     const columns = [
+        { key: 'id', label: 'Voucher ID', type: 'text' },
+        { key: 'date', label: 'Date', type: 'date' },
+        { key: 'delivererName', label: 'Deliverer', type: 'text' },
+        { key: 'status', label: 'Status', type: 'enum', options: ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'FAILED'] },
+        { key: 'total', label: 'Total Expense', type: 'number' }
+    ];
 
-    // 2. Sort
-    const sorted = [...filtered].sort((a, b) => {
-        const valA = a[sort.key] ?? '';
-        const valB = b[sort.key] ?? '';
-        if (valA < valB) return sort.direction === 'asc' ? -1 : 1;
-        if (valA > valB) return sort.direction === 'asc' ? 1 : -1;
-        return 0;
-    });
-
-    // 3. Paginate
+    const sorted = applyFiltersAndSort(vouchers, search, ['id', 'delivererName', 'status', 'items'], filters, sort);
     const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
-    const start = filtered.length > 0 ? (page - 1) * pageSize + 1 : 0;
-    const end = Math.min(page * pageSize, filtered.length);
+    const start = sorted.length > 0 ? (page - 1) * pageSize + 1 : 0;
+    const end = Math.min(page * pageSize, sorted.length);
 
     const handleSort = (key) => {
         setSort(prev => ({
@@ -107,13 +99,30 @@ export default function ExpenseListView({ onNavigate, showToast }) {
             <PageHeader title="Expense Vouchers" subtitle="Manage deliverer reimbursement claims"
                 action={<Btn onClick={() => onNavigate()}><Plus className="w-4 h-4" /> Create Voucher</Btn>} />
 
-            <Card className="overflow-hidden">
+             <Card className="overflow-hidden">
                 <CardHeader
-                    search={<Input icon={Search} placeholder="Search ID, deliverer, status..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="h-10 shadow-sm" />}
+                    search={
+                        <div className="flex items-center gap-2 flex-1">
+                            <Input
+                                icon={Search}
+                                placeholder="Search ID, deliverer, status..."
+                                value={search}
+                                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                                className="h-10 shadow-sm"
+                            />
+                            <TableSortFilter
+                                columns={columns}
+                                sort={sort}
+                                onSortChange={s => { setSort(s); setPage(1); }}
+                                filters={filters}
+                                onFiltersChange={f => { setFilters(f); setPage(1); }}
+                            />
+                        </div>
+                    }
                     filter={
                         <div className="flex items-center gap-3">
                             <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
-                                {start}-{end} of {filtered.length} vouchers
+                                {start}-{end} of {sorted.length} vouchers
                             </span>
                             <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-28">
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
@@ -121,6 +130,24 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                         </div>
                     }
                 />
+
+                {filters.length > 0 && (
+                    <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
+                        <FilterPills
+                            columns={columns}
+                            filters={filters}
+                            onRemoveFilter={i => {
+                                const newFilters = filters.filter((_, idx) => idx !== i);
+                                setFilters(newFilters);
+                                setPage(1);
+                            }}
+                            onClearAll={() => {
+                                setFilters([]);
+                                setPage(1);
+                            }}
+                        />
+                    </div>
+                )}
                 <Table
                     onSort={handleSort}
                     sortConfig={sort}
@@ -168,7 +195,7 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                 </Table>
 
                 <Pagination
-                    totalItems={filtered.length}
+                    totalItems={sorted.length}
                     itemsPerPage={pageSize}
                     currentPage={page}
                     onPageChange={setPage}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, AlertCircle } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 
 function computeStatus(startDate, endDate) {
@@ -14,13 +14,14 @@ function computeStatus(startDate, endDate) {
 
 const STATUS_COLOR = { ACTIVE: 'green', UPCOMING: 'blue', EXPIRED: 'gray' };
 
-export default function PromotionListView({ onNavigate, showToast }) {
+ export default function PromotionListView({ onNavigate, showToast }) {
     const [rows,     setRows]     = useState([]);
     const [loading,  setLoading]  = useState(true);
     const [error,    setError]    = useState(null);
     const [tick,     setTick]     = useState(0);
     const [search,   setSearch]   = useState('');
-    const [sort,     setSort]     = useState({ key: 'name', direction: 'asc' });
+    const [sort,     setSort]     = useState({ key: '', direction: 'asc' });
+    const [filters,  setFilters]  = useState([]);
     const [page,     setPage]     = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
@@ -77,24 +78,20 @@ export default function PromotionListView({ onNavigate, showToast }) {
         }
     };
 
-    const filtered = rows.filter(p =>
-        p.promotionCode.toLowerCase().includes(search.toLowerCase()) ||
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.storeName.toLowerCase().includes(search.toLowerCase()) ||
-        p.discountType.toLowerCase().includes(search.toLowerCase())
-    );
+     const columns = [
+        { key: 'promotionCode', label: 'Code', type: 'text' },
+        { key: 'name', label: 'Campaign', type: 'text' },
+        { key: 'storeName', label: 'Store Name', type: 'text' },
+        { key: 'startDate', label: 'Start Date', type: 'date' },
+        { key: 'endDate', label: 'End Date', type: 'date' },
+        { key: 'discountType', label: 'Type', type: 'enum', options: ['FIXED_AMOUNT', 'PERCENTAGE', 'FREE_DELIVERY'] },
+        { key: 'status', label: 'Status', type: 'enum', options: ['ACTIVE', 'UPCOMING', 'EXPIRED'] }
+    ];
 
-    const sorted = [...filtered].sort((a, b) => {
-        const valA = a[sort.key] ?? '';
-        const valB = b[sort.key] ?? '';
-        if (valA < valB) return sort.direction === 'asc' ? -1 : 1;
-        if (valA > valB) return sort.direction === 'asc' ? 1 : -1;
-        return 0;
-    });
-
+    const sorted = applyFiltersAndSort(rows, search, ['promotionCode', 'name', 'storeName', 'discountType'], filters, sort);
     const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
-    const start = filtered.length > 0 ? (page - 1) * pageSize + 1 : 0;
-    const end = Math.min(page * pageSize, filtered.length);
+    const start = sorted.length > 0 ? (page - 1) * pageSize + 1 : 0;
+    const end = Math.min(page * pageSize, sorted.length);
 
     const handleSort = (key) => {
         setSort(prev => ({
@@ -111,21 +108,30 @@ export default function PromotionListView({ onNavigate, showToast }) {
                 action={<Btn onClick={() => onNavigate()}><Plus className="w-4 h-4" /> Create Promotion</Btn>}
             />
 
-            <Card className="overflow-hidden">
+             <Card className="overflow-hidden">
                 <CardHeader
                     search={
-                        <Input
-                            icon={Search}
-                            placeholder="Search code, campaign, store..."
-                            value={search}
-                            onChange={e => { setSearch(e.target.value); setPage(1); }}
-                            className="bg-white border-slate-200 h-10 shadow-sm"
-                        />
+                        <div className="flex items-center gap-2 flex-1">
+                            <Input
+                                icon={Search}
+                                placeholder="Search code, campaign, store..."
+                                value={search}
+                                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                                className="bg-white border-slate-200 h-10 shadow-sm"
+                            />
+                            <TableSortFilter
+                                columns={columns}
+                                sort={sort}
+                                onSortChange={s => { setSort(s); setPage(1); }}
+                                filters={filters}
+                                onFiltersChange={f => { setFilters(f); setPage(1); }}
+                            />
+                        </div>
                     }
                     filter={
                         <div className="flex items-center gap-3">
                             <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
-                                {start}–{end} of {filtered.length} promotions
+                                {start}–{end} of {sorted.length} promotions
                             </span>
                             <Select
                                 value={pageSize}
@@ -137,6 +143,24 @@ export default function PromotionListView({ onNavigate, showToast }) {
                         </div>
                     }
                 />
+
+                {filters.length > 0 && (
+                    <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
+                        <FilterPills
+                            columns={columns}
+                            filters={filters}
+                            onRemoveFilter={i => {
+                                const newFilters = filters.filter((_, idx) => idx !== i);
+                                setFilters(newFilters);
+                                setPage(1);
+                            }}
+                            onClearAll={() => {
+                                setFilters([]);
+                                setPage(1);
+                            }}
+                        />
+                    </div>
+                )}
 
                 <Table
                     onSort={handleSort}
@@ -184,8 +208,8 @@ export default function PromotionListView({ onNavigate, showToast }) {
                     ))}
                 </Table>
 
-                <Pagination
-                    totalItems={filtered.length}
+                 <Pagination
+                    totalItems={sorted.length}
                     itemsPerPage={pageSize}
                     currentPage={page}
                     onPageChange={setPage}

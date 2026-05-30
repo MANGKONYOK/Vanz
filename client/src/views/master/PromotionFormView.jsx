@@ -111,7 +111,11 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
     };
 
     const validate = () => {
-        if (!isAuto && !customCode.trim()) return 'Custom Promotion Code is required when Auto is unchecked';
+        if (isNew && !isAuto) {
+            const trimmed = customCode.trim();
+            if (!trimmed) return 'Custom Promotion Code is required when Auto is unchecked';
+            if (!/^PROMO-\d{6}$/.test(trimmed)) return 'Promotion Code must be in the format PROMO-000000 (PROMO- followed by 6 digits)';
+        }
         if (!storeCode)       return 'Please select a target store';
         if (!name.trim())     return 'Campaign Name is required';
         if (!startDate || !endDate) return 'Please specify both Start and End Dates';
@@ -179,7 +183,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
 
             <button
                 onClick={onNavigateBack}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-bold transition-colors"
             >
                 <ArrowLeft className="w-4 h-4" /> Back to Promotions
             </button>
@@ -191,7 +195,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Promotion Code — Auto/Custom input */}
-                    <FormField label="Promotion Code">
+                    <FormField label="Promotion Code" required>
                         <div className="flex items-center gap-2 mt-1">
                             <Input
                                 value={isNew ? (isAuto ? previewCode : customCode) : previewCode}

@@ -36,7 +36,11 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
     }, [isNew]);
 
     const validate = () => {
-        if (!isAuto && !customCode.trim()) return 'Custom Deliverer Code is required when Auto is unchecked';
+        if (isNew && !isAuto) {
+            const trimmed = customCode.trim();
+            if (!trimmed) return 'Custom Deliverer Code is required when Auto is unchecked';
+            if (!/^DLV-\d{6}$/.test(trimmed)) return 'Deliverer Code must be in the format DLV-000000 (DLV- followed by 6 digits)';
+        }
         if (!name.trim())    return 'Full Name is required';
         if (!phone.trim())   return 'Phone Number is required';
         if (!license.trim()) return 'License Plate is required';
@@ -93,7 +97,7 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
         <div className="fade-in space-y-5">
             <button
                 onClick={onBack}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-bold transition-colors"
             >
                 <ArrowLeft className="w-4 h-4" /> Back to Deliverers
             </button>
@@ -106,7 +110,7 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
                 <div className="space-y-5">
                     {/* Row 1: Code preview | Status */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label="Deliverer Code">
+                        <FormField label="Deliverer Code" required>
                             <div className="flex items-center gap-2 mt-1">
                                 <Input
                                     value={isNew ? (isAuto ? previewCode : customCode) : previewCode}

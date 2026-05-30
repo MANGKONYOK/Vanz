@@ -57,7 +57,11 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
     const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
 
     const onSubmit = async (headerData) => {
-        if (!isAuto && !customCode.trim()) return showToast('Custom Voucher ID is required when Auto is unchecked', 'error');
+        if (!isAuto) {
+            const trimmed = customCode.trim();
+            if (!trimmed) return showToast('Custom Voucher ID is required when Auto is unchecked', 'error');
+            if (!/^EXP-\d{6}$/.test(trimmed)) return showToast('Voucher ID must be in the format EXP-000000 (EXP- followed by 6 digits)', 'error');
+        }
         if (items.length === 0) return showToast('Voucher must contain at least one expense item', 'error');
         if (items.some(i => i.amount <= 0)) return showToast('All expense amounts must be greater than zero', 'error');
         if (items.some(i => !i.desc.trim())) return showToast('Please provide descriptions for all expense items', 'error');
@@ -104,14 +108,14 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 )}
             />
             
-            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors">
+            <button onClick={onNavigateBack} className="inline-flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-bold transition-colors">
                 <ArrowLeft className="w-4 h-4" /> Back to Vouchers
             </button>
             
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-4">Voucher Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField label="Voucher ID">
+                    <FormField label="Voucher ID" required>
                         <div className="flex items-center gap-2 mt-1">
                             <Input
                                 value={isAuto ? previewCode : customCode}

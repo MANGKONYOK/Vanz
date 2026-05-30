@@ -65,7 +65,11 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
     const total = items.reduce((s, i) => s + (i.qty * i.price), 0);
 
     const onSubmit = async (headerData) => {
-        if (!isAuto && !customCode.trim()) return showToast('Custom Order ID is required when Auto is unchecked', 'error');
+        if (!isAuto) {
+            const trimmed = customCode.trim();
+            if (!trimmed) return showToast('Custom Order ID is required when Auto is unchecked', 'error');
+            if (!/^ORD-\d{6}$/.test(trimmed)) return showToast('Order ID must be in the format ORD-000000 (ORD- followed by 6 digits)', 'error');
+        }
         if (items.length === 0) return showToast('Order must contain at least one item', 'error');
         if (items.some(i => !i.productName || i.qty <= 0)) return showToast('Please select valid products with positive quantities', 'error');
 
@@ -128,12 +132,12 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                     />
                 )}
             />
-            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors mb-2"><ArrowLeft className="w-4 h-4" /> Back to Orders</button>
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-bold transition-colors mb-2"><ArrowLeft className="w-4 h-4" /> Back to Orders</button>
             <PageHeader title="Customer Order" subtitle="Create a new order for a customer from a specific store" />
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-4">Order Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField label="Order ID">
+                    <FormField label="Order ID" required>
                         <div className="flex items-center gap-2 mt-1">
                             <Input
                                 value={isAuto ? previewCode : customCode}

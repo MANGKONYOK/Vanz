@@ -100,7 +100,7 @@ export default function ProductFormView({ data = {}, stores: initStores = [], on
 
             <button
                 onClick={onBack}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-bold transition-colors"
             >
                 <ArrowLeft className="w-4 h-4" /> Back to Products
             </button>
