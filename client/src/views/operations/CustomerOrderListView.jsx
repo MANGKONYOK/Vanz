@@ -113,7 +113,7 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                             <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}-{end} of {filtered.length} orders
                             </span>
-                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-24">
+                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-28">
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
                         </div>
@@ -151,9 +151,9 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                             <Td>{o.date}</Td>
                             <Td bold>{o.customer}</Td>
                             <Td>{o.store}</Td>
-                            <Td right bold>฿{o.total?.toLocaleString()}</Td>
+                            <Td right bold>฿{o.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Td>
                             <Td center>
-                                <Badge color={o.status === 'DELIVERED' ? 'green' : o.status === 'CANCELLED' ? 'red' : 'amber'}>
+                                <Badge color={o.status?.toUpperCase() === 'DELIVERED' || o.status?.toUpperCase() === 'COMPLETED' ? 'green' : o.status?.toUpperCase() === 'CANCELLED' || o.status?.toUpperCase() === 'FAILED' ? 'red' : 'amber'}>
                                     {o.status}
                                 </Badge>
                             </Td>

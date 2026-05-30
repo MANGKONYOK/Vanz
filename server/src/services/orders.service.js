@@ -31,7 +31,7 @@ exports.update = async (code, data) => {
 exports.remove = async (code) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Order ${code} not found`);
-  if (existing.status !== 'PENDING')
+  if (existing.status?.toUpperCase() !== 'PENDING')
     throw new ValidationError(`Order ${code} can only be deleted when status is PENDING`);
   await model.deleteById(existing.order_id);
   return { message: `Order ${code} deleted successfully` };

@@ -6,5 +6,13 @@ export default function Badge({ children, color = 'gray' }) {
         red: 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400',
         blue: 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400',
     };
-    return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border border-transparent dark:border-current/10 ${colors[color]}`}>{children}</span>;
+
+    let content = children;
+    if (typeof children === 'string') {
+        const str = children.toLowerCase();
+        content = str.charAt(0).toUpperCase() + str.slice(1).replace(/_/g, ' ');
+    }
+
+    return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border border-transparent dark:border-current/10 ${colors[color]}`}>{content}</span>;
 }
+

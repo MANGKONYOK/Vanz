@@ -74,8 +74,13 @@ exports.create = async (data) => {
     // expense_voucher.id is plain bigint NOT NULL (no GENERATED ALWAYS, no sequence)
     const { rows: [idRow] } = await client.query('SELECT COALESCE(MAX(id), 0) + 1 AS nxt FROM expense_voucher');
     const nextId = Number(idRow.nxt);
-    const year = new Date().getFullYear();
-    const code = 'EXP-' + year + '-' + String(nextId).padStart(6, '0');
+
+    let code = data.code;
+    if (code && typeof code === 'string' && code.trim()) {
+      code = code.trim();
+    } else {
+      code = 'EXP-' + String(nextId).padStart(6, '0');
+    }
 
     // Insert header with all NOT NULL fields in one step
     const { rows: [hdr] } = await client.query(

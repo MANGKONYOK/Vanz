@@ -17,6 +17,8 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
     const [endDate,      setEndDate]      = useState(editData.endDate   || '');
     const [discountType, setDiscountType] = useState(editData.discountType || 'PERCENTAGE');
     const [previewCode,  setPreviewCode]  = useState(editData.promotionCode || '…');
+    const [isAuto,       setIsAuto]       = useState(true);
+    const [customCode,   setCustomCode]   = useState('');
 
     // Line items
     const [items, setItems] = useState(
@@ -58,7 +60,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
             getJson('/promotions')
                 .then(promos => {
                     const codes = promos.map(p => p.promotion_code);
-                    setPreviewCode(nextCode(codes, 'PROMO-', 4));
+                    setPreviewCode(nextCode(codes, 'PROMO-', 6));
                 })
                 .catch(() => setPreviewCode('PROMO-????'));
         }
@@ -109,6 +111,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
     };
 
     const validate = () => {
+        if (!isAuto && !customCode.trim()) return 'Custom Promotion Code is required when Auto is unchecked';
         if (!storeCode)       return 'Please select a target store';
         if (!name.trim())     return 'Campaign Name is required';
         if (!startDate || !endDate) return 'Please specify both Start and End Dates';
@@ -134,6 +137,7 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                     product_id:     Number(i.productId),
                     discount_value: Number(i.discount),
                 })),
+                code:          isAuto ? previewCode : customCode.trim(),
             });
             showToast('Promotion created successfully!');
             onNavigateBack();
@@ -186,14 +190,28 @@ export default function PromotionFormView({ data, onNavigateBack, showToast }) {
                     {isNew ? 'New Campaign' : `Edit: ${editData.name}`}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Promotion Code — read-only preview */}
+                    {/* Promotion Code — Auto/Custom input */}
                     <FormField label="Promotion Code">
-                        <Input
-                            value={previewCode}
-                            readOnly
-                            className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
-                            title="Code is assigned by server on save"
-                        />
+                        <div className="flex items-center gap-2 mt-1">
+                            <Input
+                                value={isNew ? (isAuto ? previewCode : customCode) : previewCode}
+                                onChange={e => setCustomCode(e.target.value)}
+                                readOnly={!isNew || isAuto}
+                                className={`font-mono flex-1 ${(!isNew || isAuto) ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300' : ''}`}
+                                placeholder="PROMO-000001"
+                            />
+                            {isNew && (
+                                <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-gray-300 select-none cursor-pointer shrink-0 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/55 transition-colors h-9">
+                                    <input
+                                        type="checkbox"
+                                        checked={isAuto}
+                                        onChange={e => setIsAuto(e.target.checked)}
+                                        className="rounded accent-red-650 cursor-pointer"
+                                    />
+                                    <span>Auto</span>
+                                </label>
+                            )}
+                        </div>
                     </FormField>
 
                     <FormField label="Campaign Name" required>

@@ -114,7 +114,7 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                             <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}-{end} of {filtered.length} payments
                             </span>
-                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-24">
+                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-28">
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
                         </div>
@@ -150,9 +150,9 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                             <Td mono className="text-xs font-bold text-slate-950 dark:text-slate-100">{p.id}</Td>
                             <Td>{p.date}</Td>
                             <Td bold>{p.delivererName}</Td>
-                            <Td right bold>฿{p.amount?.toLocaleString()}</Td>
+                            <Td right bold>฿{p.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Td>
                             <Td center>
-                                <Badge color={p.status === 'PAID' ? 'green' : p.status === 'PENDING' ? 'amber' : 'red'}>
+                                <Badge color={p.status?.toUpperCase() === 'PAID' || p.status?.toUpperCase() === 'COMPLETED' ? 'green' : p.status?.toUpperCase() === 'PENDING' || p.status?.toUpperCase() === 'PROCESSING' ? 'amber' : 'red'}>
                                     {p.status}
                                 </Badge>
                             </Td>

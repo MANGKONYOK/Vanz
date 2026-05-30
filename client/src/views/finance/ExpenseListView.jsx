@@ -115,7 +115,7 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                             <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
                                 {start}-{end} of {filtered.length} vouchers
                             </span>
-                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-24">
+                            <Select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-9 shadow-sm w-28">
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
                         </div>
@@ -152,11 +152,11 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                             <Td>{v.date}</Td>
                             <Td bold>{v.delivererName}</Td>
                             <Td center>
-                                <Badge color={v.status === 'APPROVED' ? 'green' : v.status === 'REJECTED' ? 'red' : 'amber'}>
+                                <Badge color={v.status?.toUpperCase() === 'APPROVED' || v.status?.toUpperCase() === 'COMPLETED' ? 'green' : v.status?.toUpperCase() === 'REJECTED' || v.status?.toUpperCase() === 'FAILED' ? 'red' : 'amber'}>
                                     {v.status}
                                 </Badge>
                             </Td>
-                            <Td right bold>฿{v.total?.toLocaleString()}</Td>
+                            <Td right bold>฿{v.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Td>
                             <Td right>
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(v)}><Edit2 className="w-3 h-3" /> Edit</Btn>

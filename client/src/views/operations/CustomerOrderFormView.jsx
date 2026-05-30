@@ -5,6 +5,7 @@ import { ArrowLeft, Save, Plus, Trash2, Search } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Td, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { getJson, postJson, getApiErrorMessage } from '../../api/http';
 import { orderHeaderSchema } from '../../schemas/operations';
+import { nextCode } from '../../api/codeGen';
 
 export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
     const onBack = onNavigateBack || (() => {});
@@ -14,6 +15,10 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
     const [items, setItems] = useState([{ id: 1, productId: '', productName: '', qty: 1, price: 0 }]);
     const [activeLov, setActiveLov] = useState(null);
     const [search, setSearch] = useState('');
+
+    const [previewCode, setPreviewCode] = useState('…');
+    const [isAuto, setIsAuto] = useState(true);
+    const [customCode, setCustomCode] = useState('');
 
     const { control, register, handleSubmit, formState: { errors } } = useForm({
         resolver: zodResolver(orderHeaderSchema),
@@ -27,7 +32,8 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
             getJson('/profiles'),
             getJson('/stores'),
             getJson('/store-products'),
-        ]).then(([custs, profs, strs, prods]) => {
+            getJson('/orders').catch(() => []),
+        ]).then(([custs, profs, strs, prods, ords]) => {
             const profileMap = new Map(profs.map(p => [p.profile_id, p]));
             setCustomers(custs.map(c => {
                 const prof = profileMap.get(c.profile_id) || {};
@@ -47,6 +53,9 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                 name: p.name,
                 price: parseFloat(p.unit_price || 0)
             })));
+
+            const codes = ords.map(o => o.order_code);
+            setPreviewCode(nextCode(codes, 'ORD-', 6));
         }).catch(err => {
             console.error('Failed to load master records for order form:', err);
             showToast('Failed to load master records', 'error');
@@ -56,23 +65,30 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
     const total = items.reduce((s, i) => s + (i.qty * i.price), 0);
 
     const onSubmit = async (headerData) => {
+        if (!isAuto && !customCode.trim()) return showToast('Custom Order ID is required when Auto is unchecked', 'error');
         if (items.length === 0) return showToast('Order must contain at least one item', 'error');
         if (items.some(i => !i.productName || i.qty <= 0)) return showToast('Please select valid products with positive quantities', 'error');
 
         const customerCode = headerData.customer.split(' – ')[0];
         const storeCode = headerData.store.split(' – ')[0];
 
+        const roundedTotal = Math.round((total + Number.EPSILON) * 100) / 100;
         const payload = {
+            code: isAuto ? previewCode : customCode.trim(),
             customer_code: customerCode,
             store_code: storeCode,
             address_snapshot: headerData.deliveryAddress,
-            total_price: total,
-            order_items: items.map(i => ({
-                product_id: parseInt(i.productId, 10) || i.productId,
-                quantity: i.qty,
-                unit_price: i.price,
-                extend_price: i.qty * i.price
-            }))
+            total_price: roundedTotal,
+            order_items: items.map(i => {
+                const itemPrice = Math.round((parseFloat(i.price) + Number.EPSILON) * 100) / 100;
+                const extPrice = Math.round(((i.qty * itemPrice) + Number.EPSILON) * 100) / 100;
+                return {
+                    product_id: parseInt(i.productId, 10) || i.productId,
+                    quantity: i.qty,
+                    unit_price: itemPrice,
+                    extend_price: extPrice
+                };
+            })
         };
 
         try {
@@ -118,11 +134,24 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                 <h3 className="font-bold text-current mb-4">Order Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField label="Order ID">
-                        <Input 
-                            value="ORD-AUTO (Assigned on save)" 
-                            readOnly
-                            className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
-                        />
+                        <div className="flex items-center gap-2 mt-1">
+                            <Input
+                                value={isAuto ? previewCode : customCode}
+                                onChange={e => setCustomCode(e.target.value)}
+                                readOnly={isAuto}
+                                className={`font-mono flex-1 ${isAuto ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300' : ''}`}
+                                placeholder="ORD-000001"
+                            />
+                            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-gray-300 select-none cursor-pointer shrink-0 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/55 transition-colors h-9">
+                                <input
+                                    type="checkbox"
+                                    checked={isAuto}
+                                    onChange={e => setIsAuto(e.target.checked)}
+                                    className="rounded accent-red-650 cursor-pointer"
+                                />
+                                <span>Auto</span>
+                            </label>
+                        </div>
                     </FormField>
                     <FormField label="Customer" required error={errors.customer?.message}>
                         <Controller
@@ -172,8 +201,8 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                                 </div>
                             </td>
                             <td className="px-4 py-3 text-center"><input type="number" min="1" value={it.qty} onChange={e => { const n = [...items]; const idx = items.indexOf(it); n[idx].qty = Math.max(1, Number(e.target.value)); setItems(n); }} className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 text-sm text-center outline-none focus:border-red-400 dark:focus:border-red-500 w-16" /></td>
-                            <Td right>฿{it.price}</Td>
-                            <Td right bold>฿{it.qty * it.price}</Td>
+                            <Td right>฿{parseFloat(it.price || 0).toFixed(2)}</Td>
+                            <Td right bold>฿{parseFloat((it.qty * it.price) || 0).toFixed(2)}</Td>
                             <td className="px-4 py-3 text-center"><button onClick={() => setItems(items.filter(x => x.id !== it.id))} className="p-1.5 text-slate-300 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button></td>
                         </tr>
                     ))}

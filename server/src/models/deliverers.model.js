@@ -30,12 +30,25 @@ exports.create = async (data) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    let code = data.code;
+    if (code && typeof code === 'string' && code.trim()) {
+      code = code.trim();
+    } else {
+      code = 'DLV-TMP-' + Date.now();
+    }
     const { rows: [ins] } = await client.query(
       'INSERT INTO deliverer (profile_id,vehicle_type,license_plate,current_status,code) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-      [data.profile_id, data.vehicle_type, data.license_plate, data.current_status || 'AVAILABLE', 'DLV-TMP-' + Date.now()]
+      [data.profile_id, data.vehicle_type, data.license_plate, data.current_status || 'AVAILABLE', code]
     );
-    const code = 'DLV-' + String(ins.id).padStart(4, '0');
-    const { rows: [r] } = await client.query('UPDATE deliverer SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);
+    let r;
+    if (!data.code || typeof data.code !== 'string' || !data.code.trim()) {
+      const fallbackCode = 'DLV-' + String(ins.id).padStart(6, '0');
+      const { rows: [updated] } = await client.query('UPDATE deliverer SET code=$1 WHERE id=$2 RETURNING *', [fallbackCode, ins.id]);
+      r = updated;
+    } else {
+      const { rows: [selected] } = await client.query('SELECT * FROM deliverer WHERE id=$1', [ins.id]);
+      r = selected;
+    }
     await client.query('COMMIT');
     return fmt(r);
   } catch (e) { await client.query('ROLLBACK'); throw e; }

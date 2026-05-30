@@ -5,6 +5,7 @@ import { ArrowLeft, Save, Plus, Trash2, Search } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, Td, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { getJson, postJson, getApiErrorMessage } from '../../api/http';
 import { expenseHeaderSchema } from '../../schemas/finance';
+import { nextCode } from '../../api/codeGen';
 
 export default function ExpenseFormView({ onNavigateBack, showToast }) {
     const [items, setItems] = useState([{ id: 1, type: 'TOLL', desc: 'Expressway', amount: 50, receipt: 'RC-9901' }]);
@@ -12,19 +13,24 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
     const [search, setSearch] = useState('');
     const [deliveriesList, setDeliveriesList] = useState([]);
 
+    const [previewCode, setPreviewCode] = useState('…');
+    const [isAuto, setIsAuto] = useState(true);
+    const [customCode, setCustomCode] = useState('');
+
     const { control, register, handleSubmit, formState: { errors } } = useForm({
         resolver: zodResolver(expenseHeaderSchema),
         defaultValues: { delivererId: '', voucherDate: new Date().toISOString().split('T')[0], status: 'DRAFT', approvedBy: 'System Admin' },
     });
 
     useEffect(() => {
-        // Fetch deliveries, deliverers, profiles, and orders to populate LoV
+        // Fetch deliveries, deliverers, profiles, orders, and vouchers to populate LoV and generate preview
         Promise.all([
             getJson('/deliveries'),
             getJson('/deliverers'),
             getJson('/profiles'),
-            getJson('/orders')
-        ]).then(([delivs, dlvs, profs, ords]) => {
+            getJson('/orders'),
+            getJson('/expense-vouchers').catch(() => [])
+        ]).then(([delivs, dlvs, profs, ords, vouchers]) => {
             const delivererMap = new Map(dlvs.map(d => [d.deliverer_id, d]));
             const profileMap = new Map(profs.map(p => [p.profile_id, p]));
             const orderMap = new Map(ords.map(o => [o.order_id, o]));
@@ -39,6 +45,9 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                     type: `${d.delivery_type} (Order: ${ord.order_code || '—'})`
                 };
             }));
+
+            const codes = vouchers.map(v => v.voucher_code);
+            setPreviewCode(nextCode(codes, 'EXP-', 6));
         }).catch(err => {
             console.error('Failed to load deliveries for LoV:', err);
             showToast('Failed to load deliveries list', 'error');
@@ -48,6 +57,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
     const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
 
     const onSubmit = async (headerData) => {
+        if (!isAuto && !customCode.trim()) return showToast('Custom Voucher ID is required when Auto is unchecked', 'error');
         if (items.length === 0) return showToast('Voucher must contain at least one expense item', 'error');
         if (items.some(i => i.amount <= 0)) return showToast('All expense amounts must be greater than zero', 'error');
         if (items.some(i => !i.desc.trim())) return showToast('Please provide descriptions for all expense items', 'error');
@@ -55,13 +65,14 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
         const deliveryId = parseInt(headerData.delivererId.split(' – ')[0], 10);
 
         const payload = {
+            code: isAuto ? previewCode : customCode.trim(),
             delivery_id: deliveryId,
             voucher_date: headerData.voucherDate,
-            total_amount: totalAmount,
+            total_amount: Math.round((totalAmount + Number.EPSILON) * 100) / 100,
             expense_items: items.map(i => ({
                 expense_type: i.type.toUpperCase(),
                 description: i.desc.trim(),
-                amount: parseFloat(i.amount),
+                amount: Math.round((parseFloat(i.amount) + Number.EPSILON) * 100) / 100,
                 receipt_reference_code: i.receipt || ''
             }))
         };
@@ -101,11 +112,24 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 <h3 className="font-bold text-current mb-4">Voucher Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField label="Voucher ID">
-                        <Input 
-                            value="EXP-AUTO (Assigned on save)" 
-                            readOnly
-                            className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
-                        />
+                        <div className="flex items-center gap-2 mt-1">
+                            <Input
+                                value={isAuto ? previewCode : customCode}
+                                onChange={e => setCustomCode(e.target.value)}
+                                readOnly={isAuto}
+                                className={`font-mono flex-1 ${isAuto ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300' : ''}`}
+                                placeholder="EXP-000001"
+                            />
+                            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-gray-300 select-none cursor-pointer shrink-0 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/55 transition-colors h-9">
+                                <input
+                                    type="checkbox"
+                                    checked={isAuto}
+                                    onChange={e => setIsAuto(e.target.checked)}
+                                    className="rounded accent-red-650 cursor-pointer"
+                                />
+                                <span>Auto</span>
+                            </label>
+                        </div>
                     </FormField>
                     <FormField label="Delivery & Deliverer" required error={errors.delivererId?.message}>
                         <Controller
@@ -125,8 +149,8 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                             control={control}
                             render={({ field }) => (
                                 <Select value={field.value} onChange={e => field.onChange(e.target.value)}>
-                                    <option value="DRAFT">DRAFT</option>
-                                    <option value="SUBMITTED">SUBMITTED</option>
+                                    <option value="DRAFT">Draft</option>
+                                    <option value="SUBMITTED">Submitted</option>
                                 </Select>
                             )}
                         />
@@ -208,7 +232,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 <div className="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-current/10 flex flex-col sm:flex-row justify-end items-center gap-4">
                     <div className="text-right">
                         <p className="text-xs text-slate-500 dark:text-gray-300 font-bold uppercase tracking-wide">Total Expense</p>
-                        <p className="text-3xl font-black text-current font-bold mono">฿{totalAmount}</p>
+                        <p className="text-3xl font-black text-current font-bold mono">฿{totalAmount.toFixed(2)}</p>
                     </div>
                     <Btn onClick={handleSubmit(onSubmit)} size="lg"><Save className="w-4 h-4" /> Save Voucher</Btn>
                 </div>

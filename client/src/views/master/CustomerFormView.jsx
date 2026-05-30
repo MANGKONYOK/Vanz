@@ -17,9 +17,11 @@ export default function CustomerFormView({ data = {}, onBack, onSaved, showToast
     const [city,       setCity]       = useState(data.city       || '');
     const [membership, setMembership] = useState(data.membership || 'STANDARD');
 
-    // Predicted next code (preview only — real code is assigned by server)
+    // Predicted next code (preview only — real code is assigned by server unless custom)
     const [previewCode, setPreviewCode] = useState(data.customerCode || '…');
     const [saving, setSaving] = useState(false);
+    const [isAuto, setIsAuto] = useState(true);
+    const [customCode, setCustomCode] = useState('');
 
     // On new form: fetch existing customers to compute next code preview
     useEffect(() => {
@@ -27,12 +29,13 @@ export default function CustomerFormView({ data = {}, onBack, onSaved, showToast
         getJson('/customers')
             .then(customers => {
                 const codes = customers.map(c => c.customer_code);
-                setPreviewCode(nextCode(codes, 'CUST-', 4));
+                setPreviewCode(nextCode(codes, 'CUST-', 6));
             })
             .catch(() => setPreviewCode('CUST-????'));
     }, [isNew]);
 
     const validate = () => {
+        if (!isAuto && !customCode.trim()) return 'Custom Customer Code is required when Auto is unchecked';
         if (!name.trim())    return 'Full Name is required';
         if (!phone.trim())   return 'Phone Number is required';
         if (!address.trim()) return 'Address is required';
@@ -66,6 +69,7 @@ export default function CustomerFormView({ data = {}, onBack, onSaved, showToast
                     profile_id:       profile.profile_id,
                     address_id:       addr.address_id,
                     membership_level: membership,
+                    code:             isAuto ? previewCode : customCode.trim(),
                 });
                 showToast('Customer created successfully!');
             } else {
@@ -112,14 +116,28 @@ export default function CustomerFormView({ data = {}, onBack, onSaved, showToast
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {/* Customer Code — read-only preview */}
+                    {/* Customer Code — Auto/Custom input */}
                     <FormField label="Customer Code">
-                        <Input
-                            value={previewCode}
-                            readOnly
-                            className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
-                            title={isNew ? 'Code is assigned by server on save' : 'Code cannot be changed'}
-                        />
+                        <div className="flex items-center gap-2 mt-1">
+                            <Input
+                                value={isNew ? (isAuto ? previewCode : customCode) : previewCode}
+                                onChange={e => setCustomCode(e.target.value)}
+                                readOnly={!isNew || isAuto}
+                                className={`font-mono flex-1 ${(!isNew || isAuto) ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300' : ''}`}
+                                placeholder="CUST-000001"
+                            />
+                            {isNew && (
+                                <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-gray-300 select-none cursor-pointer shrink-0 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/55 transition-colors h-9">
+                                    <input
+                                        type="checkbox"
+                                        checked={isAuto}
+                                        onChange={e => setIsAuto(e.target.checked)}
+                                        className="rounded accent-red-650 cursor-pointer"
+                                    />
+                                    <span>Auto</span>
+                                </label>
+                            )}
+                        </div>
                     </FormField>
 
                     {/* Membership Level */}

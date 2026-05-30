@@ -135,7 +135,7 @@ export default function DelivererListView({ showToast }) {
                             <Select
                                 value={pageSize}
                                 onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
-                                className="h-9 border-slate-200 bg-white shadow-sm w-24"
+                                className="h-9 border-slate-200 bg-white shadow-sm w-28"
                             >
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
@@ -179,7 +179,7 @@ export default function DelivererListView({ showToast }) {
                             <Td className="whitespace-nowrap">{d.type}</Td>
                             <Td mono className="text-xs whitespace-nowrap">{d.phone}</Td>
                             <Td center className="whitespace-nowrap">
-                                <Badge color={STATUS_COLOR[d.currentStatus] || 'gray'}>{d.status}</Badge>
+                                <Badge color={STATUS_COLOR[d.currentStatus?.toUpperCase()] || STATUS_COLOR[d.status?.toUpperCase()] || 'gray'}>{d.currentStatus}</Badge>
                             </Td>
                             <Td center className="whitespace-nowrap">
                                 <span className="flex items-center justify-center gap-1">

@@ -23,7 +23,7 @@ exports.create = async (data) => {
 exports.update = async (code, data) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Payment ${code} not found`);
-  if (existing.status !== 'PENDING')
+  if (existing.status?.toUpperCase() !== 'PENDING')
     throw new ValidationError(`Payment ${code} can only be updated when status is PENDING`);
   const result = schemas.paymentUpdate.safeParse(data);
   if (!result.success) throw new ValidationError('Invalid payment input', toFieldErrors(result.error));
@@ -33,7 +33,7 @@ exports.update = async (code, data) => {
 exports.remove = async (code) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Payment ${code} not found`);
-  if (existing.status !== 'PENDING')
+  if (existing.status?.toUpperCase() !== 'PENDING')
     throw new ValidationError(`Payment ${code} can only be deleted when status is PENDING`);
   await model.deleteById(existing.payment_id);
   return { message: `Payment ${code} deleted successfully` };

@@ -67,13 +67,25 @@ exports.create = async (data) => {
     if (!cust) throw Object.assign(new Error(`Customer ${data.customer_code} not found`), { name: 'NotFoundError' });
     const { rows: [store] } = await client.query('SELECT id FROM store WHERE code=$1', [data.store_code]);
     if (!store) throw Object.assign(new Error(`Store ${data.store_code} not found`), { name: 'NotFoundError' });
+    let code = data.code;
+    if (code && typeof code === 'string' && code.trim()) {
+      code = code.trim();
+    } else {
+      code = 'ORD-TMP-' + Date.now();
+    }
     const { rows: [ins] } = await client.query(
       'INSERT INTO "order" (customer_id,store_id,total_price,address_snapshot,status,code) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
-      [cust.id, store.id, data.total_price, data.address_snapshot, 'PENDING', 'ORD-TMP-' + Date.now()]
+      [cust.id, store.id, data.total_price, data.address_snapshot, 'PENDING', code]
     );
-    const year = new Date().getFullYear();
-    const code = 'ORD-' + year + '-' + String(ins.id).padStart(6, '0');
-    const { rows: [hdr] } = await client.query('UPDATE "order" SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);
+    let hdr;
+    if (!data.code || typeof data.code !== 'string' || !data.code.trim()) {
+      const fallbackCode = 'ORD-' + String(ins.id).padStart(6, '0');
+      const { rows: [updated] } = await client.query('UPDATE "order" SET code=$1 WHERE id=$2 RETURNING *', [fallbackCode, ins.id]);
+      hdr = updated;
+    } else {
+      const { rows: [selected] } = await client.query('SELECT * FROM "order" WHERE id=$1', [ins.id]);
+      hdr = selected;
+    }
     const items = [];
     for (const item of data.order_items) {
       const { rows: [i] } = await client.query(

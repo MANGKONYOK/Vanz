@@ -5,6 +5,7 @@ import { ArrowLeft, Save, CreditCard, RefreshCw, Search } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
 import { getJson, postJson, getApiErrorMessage } from '../../api/http';
 import { paymentHeaderSchema } from '../../schemas/finance';
+import { nextCode } from '../../api/codeGen';
 
 export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     const onBack = onNavigateBack || (() => {});
@@ -14,6 +15,10 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     const [deliverersList, setDeliverersList] = useState([]);
     const [unpaidOrders, setUnpaidOrders] = useState([]);
     const [loadingOrders, setLoadingOrders] = useState(false);
+
+    const [previewCode, setPreviewCode] = useState('…');
+    const [isAuto, setIsAuto] = useState(true);
+    const [customCode, setCustomCode] = useState('');
 
     const { control, register, handleSubmit, watch, formState: { errors } } = useForm({
         resolver: zodResolver(paymentHeaderSchema),
@@ -25,11 +30,12 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     const watchedEndDate = watch('endDate');
 
     useEffect(() => {
-        // Fetch deliverers and profiles from real db
+        // Fetch deliverers, profiles and existing payments to compute next payment code
         Promise.all([
             getJson('/deliverers'),
-            getJson('/profiles')
-        ]).then(([dlvs, profs]) => {
+            getJson('/profiles'),
+            getJson('/payments').catch(() => [])
+        ]).then(([dlvs, profs, pymts]) => {
             const profileMap = new Map(profs.map(p => [p.profile_id, p]));
             setDeliverersList(dlvs.map(d => {
                 const prof = profileMap.get(d.profile_id) || {};
@@ -39,6 +45,9 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                     type: d.vehicle_type || '—'
                 };
             }));
+
+            const codes = pymts.map(p => p.payment_code);
+            setPreviewCode(nextCode(codes, 'PAY-', 6));
         }).catch(err => {
             console.error('Failed to load deliverers for payment LoV:', err);
             showToast('Failed to load deliverers', 'error');
@@ -104,6 +113,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     };
 
     const onSubmit = async (headerData) => {
+        if (!isAuto && !customCode.trim()) return showToast('Custom Payment ID is required when Auto is unchecked', 'error');
         if (headerData.startDate && headerData.endDate && new Date(headerData.endDate) < new Date(headerData.startDate)) return showToast('Period end cannot be before period start', 'error');
         if (selected.length === 0) return showToast('Please select at least one unpaid order', 'error');
 
@@ -111,15 +121,16 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
         const deliveryId = selectedOrderObjects[0].deliveryId;
 
         const payload = {
+            code: isAuto ? previewCode : customCode.trim(),
             delivery_id: deliveryId,
             payment_period_start: headerData.startDate,
             payment_period_end: headerData.endDate,
-            total_payment: total,
+            total_payment: Math.round((total + Number.EPSILON) * 100) / 100,
             payment_items: selectedOrderObjects.map(o => ({
                 order_code: o.id,
-                delivery_fee: o.fee,
-                bonus: o.bonus,
-                adjustment_amount: o.adjustment
+                delivery_fee: Math.round((o.fee + Number.EPSILON) * 100) / 100,
+                bonus: Math.round((o.bonus + Number.EPSILON) * 100) / 100,
+                adjustment_amount: Math.round((o.adjustment + Number.EPSILON) * 100) / 100
             }))
         };
 
@@ -161,11 +172,24 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                 <h3 className="font-bold text-current mb-4">Payment Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField label="Payment ID">
-                        <Input 
-                            value="PAY-AUTO (Assigned on save)" 
-                            readOnly
-                            className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
-                        />
+                        <div className="flex items-center gap-2 mt-1">
+                            <Input
+                                value={isAuto ? previewCode : customCode}
+                                onChange={e => setCustomCode(e.target.value)}
+                                readOnly={isAuto}
+                                className={`font-mono flex-1 ${isAuto ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300' : ''}`}
+                                placeholder="PAY-000001"
+                            />
+                            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-gray-300 select-none cursor-pointer shrink-0 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/55 transition-colors h-9">
+                                <input
+                                    type="checkbox"
+                                    checked={isAuto}
+                                    onChange={e => setIsAuto(e.target.checked)}
+                                    className="rounded accent-red-650 cursor-pointer"
+                                />
+                                <span>Auto</span>
+                            </label>
+                        </div>
                     </FormField>
                     <FormField label="Deliverer" required error={errors.deliverer?.message}>
                         <Controller
@@ -191,9 +215,9 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                             control={control}
                             render={({ field }) => (
                                 <Select value={field.value} onChange={e => field.onChange(e.target.value)}>
-                                    <option value="PENDING">PENDING</option>
-                                    <option value="PAID">PAID</option>
-                                    <option value="CANCELLED">CANCELLED</option>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="PAID">Paid</option>
+                                    <option value="CANCELLED">Cancelled</option>
                                 </Select>
                             )}
                         />
@@ -245,10 +269,10 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                                 <Td bold mono>{o.id}</Td>
                                 <Td>{o.date}</Td>
                                 <Td center><Badge color="amber">{o.status}</Badge></Td>
-                                <Td right>฿{o.fee}</Td>
-                                <Td right>฿{o.bonus}</Td>
-                                <Td right>฿{o.adjustment}</Td>
-                                <Td right bold>฿{o.fee + o.bonus + o.adjustment}</Td>
+                                <Td right>฿{parseFloat(o.fee || 0).toFixed(2)}</Td>
+                                <Td right>฿{parseFloat(o.bonus || 0).toFixed(2)}</Td>
+                                <Td right>฿{parseFloat(o.adjustment || 0).toFixed(2)}</Td>
+                                <Td right bold>฿{parseFloat((o.fee + o.bonus + o.adjustment) || 0).toFixed(2)}</Td>
                             </Tr>
                         ))
                     )}
@@ -258,7 +282,7 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                     <div className="flex items-center gap-6">
                         <div className="text-right">
                             <p className="text-xs text-slate-500 dark:text-gray-300 font-bold uppercase tracking-wide">Total Payment</p>
-                            <p className="text-3xl font-black text-current font-bold mono">฿{total}</p>
+                            <p className="text-3xl font-black text-current font-bold mono">฿{total.toFixed(2)}</p>
                         </div>
                         <Btn onClick={handleSubmit(onSubmit)} size="lg">
                             <CreditCard className="w-4 h-4" /> Confirm Payment

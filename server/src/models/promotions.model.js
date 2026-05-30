@@ -64,14 +64,25 @@ exports.create = async (data) => {
     const { rows: [s] } = await client.query('SELECT id FROM store WHERE code=$1', [data.store_code]);
     if (!s) throw Object.assign(new Error(`Store ${data.store_code} not found`), { name: 'NotFoundError' });
 
-    // promotion.code is NOT NULL UNIQUE — insert a temp placeholder, then UPDATE with real code
-    const tmp = 'PROMO-TMP-' + Date.now();
+    let code = data.code;
+    if (code && typeof code === 'string' && code.trim()) {
+      code = code.trim();
+    } else {
+      code = 'PROMO-TMP-' + Date.now();
+    }
     const { rows: [ins] } = await client.query(
       'INSERT INTO promotion (store_id,name,start_date,end_date,discount_type,code) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
-      [s.id, data.name, data.start_date, data.end_date, data.discount_type, tmp]
+      [s.id, data.name, data.start_date, data.end_date, data.discount_type, code]
     );
-    const code = 'PROMO-' + String(ins.id).padStart(4, '0');
-    const { rows: [hdr] } = await client.query('UPDATE promotion SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);
+    let hdr;
+    if (!data.code || typeof data.code !== 'string' || !data.code.trim()) {
+      const fallbackCode = 'PROMO-' + String(ins.id).padStart(6, '0');
+      const { rows: [updated] } = await client.query('UPDATE promotion SET code=$1 WHERE id=$2 RETURNING *', [fallbackCode, ins.id]);
+      hdr = updated;
+    } else {
+      const { rows: [selected] } = await client.query('SELECT * FROM promotion WHERE id=$1', [ins.id]);
+      hdr = selected;
+    }
 
     // promotion_items.id is plain bigint NOT NULL — must supply explicitly
     const items = [];

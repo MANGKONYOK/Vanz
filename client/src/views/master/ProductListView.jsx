@@ -146,7 +146,7 @@ export default function ProductListView({ showToast }) {
                             <Select
                                 value={pageSize}
                                 onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
-                                className="h-9 border-slate-200 bg-white shadow-sm w-24"
+                                className="h-9 border-slate-200 bg-white shadow-sm w-28"
                             >
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
@@ -187,7 +187,7 @@ export default function ProductListView({ showToast }) {
                             <Td className="text-slate-600 dark:text-gray-300 whitespace-nowrap">{p.storeName}</Td>
                             <Td right bold mono className="whitespace-nowrap">฿{parseFloat(p.price).toFixed(2)}</Td>
                             <Td center className="whitespace-nowrap">
-                                <Badge color={STATUS_COLOR[p.status] || 'gray'}>{p.status}</Badge>
+                                <Badge color={STATUS_COLOR[p.status?.toUpperCase()] || 'gray'}>{p.status}</Badge>
                             </Td>
                             <Td right className="whitespace-nowrap">
                                 <div className="flex justify-end gap-2">

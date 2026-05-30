@@ -22,7 +22,7 @@ exports.create = async (data) => {
 exports.update = async (code, data) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Expense Voucher ${code} not found`);
-  if (existing.status !== 'DRAFT')
+  if (existing.status?.toUpperCase() !== 'DRAFT')
     throw new ValidationError(`Expense Voucher ${code} can only be updated when status is DRAFT`);
   const result = schemas.expenseVoucherUpdate.safeParse(data);
   if (!result.success) throw new ValidationError('Invalid expense voucher input', toFieldErrors(result.error));
@@ -32,7 +32,7 @@ exports.update = async (code, data) => {
 exports.remove = async (code) => {
   const existing = await model.findByCode(code);
   if (!existing) throw new NotFoundError(`Expense Voucher ${code} not found`);
-  if (existing.status !== 'DRAFT')
+  if (existing.status?.toUpperCase() !== 'DRAFT')
     throw new ValidationError(`Expense Voucher ${code} can only be deleted when status is DRAFT`);
   await model.deleteById(existing.expense_voucher_id);
   return { message: `Expense Voucher ${code} deleted successfully` };
