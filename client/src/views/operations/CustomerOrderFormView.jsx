@@ -1,38 +1,92 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Save, Plus, Trash2, Check, Search } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Search } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Td, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
-import { MOCK_CUSTOMERS, MOCK_STORES, MOCK_PRODUCTS } from '../../data/mockData';
+import { getJson, postJson, getApiErrorMessage } from '../../api/http';
 import { orderHeaderSchema } from '../../schemas/operations';
 
 export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
     const onBack = onNavigateBack || (() => {});
-    const [orderId, setOrderId] = useState('');
-    const [autoId, setAutoId] = useState(true);
+    const [customers, setCustomers] = useState([]);
+    const [stores, setStores] = useState([]);
+    const [products, setProducts] = useState([]);
     const [items, setItems] = useState([{ id: 1, productId: '', productName: '', qty: 1, price: 0 }]);
     const [activeLov, setActiveLov] = useState(null);
     const [search, setSearch] = useState('');
 
-    const { control, register, handleSubmit, reset, formState: { errors } } = useForm({
+    const { control, register, handleSubmit, formState: { errors } } = useForm({
         resolver: zodResolver(orderHeaderSchema),
         defaultValues: { customer: '', store: '', deliveryAddress: '123 Sukhumvit Road' },
     });
 
-    const total = items.reduce((s, i) => s + (i.qty * i.price), 0);
-    const displayId = autoId ? (orderId || 'ORD-AUTO') : orderId;
+    useEffect(() => {
+        // Fetch customers, profiles, stores, and products from real db
+        Promise.all([
+            getJson('/customers'),
+            getJson('/profiles'),
+            getJson('/stores'),
+            getJson('/store-products'),
+        ]).then(([custs, profs, strs, prods]) => {
+            const profileMap = new Map(profs.map(p => [p.profile_id, p]));
+            setCustomers(custs.map(c => {
+                const prof = profileMap.get(c.profile_id) || {};
+                return {
+                    id: c.customer_code,
+                    name: prof.full_name || '—',
+                    phone: prof.phone || '—'
+                };
+            }));
+            setStores(strs.map(s => ({
+                id: s.store_code,
+                name: s.name,
+                category: s.category || '—'
+            })));
+            setProducts(prods.map(p => ({
+                id: p.product_id,
+                name: p.name,
+                price: parseFloat(p.unit_price || 0)
+            })));
+        }).catch(err => {
+            console.error('Failed to load master records for order form:', err);
+            showToast('Failed to load master records', 'error');
+        });
+    }, [showToast]);
 
-    const onSubmit = (headerData) => {
+    const total = items.reduce((s, i) => s + (i.qty * i.price), 0);
+
+    const onSubmit = async (headerData) => {
         if (items.length === 0) return showToast('Order must contain at least one item', 'error');
         if (items.some(i => !i.productName || i.qty <= 0)) return showToast('Please select valid products with positive quantities', 'error');
-        showToast('Order saved successfully!');
-        setItems([{ id: 1, productId: '', productName: '', qty: 1, price: 0 }]);
-        reset();
+
+        const customerCode = headerData.customer.split(' – ')[0];
+        const storeCode = headerData.store.split(' – ')[0];
+
+        const payload = {
+            customer_code: customerCode,
+            store_code: storeCode,
+            address_snapshot: headerData.deliveryAddress,
+            total_price: total,
+            order_items: items.map(i => ({
+                product_id: parseInt(i.productId, 10) || i.productId,
+                quantity: i.qty,
+                unit_price: i.price,
+                extend_price: i.qty * i.price
+            }))
+        };
+
+        try {
+            await postJson('/orders', payload);
+            showToast('Order saved successfully!');
+            onBack();
+        } catch (err) {
+            showToast(getApiErrorMessage(err, 'Failed to place order'), 'error');
+        }
     };
 
     const filteredItems = items.filter(it => 
         it.productName.toLowerCase().includes(search.toLowerCase()) ||
-        it.productId.toLowerCase().includes(search.toLowerCase())
+        String(it.productId).includes(search)
     );
 
     return (
@@ -47,7 +101,7 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                         render={({ field: storeField }) => (
                             <LovModal isOpen={!!activeLov} onClose={() => setActiveLov(null)} title={activeLov?.type === 'product' ? 'Product' : activeLov?.type === 'store' ? 'Store' : 'Customer'}
                                 columns={activeLov?.type === 'product' ? [{ key: 'id', label: 'ID' }, { key: 'name', label: 'Product' }, { key: 'price', label: 'Price' }] : activeLov?.type === 'store' ? [{ key: 'id', label: 'ID' }, { key: 'name', label: 'Store Name' }, { key: 'category', label: 'Category' }] : [{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'phone', label: 'Phone' }]}
-                                data={activeLov?.type === 'product' ? MOCK_PRODUCTS : activeLov?.type === 'store' ? MOCK_STORES : MOCK_CUSTOMERS}
+                                data={activeLov?.type === 'product' ? products : activeLov?.type === 'store' ? stores : customers}
                                 onSelect={r => {
                                     if (activeLov.type === 'product') { const n = [...items]; n[activeLov.index].productName = r.name; n[activeLov.index].price = r.price || 0; n[activeLov.index].productId = r.id; setItems(n); }
                                     else if (activeLov.type === 'store') { storeField.onChange(`${r.id} – ${r.name}`); }
@@ -63,33 +117,13 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-4">Order Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-end gap-3">
-                        <div className="flex-1">
-                            <FormField label="Order ID" required>
-                                <Input 
-                                    value={displayId} 
-                                    onChange={e => setOrderId(e.target.value.toUpperCase())} 
-                                    placeholder="ORD-001" 
-                                    readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
-                                />
-                            </FormField>
-                        </div>
-                        <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
-                            <div className="relative">
-                                <input 
-                                    type="checkbox" 
-                                    checked={autoId} 
-                                    onChange={e => setAutoId(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-5 h-5 border-2 border-slate-300 dark:border-white bg-transparent rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
-                                    <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
-                                </div>
-                            </div>
-                            <span className="text-sm font-bold text-slate-700 dark:text-gray-200 font-sans">Auto</span>
-                        </label>
-                    </div>
+                    <FormField label="Order ID">
+                        <Input 
+                            value="ORD-AUTO (Assigned on save)" 
+                            readOnly
+                            className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
+                        />
+                    </FormField>
                     <FormField label="Customer" required error={errors.customer?.message}>
                         <Controller
                             name="customer"
@@ -116,9 +150,6 @@ export default function CustomerOrderFormView({ showToast, onNavigateBack }) {
                     </FormField>
                     <FormField label="Payment Method" required>
                         <Select><option>Cash</option><option>PromptPay</option><option>Credit Card</option></Select>
-                    </FormField>
-                    <FormField label="Date">
-                        <Input type="date" defaultValue="2026-03-23" />
                     </FormField>
                 </div>
             </Card>

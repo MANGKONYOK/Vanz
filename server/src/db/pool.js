@@ -2,6 +2,21 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// Parse unified DATABASE_URL if present
+if (process.env.DATABASE_URL) {
+  try {
+    const parsed = new URL(process.env.DATABASE_URL);
+    process.env.DB_PROTOCOL = parsed.protocol.replace(':', '');
+    process.env.DB_USERNAME = decodeURIComponent(parsed.username || '');
+    process.env.DB_PASSWORD = decodeURIComponent(parsed.password || '');
+    process.env.DB_HOST = parsed.hostname || '';
+    process.env.DB_PORT = parsed.port || '5432';
+    process.env.DB_NAME = parsed.pathname.replace(/^\//, '') || '';
+  } catch (e) {
+    console.error('[pool] Failed to parse DATABASE_URL:', e.message);
+  }
+}
+
 const sslEnabled = String(process.env.DB_SSL || '').toLowerCase() === 'true';
 
 const dbProtocol = process.env.DB_PROTOCAL || process.env.DB_PROTOCOL;
@@ -12,7 +27,7 @@ const dbUsername = process.env.DB_USERNAME;
 const dbPassword = process.env.DB_PASSWORD;
 
 const missing = [];
-if (!dbProtocol) missing.push('DB_PROTOCAL');
+if (!dbProtocol) missing.push('DB_PROTOCOL');
 if (!dbHost) missing.push('DB_HOST');
 if (!dbPortRaw) missing.push('DB_PORT');
 if (!dbName) missing.push('DB_NAME');
@@ -26,9 +41,10 @@ if (missing.length > 0) {
   );
 }
 
-if (String(dbProtocol).toLowerCase() !== 'postgresql') {
+const protocolLower = String(dbProtocol).toLowerCase();
+if (protocolLower !== 'postgresql' && protocolLower !== 'postgres') {
   throw new Error(
-    `Unsupported DB_PROTOCAL value "${dbProtocol}". Expected "postgresql".`,
+    `Unsupported DB_PROTOCOL value "${dbProtocol}". Expected "postgresql" or "postgres".`,
   );
 }
 
@@ -57,10 +73,10 @@ pool
   .connect()
   .then((client) => {
     client.release();
+    console.log('[pool] Successfully connected to PostgreSQL.');
   })
   .catch((err) => {
     console.error('[pool] Failed to connect to PostgreSQL:', err.message);
-    process.exit(1);
   });
 
 pool.on('error', (err) => {

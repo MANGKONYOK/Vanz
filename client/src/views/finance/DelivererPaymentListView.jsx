@@ -1,26 +1,74 @@
-import { useState } from 'react';
-import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal } from '../../components/ui';
-
-const INITIAL_PAYMENTS = [
-    { id: 'PAY-2026-000456', period: 'Mar 2026', date: '2026-03-24', delivererName: 'Somchai Jaidee', status: 'PAID', amount: 2450 },
-    { id: 'PAY-2026-000457', period: 'Mar 2026', date: '2026-03-22', delivererName: 'Kittisak Phromsorn', status: 'PAID', amount: 1500 },
-    { id: 'PAY-2026-000458', period: 'Mar 2026', date: '2026-03-20', delivererName: 'Wanchai Boonmee', status: 'PENDING', amount: 450 }
-];
+import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 
 export default function DelivererPaymentListView({ onNavigate, showToast }) {
-    const [payments, setPayments] = useState(INITIAL_PAYMENTS);
+    const [payments, setPayments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [tick, setTick] = useState(0);
     const [search, setSearch] = useState('');
     const [sort, setSort] = useState({ key: 'date', direction: 'desc' });
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-    const confirmDelete = () => {
+    const refresh = () => {
+        setLoading(true);
+        setError(null);
+        setTick(t => t + 1);
+    };
+
+    useEffect(() => {
+        let cancelled = false;
+        Promise.all([
+            getJson('/payments'),
+            getJson('/deliverers'),
+            getJson('/profiles'),
+            getJson('/deliveries'),
+        ]).then(([paymentsList, deliverersList, profilesList, deliveriesList]) => {
+            if (cancelled) return;
+            const delivererMap = new Map(deliverersList.map(d => [d.deliverer_id, d]));
+            const profileMap = new Map(profilesList.map(p => [p.profile_id, p]));
+            const deliveryMap = new Map(deliveriesList.map(dl => [dl.delivery_id || dl.id, dl]));
+
+            const joined = paymentsList.map(p => {
+                const deliv = deliveryMap.get(p.delivery_id) || {};
+                const dlv = delivererMap.get(deliv.deliverer_id) || {};
+                const prof = profileMap.get(dlv.profile_id) || {};
+                return {
+                    id: p.payment_code,
+                    period: `${p.payment_period_start} to ${p.payment_period_end}`,
+                    date: p.payment_datetime ? new Date(p.payment_datetime).toLocaleDateString() : '—',
+                    delivererName: prof.full_name || '—',
+                    amount: parseFloat(p.total_payment || 0),
+                    status: p.status || 'PENDING'
+                };
+            });
+            setPayments(joined);
+        }).catch(err => {
+            if (!cancelled) {
+                setError(err);
+                showToast(getApiErrorMessage(err, 'Failed to load payments'), 'error');
+            }
+        }).finally(() => {
+            if (!cancelled) setLoading(false);
+        });
+        return () => { cancelled = true; };
+    }, [tick, showToast]);
+
+    const confirmDelete = async () => {
         if (confirmDeleteId) {
-            setPayments(prev => prev.filter(p => p.id !== confirmDeleteId));
-            showToast(`Payment ${confirmDeleteId} deleted successfully`, 'error');
-            setConfirmDeleteId(null);
+            try {
+                await deleteJson(`/payments/${confirmDeleteId}`);
+                showToast(`Payment record ${confirmDeleteId} deleted successfully`);
+                setConfirmDeleteId(null);
+                refresh();
+            } catch (err) {
+                showToast(getApiErrorMessage(err, 'Delete failed'), 'error');
+                setConfirmDeleteId(null);
+            }
         }
     };
 
@@ -34,8 +82,8 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
 
     // 2. Sort
     const sorted = [...filtered].sort((a, b) => {
-        const valA = a[sort.key];
-        const valB = b[sort.key];
+        const valA = a[sort.key] ?? '';
+        const valB = b[sort.key] ?? '';
         if (valA < valB) return sort.direction === 'asc' ? -1 : 1;
         if (valA > valB) return sort.direction === 'asc' ? 1 : -1;
         return 0;
@@ -84,9 +132,22 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                         { label: 'Actions', right: true, width: '14%' }
                     ]}
                 >
-                    {paginated.map(p => (
+                    {loading ? (
+                        <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">Loading…</Td></Tr>
+                    ) : error ? (
+                        <Tr><Td colSpan={6} className="text-center py-8">
+                            <div className="flex flex-col items-center justify-center text-red-500 gap-2">
+                                <AlertCircle className="w-8 h-8 text-red-500 animate-bounce" />
+                                <span className="font-semibold text-sm">Network Error: Failed to fetch data from server</span>
+                                <span className="text-xs text-slate-400">{error.message || 'Please check your connection.'}</span>
+                                <Btn size="sm" variant="secondary" onClick={refresh} className="mt-2">Retry</Btn>
+                            </div>
+                        </Td></Tr>
+                    ) : paginated.length === 0 ? (
+                        <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">No payments found</Td></Tr>
+                    ) : paginated.map(p => (
                         <Tr key={p.id}>
-                            <Td mono className="text-xs font-bold text-slate-900 dark:text-slate-100">{p.id}</Td>
+                            <Td mono className="text-xs font-bold text-slate-950 dark:text-slate-100">{p.id}</Td>
                             <Td>{p.date}</Td>
                             <Td bold>{p.delivererName}</Td>
                             <Td right bold>฿{p.amount?.toLocaleString()}</Td>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 import CustomerFormView from './CustomerFormView';
@@ -10,17 +10,21 @@ export default function CustomerListView({ showToast }) {
     const [editing, setEditing] = useState(null);
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [tick, setTick] = useState(0);
     const [search, setSearch] = useState('');
     const [sort, setSort] = useState({ key: 'name', direction: 'asc' });
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-    const refresh = () => setTick(t => t + 1);
+    const refresh = () => {
+        setLoading(true);
+        setError(null);
+        setTick(t => t + 1);
+    };
 
     useEffect(() => {
         let cancelled = false;
-        setLoading(true);
         Promise.all([
             getJson('/customers'),
             getJson('/profiles'),
@@ -50,12 +54,15 @@ export default function CustomerListView({ showToast }) {
             });
             setRows(joined);
         }).catch(err => {
-            if (!cancelled) showToast(getApiErrorMessage(err, 'Failed to load customers'), 'error');
+            if (!cancelled) {
+                setError(err);
+                showToast(getApiErrorMessage(err, 'Failed to load customers'), 'error');
+            }
         }).finally(() => {
             if (!cancelled) setLoading(false);
         });
         return () => { cancelled = true; };
-    }, [tick]);
+    }, [tick, showToast]);
 
     const handleDelete = async (c) => {
         if (!window.confirm(`Delete customer ${c.customerCode}?`)) return;
@@ -157,6 +164,15 @@ export default function CustomerListView({ showToast }) {
                 >
                     {loading ? (
                         <Tr><Td colSpan={7} className="text-center text-slate-400 py-8">Loading…</Td></Tr>
+                    ) : error ? (
+                        <Tr><Td colSpan={7} className="text-center py-8">
+                            <div className="flex flex-col items-center justify-center text-red-500 gap-2">
+                                <AlertCircle className="w-8 h-8 text-red-500 animate-bounce" />
+                                <span className="font-semibold text-sm">Network Error: Failed to fetch data from server</span>
+                                <span className="text-xs text-slate-400">{error.message || 'Please check your connection.'}</span>
+                                <Btn size="sm" variant="secondary" onClick={refresh} className="mt-2">Retry</Btn>
+                            </div>
+                        </Td></Tr>
                     ) : paginated.length === 0 ? (
                         <Tr><Td colSpan={7} className="text-center text-slate-400 py-8">No customers found</Td></Tr>
                     ) : paginated.map(c => (

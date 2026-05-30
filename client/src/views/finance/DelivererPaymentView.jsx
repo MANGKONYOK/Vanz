@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Save, CreditCard, RefreshCw, Search, Check } from 'lucide-react';
+import { ArrowLeft, Save, CreditCard, RefreshCw, Search } from 'lucide-react';
 import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
-import { MOCK_DELIVERERS, INITIAL_ORDERS } from '../../data/mockData';
+import { getJson, postJson, getApiErrorMessage } from '../../api/http';
 import { paymentHeaderSchema } from '../../schemas/finance';
 
 export default function DelivererPaymentView({ showToast, onNavigateBack }) {
@@ -11,43 +11,133 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
     const [selected, setSelected] = useState([]);
     const [isLovOpen, setIsLovOpen] = useState(false);
     const [search, setSearch] = useState('');
-    const [paymentId, setPaymentId] = useState('');
-    const [autoId, setAutoId] = useState(true);
+    const [deliverersList, setDeliverersList] = useState([]);
+    const [unpaidOrders, setUnpaidOrders] = useState([]);
+    const [loadingOrders, setLoadingOrders] = useState(false);
 
-    const { control, register, handleSubmit, watch, reset, setValue, formState: { errors } } = useForm({
+    const { control, register, handleSubmit, watch, formState: { errors } } = useForm({
         resolver: zodResolver(paymentHeaderSchema),
-        defaultValues: { deliverer: '', paymentDate: '2026-03-23', startDate: '2026-03-01', endDate: '2026-03-31', status: 'PENDING' },
+        defaultValues: { deliverer: '', paymentDate: new Date().toISOString().split('T')[0], startDate: '2026-03-01', endDate: '2026-03-31', status: 'PENDING' },
     });
-
-    const displayPaymentId = autoId ? (paymentId || 'PAY-AUTO') : paymentId;
 
     const watchedDeliverer = watch('deliverer');
     const watchedStartDate = watch('startDate');
     const watchedEndDate = watch('endDate');
 
-    const onSubmit = (headerData) => {
-        if (!autoId && !paymentId.trim()) return showToast('Please enter a Payment ID', 'error');
-        if (headerData.startDate && headerData.endDate && new Date(headerData.endDate) < new Date(headerData.startDate)) return showToast('Period end cannot be before period start', 'error');
-        if (selected.length === 0) return showToast('Please select at least one unpaid order', 'error');
-        showToast('Payment confirmed successfully!'); setSelected([]); reset(); onBack();
-    };
+    useEffect(() => {
+        // Fetch deliverers and profiles from real db
+        Promise.all([
+            getJson('/deliverers'),
+            getJson('/profiles')
+        ]).then(([dlvs, profs]) => {
+            const profileMap = new Map(profs.map(p => [p.profile_id, p]));
+            setDeliverersList(dlvs.map(d => {
+                const prof = profileMap.get(d.profile_id) || {};
+                return {
+                    id: d.deliverer_code,
+                    name: prof.full_name || '—',
+                    type: d.vehicle_type || '—'
+                };
+            }));
+        }).catch(err => {
+            console.error('Failed to load deliverers for payment LoV:', err);
+            showToast('Failed to load deliverers', 'error');
+        });
+    }, [showToast]);
 
     const handleLoadOrders = () => {
-        showToast('Orders reloaded successfully!');
+        if (!watchedDeliverer) return showToast('Please select a deliverer first', 'error');
+
+        setLoadingOrders(true);
+        Promise.all([
+            getJson('/deliveries'),
+            getJson('/orders'),
+            getJson('/payments'),
+            getJson('/stores'),
+            getJson('/deliverers')
+        ]).then(([delivs, ords, pymts, strs, dlvs]) => {
+            const delivererCode = watchedDeliverer.split(' – ')[0];
+            const dlv = dlvs.find(d => d.deliverer_code === delivererCode);
+            if (!dlv) return setUnpaidOrders([]);
+
+            // Filter deliveries for this deliverer
+            const myDelivs = delivs.filter(d => d.deliverer_id === dlv.deliverer_id);
+            const myDelivsMap = new Map(myDelivs.map(d => [d.order_id, d]));
+
+            // Filter paid delivery IDs
+            const paidDeliveryIds = new Set(pymts.map(p => p.delivery_id));
+
+            // Map stores
+            const storeMap = new Map(strs.map(s => [s.store_id, s]));
+
+            // Filter completed unpaid orders for this deliverer
+            const unpaid = ords.filter(o => {
+                const deliv = myDelivsMap.get(o.order_id);
+                if (!deliv) return false;
+                if (paidDeliveryIds.has(deliv.delivery_id)) return false;
+                const oDate = o.order_date ? o.order_date.split('T')[0] : '';
+                if (watchedStartDate && oDate < watchedStartDate) return false;
+                if (watchedEndDate && oDate > watchedEndDate) return false;
+                return true;
+            }).map(o => {
+                const deliv = myDelivsMap.get(o.order_id) || {};
+                const store = storeMap.get(o.store_id) || {};
+                return {
+                    id: o.order_code,
+                    date: o.order_date ? o.order_date.split('T')[0] : '—',
+                    deliveryId: deliv.delivery_id,
+                    fee: parseFloat(deliv.delivery_fee || 40),
+                    bonus: 0,
+                    adjustment: 0,
+                    status: 'PENDING',
+                    store: store.name || '—'
+                };
+            });
+            setUnpaidOrders(unpaid);
+            showToast('Unpaid orders loaded successfully!');
+        }).catch(err => {
+            console.error('Failed to load unpaid orders:', err);
+            showToast('Failed to load completed orders', 'error');
+        }).finally(() => {
+            setLoadingOrders(false);
+        });
     };
 
-    // Extract deliverer ID (e.g. 'D-001' from 'D-001 – Somchai J.')
-    const delivererId = watchedDeliverer ? watchedDeliverer.split(' – ')[0] : '';
+    const onSubmit = async (headerData) => {
+        if (headerData.startDate && headerData.endDate && new Date(headerData.endDate) < new Date(headerData.startDate)) return showToast('Period end cannot be before period start', 'error');
+        if (selected.length === 0) return showToast('Please select at least one unpaid order', 'error');
 
-    const filteredOrders = INITIAL_ORDERS.filter(o => {
-        const matchesSearch = o.id.toLowerCase().includes(search.toLowerCase()) || o.date.includes(search);
-        const matchesDeliverer = !delivererId || o.deliverer === delivererId;
-        const matchesStartDate = !watchedStartDate || o.date >= watchedStartDate;
-        const matchesEndDate = !watchedEndDate || o.date <= watchedEndDate;
-        return matchesSearch && matchesDeliverer && matchesStartDate && matchesEndDate;
+        const selectedOrderObjects = unpaidOrders.filter(o => selected.includes(o.id));
+        const deliveryId = selectedOrderObjects[0].deliveryId;
+
+        const payload = {
+            delivery_id: deliveryId,
+            payment_period_start: headerData.startDate,
+            payment_period_end: headerData.endDate,
+            total_payment: total,
+            payment_items: selectedOrderObjects.map(o => ({
+                order_code: o.id,
+                delivery_fee: o.fee,
+                bonus: o.bonus,
+                adjustment_amount: o.adjustment
+            }))
+        };
+
+        try {
+            await postJson('/payments', payload);
+            showToast('Payment processed successfully!');
+            setSelected([]);
+            onBack();
+        } catch (err) {
+            showToast(getApiErrorMessage(err, 'Failed to process payment'), 'error');
+        }
+    };
+
+    const filteredOrders = unpaidOrders.filter(o => {
+        return o.id.toLowerCase().includes(search.toLowerCase()) || o.date.includes(search);
     });
 
-    const selectedOrders = INITIAL_ORDERS.filter(o => selected.includes(o.id));
+    const selectedOrders = unpaidOrders.filter(o => selected.includes(o.id));
     const total = selectedOrders.reduce((s, o) => s + o.fee + o.bonus + o.adjustment, 0);
 
     return (
@@ -58,10 +148,10 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                 render={({ field }) => (
                     <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
                         columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Vehicle' }]}
-                        data={MOCK_DELIVERERS} onSelect={r => { field.onChange(`${r.id} – ${r.name}`); setSelected([]); setIsLovOpen(false); }} />
+                        data={deliverersList} onSelect={r => { field.onChange(`${r.id} – ${r.name}`); setSelected([]); setUnpaidOrders([]); setIsLovOpen(false); }} />
                 )}
             />
-                   <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors mb-2">
+            <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors mb-2">
                 <ArrowLeft className="w-4 h-4" /> Back to Payments
             </button>
             
@@ -70,33 +160,13 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-4">Payment Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-end gap-3">
-                        <div className="flex-1">
-                            <FormField label="Payment ID" required>
-                                <Input 
-                                    value={displayPaymentId} 
-                                    onChange={e => setPaymentId(e.target.value.toUpperCase())} 
-                                    placeholder="PAY-001" 
-                                    readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
-                                />
-                            </FormField>
-                        </div>
-                        <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
-                            <div className="relative">
-                                <input 
-                                    type="checkbox" 
-                                    checked={autoId} 
-                                    onChange={e => setAutoId(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-5 h-5 border-2 border-slate-300 dark:border-white bg-transparent rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
-                                    <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
-                                </div>
-                            </div>
-                            <span className="text-sm font-bold text-slate-700 dark:text-gray-200 font-sans">Auto</span>
-                        </label>
-                    </div>
+                    <FormField label="Payment ID">
+                        <Input 
+                            value="PAY-AUTO (Assigned on save)" 
+                            readOnly
+                            className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
+                        />
+                    </FormField>
                     <FormField label="Deliverer" required error={errors.deliverer?.message}>
                         <Controller
                             name="deliverer"
@@ -110,10 +180,10 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                         <Input type="date" {...register('paymentDate')} />
                     </FormField>
                     <FormField label="Period Start" required error={errors.startDate?.message}>
-                        <Input type="date" {...register('startDate', { onChange: () => setSelected([]) })} />
+                        <Input type="date" {...register('startDate', { onChange: () => { setSelected([]); setUnpaidOrders([]); } })} />
                     </FormField>
                     <FormField label="Period End" required error={errors.endDate?.message}>
-                        <Input type="date" {...register('endDate', { onChange: () => setSelected([]) })} />
+                        <Input type="date" {...register('endDate', { onChange: () => { setSelected([]); setUnpaidOrders([]); } })} />
                     </FormField>
                     <FormField label="Status" error={errors.status?.message}>
                         <Controller
@@ -149,7 +219,13 @@ export default function DelivererPaymentView({ showToast, onNavigateBack }) {
                     ]} 
                     minWidth="700px"
                 >
-                    {filteredOrders.length === 0 ? (
+                    {loadingOrders ? (
+                        <tr>
+                            <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-400 font-medium bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                                Loading orders…
+                            </td>
+                        </tr>
+                    ) : filteredOrders.length === 0 ? (
                         <tr>
                             <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500 dark:text-gray-300 font-medium bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                                 No unpaid orders found for the selected criteria.

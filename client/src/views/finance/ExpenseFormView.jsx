@@ -1,32 +1,78 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Save, Plus, Trash2, Search, Check } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Search } from 'lucide-react';
 import { Btn, Card, CardHeader, Table, Td, FormField, Input, Select, LovInput, LovModal } from '../../components/ui';
-import { MOCK_DELIVERERS } from '../../data/mockData';
+import { getJson, postJson, getApiErrorMessage } from '../../api/http';
 import { expenseHeaderSchema } from '../../schemas/finance';
 
 export default function ExpenseFormView({ onNavigateBack, showToast }) {
-    const [items, setItems] = useState([{ id: 1, type: 'Toll', desc: 'Expressway', amount: 50, receipt: 'RC-9901' }]);
+    const [items, setItems] = useState([{ id: 1, type: 'TOLL', desc: 'Expressway', amount: 50, receipt: 'RC-9901' }]);
     const [isLovOpen, setIsLovOpen] = useState(false);
     const [search, setSearch] = useState('');
-    const [voucherId, setVoucherId] = useState('');
-    const [autoId, setAutoId] = useState(true);
+    const [deliveriesList, setDeliveriesList] = useState([]);
 
-    const { control, register, handleSubmit, reset, formState: { errors } } = useForm({
+    const { control, register, handleSubmit, formState: { errors } } = useForm({
         resolver: zodResolver(expenseHeaderSchema),
-        defaultValues: { delivererId: '', voucherDate: '2026-03-23', status: 'DRAFT', approvedBy: '' },
+        defaultValues: { delivererId: '', voucherDate: new Date().toISOString().split('T')[0], status: 'DRAFT', approvedBy: 'System Admin' },
     });
 
-    const displayVoucherId = autoId ? (voucherId || 'EXP-AUTO') : voucherId;
+    useEffect(() => {
+        // Fetch deliveries, deliverers, profiles, and orders to populate LoV
+        Promise.all([
+            getJson('/deliveries'),
+            getJson('/deliverers'),
+            getJson('/profiles'),
+            getJson('/orders')
+        ]).then(([delivs, dlvs, profs, ords]) => {
+            const delivererMap = new Map(dlvs.map(d => [d.deliverer_id, d]));
+            const profileMap = new Map(profs.map(p => [p.profile_id, p]));
+            const orderMap = new Map(ords.map(o => [o.order_id, o]));
+
+            setDeliveriesList(delivs.map(d => {
+                const dlv = delivererMap.get(d.deliverer_id) || {};
+                const prof = profileMap.get(dlv.profile_id) || {};
+                const ord = orderMap.get(d.order_id) || {};
+                return {
+                    id: d.delivery_id,
+                    name: prof.full_name || '—',
+                    type: `${d.delivery_type} (Order: ${ord.order_code || '—'})`
+                };
+            }));
+        }).catch(err => {
+            console.error('Failed to load deliveries for LoV:', err);
+            showToast('Failed to load deliveries list', 'error');
+        });
+    }, [showToast]);
+
     const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
 
-    const onSubmit = (headerData) => {
-        if (!autoId && !voucherId.trim()) return showToast('Please enter a Voucher ID', 'error');
+    const onSubmit = async (headerData) => {
         if (items.length === 0) return showToast('Voucher must contain at least one expense item', 'error');
         if (items.some(i => i.amount <= 0)) return showToast('All expense amounts must be greater than zero', 'error');
         if (items.some(i => !i.desc.trim())) return showToast('Please provide descriptions for all expense items', 'error');
-        showToast('Voucher saved successfully!'); onNavigateBack();
+
+        const deliveryId = parseInt(headerData.delivererId.split(' – ')[0], 10);
+
+        const payload = {
+            delivery_id: deliveryId,
+            voucher_date: headerData.voucherDate,
+            total_amount: totalAmount,
+            expense_items: items.map(i => ({
+                expense_type: i.type.toUpperCase(),
+                description: i.desc.trim(),
+                amount: parseFloat(i.amount),
+                receipt_reference_code: i.receipt || ''
+            }))
+        };
+
+        try {
+            await postJson('/expense-vouchers', payload);
+            showToast('Voucher saved successfully!');
+            onNavigateBack();
+        } catch (err) {
+            showToast(getApiErrorMessage(err, 'Failed to save voucher'), 'error');
+        }
     };
 
     const filteredItems = items.filter(i => 
@@ -41,9 +87,9 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 name="delivererId"
                 control={control}
                 render={({ field }) => (
-                    <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Deliverer"
-                        columns={[{ key: 'id', label: 'ID' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Vehicle' }]}
-                        data={MOCK_DELIVERERS} onSelect={r => { field.onChange(`${r.id} – ${r.name}`); setIsLovOpen(false); }} />
+                    <LovModal isOpen={isLovOpen} onClose={() => setIsLovOpen(false)} title="Delivery Assignment"
+                        columns={[{ key: 'id', label: 'Delivery ID' }, { key: 'name', label: 'Deliverer Name' }, { key: 'type', label: 'Details' }]}
+                        data={deliveriesList} onSelect={r => { field.onChange(`${r.id} – ${r.name}`); setIsLovOpen(false); }} />
                 )}
             />
             
@@ -54,39 +100,19 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
             <Card className="p-5">
                 <h3 className="font-bold text-current mb-4">Voucher Header</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-end gap-3">
-                        <div className="flex-1">
-                            <FormField label="Voucher ID" required>
-                                <Input 
-                                    value={displayVoucherId} 
-                                    onChange={e => setVoucherId(e.target.value.toUpperCase())} 
-                                    placeholder="EXP-001" 
-                                    readOnly={autoId}
-                                    className={autoId ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono' : 'font-mono'}
-                                />
-                            </FormField>
-                        </div>
-                        <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
-                            <div className="relative">
-                                <input 
-                                    type="checkbox" 
-                                    checked={autoId} 
-                                    onChange={e => setAutoId(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-5 h-5 border-2 border-slate-300 dark:border-white bg-transparent rounded-md peer-checked:bg-red-500 peer-checked:border-red-500 transition-all flex items-center justify-center text-white">
-                                    <Check size={12} strokeWidth={4} color="white" className={autoId ? 'scale-100' : 'scale-0'} />
-                                </div>
-                            </div>
-                            <span className="text-sm font-bold text-slate-700 dark:text-gray-200 font-sans">Auto</span>
-                        </label>
-                    </div>
-                    <FormField label="Deliverer" required error={errors.delivererId?.message}>
+                    <FormField label="Voucher ID">
+                        <Input 
+                            value="EXP-AUTO (Assigned on save)" 
+                            readOnly
+                            className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
+                        />
+                    </FormField>
+                    <FormField label="Delivery & Deliverer" required error={errors.delivererId?.message}>
                         <Controller
                             name="delivererId"
                             control={control}
                             render={({ field }) => (
-                                <LovInput value={field.value} onLov={() => setIsLovOpen(true)} placeholder="Select deliverer..." />
+                                <LovInput value={field.value} onLov={() => setIsLovOpen(true)} placeholder="Select delivery assignment..." />
                             )}
                         />
                     </FormField>
@@ -101,14 +127,12 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                                 <Select value={field.value} onChange={e => field.onChange(e.target.value)}>
                                     <option value="DRAFT">DRAFT</option>
                                     <option value="SUBMITTED">SUBMITTED</option>
-                                    <option value="APPROVED">APPROVED</option>
-                                    <option value="REJECTED">REJECTED</option>
                                 </Select>
                             )}
                         />
                     </FormField>
                     <FormField label="Approved By" required error={errors.approvedBy?.message}>
-                        <Input placeholder="e.g. Anutin Ch." {...register('approvedBy')} />
+                        <Input placeholder="e.g. System Admin" {...register('approvedBy')} />
                     </FormField>
                 </div>
             </Card>
@@ -117,7 +141,7 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                 <CardHeader 
                     search={<Input icon={Search} placeholder="Search description, receipt..." value={search} onChange={e => setSearch(e.target.value)} className="h-10 shadow-sm" />}
                     action={
-                        <Btn size="sm" variant="secondary" onClick={() => setItems([...items, { id: Date.now(), type: 'Fuel', desc: '', amount: 0, receipt: '' }])}>
+                        <Btn size="sm" variant="secondary" onClick={() => setItems([...items, { id: Date.now(), type: 'FUEL', desc: '', amount: 0, receipt: '' }])}>
                             <Plus className="w-3.5 h-3.5" /> Add Row
                         </Btn>
                     } 
@@ -148,11 +172,10 @@ export default function ExpenseFormView({ onNavigateBack, showToast }) {
                                     onChange={e => { const n = [...items]; const idx = items.indexOf(item); n[idx].type = e.target.value; setItems(n); }} 
                                     className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-red-400 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full"
                                 >
-                                    <option>Toll</option>
-                                    <option>Fuel</option>
-                                    <option>Parking</option>
-                                    <option>MAINTENANCE</option>
-                                    <option>OTHER</option>
+                                    <option value="TOLL">TOLL</option>
+                                    <option value="FUEL">FUEL</option>
+                                    <option value="MAINTENANCE">MAINTENANCE</option>
+                                    <option value="OTHER">OTHER</option>
                                 </select>
                             </Td>
                             <Td>
