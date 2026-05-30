@@ -43,9 +43,12 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                     delivererId: dlv.deliverer_code || '—',
                     delivererName: prof.full_name || '—',
                     date: v.voucher_date || '—',
+                    rawDate: v.voucher_date,
                     status: v.status || 'DRAFT',
                     total: parseFloat(v.total_amount || 0),
-                    items: (v.expense_items || []).map(i => i.expense_type).join(', ') || '—'
+                    items: (v.expense_items || []).map(i => i.expense_type).join(', ') || '—',
+                    rawItems: v.expense_items || [],
+                    delivery_id: v.delivery_id
                 };
             });
             setVouchers(joined);
@@ -78,8 +81,8 @@ export default function ExpenseListView({ onNavigate, showToast }) {
         { key: 'id', label: 'Voucher ID', type: 'text' },
         { key: 'date', label: 'Date', type: 'date' },
         { key: 'delivererName', label: 'Deliverer', type: 'text' },
-        { key: 'status', label: 'Status', type: 'enum', options: ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'FAILED'] },
-        { key: 'total', label: 'Total Expense', type: 'number' }
+        { key: 'total', label: 'Total Expense', type: 'number' },
+        { key: 'status', label: 'Status', type: 'enum', options: ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'FAILED'] }
     ];
 
     const sorted = applyFiltersAndSort(vouchers, search, ['id', 'delivererName', 'status', 'items'], filters, sort);
@@ -155,8 +158,8 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                         { label: 'Voucher ID', key: 'id', sortable: true, width: '24%' },
                         { label: 'Date', key: 'date', sortable: true, width: '20%' },
                         { label: 'Deliverer', key: 'delivererName', sortable: true, width: '16%' },
-                        { label: 'Status', key: 'status', center: true, sortable: true, width: '12%' },
                         { label: 'Total Expense', key: 'total', right: true, sortable: true, width: '14%' },
+                        { label: 'Status', key: 'status', center: true, sortable: true, width: '12%' },
                         { label: 'Actions', right: true, width: '14%' }
                     ]}
                 >
@@ -178,12 +181,12 @@ export default function ExpenseListView({ onNavigate, showToast }) {
                             <Td mono className="text-xs font-bold text-slate-950 dark:text-slate-100">{v.id}</Td>
                             <Td>{v.date}</Td>
                             <Td bold>{v.delivererName}</Td>
+                            <Td right bold>฿{v.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Td>
                             <Td center>
                                 <Badge color={v.status?.toUpperCase() === 'APPROVED' || v.status?.toUpperCase() === 'COMPLETED' ? 'green' : v.status?.toUpperCase() === 'REJECTED' || v.status?.toUpperCase() === 'FAILED' ? 'red' : 'amber'}>
                                     {v.status}
                                 </Badge>
                             </Td>
-                            <Td right bold>฿{v.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Td>
                             <Td right>
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => onNavigate(v)}><Edit2 className="w-3 h-3" /> Edit</Btn>

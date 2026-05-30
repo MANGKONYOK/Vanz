@@ -21,12 +21,14 @@ export default function CustomerOrderFormView({ data, showToast, onNavigateBack 
     const [isAuto, setIsAuto] = useState(true);
     const [customCode, setCustomCode] = useState('');
 
-    const { control, register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
+    const { control, register, handleSubmit, setValue, watch, getValues, reset, formState: { errors } } = useForm({
         resolver: zodResolver(orderHeaderSchema),
         defaultValues: { customer: '', store: '', deliveryAddress: '', status: 'PENDING' },
     });
 
+    const watchedStatus = watch('status');
     const isNew = !data;
+    const isEditable = isNew || (watchedStatus || 'PENDING').toUpperCase() === 'PENDING';
 
     useEffect(() => {
         const orderPromise = data ? getJson(`/orders?order_code=${data.id}`) : Promise.resolve([]);
@@ -85,7 +87,7 @@ export default function CustomerOrderFormView({ data, showToast, onNavigateBack 
                     customer: custVal,
                     store: storeVal,
                     deliveryAddress: fullOrder.address_snapshot || '',
-                    status: fullOrder.status || 'PENDING',
+                    status: (fullOrder.status || 'PENDING').toUpperCase(),
                 });
                 
                 setAddressSnapshot(fullOrder.address_snapshot || '');
@@ -113,7 +115,8 @@ export default function CustomerOrderFormView({ data, showToast, onNavigateBack 
 
     const total = items.reduce((s, i) => s + (i.qty * i.price), 0);
 
-    const onSubmit = async (headerData) => {
+    const onSubmit = async () => {
+        const formValues = getValues();
         if (isNew && !isAuto) {
             const trimmed = customCode.trim();
             if (!trimmed) return showToast('Custom Order ID is required when Auto is unchecked', 'error');
@@ -122,16 +125,16 @@ export default function CustomerOrderFormView({ data, showToast, onNavigateBack 
         if (items.length === 0) return showToast('Order must contain at least one item', 'error');
         if (items.some(i => !i.productName || i.qty <= 0)) return showToast('Please select valid products with positive quantities', 'error');
 
-        const customerCode = headerData.customer.split(' – ')[0];
-        const storeCode = headerData.store.split(' – ')[0];
+        const customerCode = (formValues.customer || '').split(' – ')[0];
+        const storeCode = (formValues.store || '').split(' – ')[0];
 
         const roundedTotal = Math.round((total + Number.EPSILON) * 100) / 100;
         const payload = {
             customer_code: customerCode,
             store_code: storeCode,
-            address_snapshot: headerData.deliveryAddress,
+            address_snapshot: formValues.deliveryAddress || '',
             total_price: roundedTotal,
-            status: headerData.status || 'PENDING',
+            status: formValues.status || 'PENDING',
             order_items: items.map(i => {
                 const itemPrice = Math.round((parseFloat(i.price) + Number.EPSILON) * 100) / 100;
                 const extPrice = Math.round(((i.qty * itemPrice) + Number.EPSILON) * 100) / 100;
@@ -215,7 +218,7 @@ export default function CustomerOrderFormView({ data, showToast, onNavigateBack 
                             name="customer"
                             control={control}
                             render={({ field }) => (
-                                <LovInput value={field.value} onLov={() => setActiveLov({ type: 'customer' })} placeholder="Select customer..." />
+                                <LovInput value={field.value} onLov={() => isEditable && setActiveLov({ type: 'customer' })} placeholder="Select customer..." disabled={!isEditable} />
                             )}
                         />
                     </FormField>
@@ -224,32 +227,40 @@ export default function CustomerOrderFormView({ data, showToast, onNavigateBack 
                             name="store"
                             control={control}
                             render={({ field }) => (
-                                <LovInput value={field.value} onLov={() => setActiveLov({ type: 'store' })} placeholder="Select store..." />
+                                <LovInput value={field.value} onLov={() => isEditable && setActiveLov({ type: 'store' })} placeholder="Select store..." disabled={!isEditable} />
                             )}
                         />
                     </FormField>
                     <FormField label="Delivery Address" required error={errors.deliveryAddress?.message}>
-                        <Input {...register('deliveryAddress')} placeholder="Enter delivery address..." />
+                        <Input {...register('deliveryAddress')} placeholder="Enter delivery address..." disabled={!isEditable} className={!isEditable ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 cursor-not-allowed' : ''} />
                     </FormField>
                     <FormField label="Delivery Address Snapshot">
-                        <textarea readOnly value={isNew ? "No snapshot saved yet (will be recorded on place)" : addressSnapshot} className="w-full min-w-0 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 outline-none resize-none h-16" />
+                        <Input readOnly value={isNew ? "No snapshot saved yet." : addressSnapshot} className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300" />
                     </FormField>
-                    <FormField label="Status" required error={errors.status?.message}>
-                        <Controller
-                            name="status"
-                            control={control}
-                            render={({ field }) => (
-                                <Select value={field.value} onChange={e => field.onChange(e.target.value)}>
-                                    <option value="PENDING">Pending</option>
-                                    <option value="PREPARING">Preparing</option>
-                                    <option value="DISPATCHED">Dispatched</option>
-                                    <option value="DELIVERED">Delivered</option>
-                                    <option value="COMPLETED">Completed</option>
-                                    <option value="CANCELLED">Cancelled</option>
-                                    <option value="FAILED">Failed</option>
-                                </Select>
-                            )}
-                        />
+                    <FormField label="Status" required={!isNew} error={errors.status?.message}>
+                        {isNew ? (
+                            <Input readOnly value="Pending" className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 cursor-not-allowed font-medium" />
+                        ) : (
+                            <Controller
+                                name="status"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select value={field.value} onChange={e => field.onChange(e.target.value)}>
+                                        <option value="PENDING">Pending</option>
+                                        <option value="CONFIRMED">Confirmed</option>
+                                        <option value="PREPARING">Preparing</option>
+                                        <option value="READY_FOR_PICKUP">Ready for Pickup</option>
+                                        <option value="PICKED_UP">Picked Up</option>
+                                        <option value="DISPATCHED">Dispatched</option>
+                                        <option value="DELIVERING">Delivering</option>
+                                        <option value="DELIVERED">Delivered</option>
+                                        <option value="COMPLETED">Completed</option>
+                                        <option value="CANCELLED">Cancelled</option>
+                                        <option value="FAILED">Failed</option>
+                                    </Select>
+                                )}
+                            />
+                        )}
                     </FormField>
                 </div>
             </Card>
@@ -257,24 +268,47 @@ export default function CustomerOrderFormView({ data, showToast, onNavigateBack 
                 <CardHeader 
                     search={<Input icon={Search} placeholder="Search product..." value={search} onChange={e => setSearch(e.target.value)} className="h-10 shadow-sm" />}
                     action={
-                        <Btn size="sm" variant="secondary" onClick={() => setItems([...items, { id: Date.now(), productId: '', productName: '', qty: 1, price: 0 }])}>
-                            <Plus className="w-3.5 h-3.5" /> Add Item
-                        </Btn>
+                        isEditable && (
+                            <Btn size="sm" variant="secondary" onClick={() => setItems([...items, { id: Date.now(), productId: '', productName: '', qty: 1, price: 0 }])}>
+                                <Plus className="w-3.5 h-3.5" /> Add Item
+                            </Btn>
+                        )
                     } 
                 />
                 <Table headers={[{ label: 'Product' }, { label: 'Qty', center: true }, { label: 'Unit Price', right: true }, { label: 'Extended Price', right: true }, { label: '', center: true }]} minWidth="600px">
                     {filteredItems.map((it) => (
                         <tr key={it.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                             <td className="px-4 py-3 min-w-[200px]">
-                                <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 focus-within:border-red-400 dark:focus-within:border-red-500">
-                                    <input readOnly value={it.productName} placeholder="Select product..." className="flex-1 min-w-0 px-3 py-1.5 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" />
-                                    <button onClick={() => setActiveLov({ type: 'product', index: items.indexOf(it) })} className="shrink-0 px-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white text-xs font-bold transition-colors border-l border-slate-700 dark:border-slate-600">LoV</button>
+                                <div className={`flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 ${!isEditable ? 'opacity-65 bg-slate-50 dark:bg-slate-800/50' : 'focus-within:border-red-400 dark:focus-within:border-red-500'}`}>
+                                    <input readOnly value={it.productName} placeholder="Select product..." disabled={!isEditable} className={`flex-1 min-w-0 px-3 py-1.5 text-sm outline-none text-slate-900 dark:text-slate-100 ${!isEditable ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 cursor-not-allowed' : 'bg-white dark:bg-slate-800'}`} />
+                                    <button 
+                                        onClick={() => isEditable && setActiveLov({ type: 'product', index: items.indexOf(it) })} 
+                                        disabled={!isEditable} 
+                                        className={`shrink-0 px-3 text-xs font-bold transition-colors border-l border-slate-700 dark:border-slate-600 ${!isEditable ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white'}`}
+                                    >
+                                        LoV
+                                    </button>
                                 </div>
                             </td>
-                            <td className="px-4 py-3 text-center"><input type="number" min="1" value={it.qty} onChange={e => { const n = [...items]; const idx = items.indexOf(it); n[idx].qty = Math.max(1, Number(e.target.value)); setItems(n); }} className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 text-sm text-center outline-none focus:border-red-400 dark:focus:border-red-500 w-16" /></td>
+                            <td className="px-4 py-3 text-center">
+                                <input 
+                                    type="number" 
+                                    min="1" 
+                                    value={it.qty} 
+                                    disabled={!isEditable} 
+                                    onChange={e => { const n = [...items]; const idx = items.indexOf(it); n[idx].qty = Math.max(1, Number(e.target.value)); setItems(n); }} 
+                                    className={`border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 text-sm text-center outline-none w-16 ${!isEditable ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 cursor-not-allowed' : 'bg-white dark:bg-slate-800 focus:border-red-400 dark:focus:border-red-500'}`} 
+                                />
+                            </td>
                             <Td right>฿{parseFloat(it.price || 0).toFixed(2)}</Td>
                             <Td right bold>฿{parseFloat((it.qty * it.price) || 0).toFixed(2)}</Td>
-                            <td className="px-4 py-3 text-center"><button onClick={() => setItems(items.filter(x => x.id !== it.id))} className="p-1.5 text-slate-300 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button></td>
+                            <td className="px-4 py-3 text-center">
+                                {isEditable && (
+                                    <button onClick={() => setItems(items.filter(x => x.id !== it.id))} className="p-1.5 text-slate-300 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors">
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </td>
                         </tr>
                     ))}
                 </Table>

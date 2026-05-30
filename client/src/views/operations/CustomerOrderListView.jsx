@@ -189,7 +189,7 @@ export default function CustomerOrderListView({ onNavigate, showToast }) {
                                     o.status?.toUpperCase() === 'CONFIRMED' ? 'blue' : 
                                     'amber'
                                 }>
-                                    {o.status}
+                                    {o.status?.toUpperCase()?.replace(/_/g, ' ')}
                                 </Badge>
                             </Td>
                             <Td right>

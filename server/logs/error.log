@@ -193,3 +193,63 @@
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
     at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:76:29)
     at async exports.create (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:11:29)
+[2026-05-30T09:43:38.447Z] [ERROR] update or delete on table "order" violates foreign key constraint "Dispatch_Assignment_order_id_fkey" on table "dispatch_assignment" error: update or delete on table "order" violates foreign key constraint "Dispatch_Assignment_order_id_fkey" on table "dispatch_assignment"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:146:5)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:36:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)
+[2026-05-30T09:43:42.601Z] [ERROR] update or delete on table "order" violates foreign key constraint "Dispatch_Assignment_order_id_fkey" on table "dispatch_assignment" error: update or delete on table "order" violates foreign key constraint "Dispatch_Assignment_order_id_fkey" on table "dispatch_assignment"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:146:5)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:36:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)
+[2026-05-30T09:43:55.462Z] [ERROR] update or delete on table "order" violates foreign key constraint "Dispatch_Assignment_order_id_fkey" on table "dispatch_assignment" error: update or delete on table "order" violates foreign key constraint "Dispatch_Assignment_order_id_fkey" on table "dispatch_assignment"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:146:5)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:36:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)
+[2026-05-30T09:52:10.230Z] [ERROR] update or delete on table "delivery" violates foreign key constraint "Expense_Voucher_delivery_id_fkey" on table "expense_voucher" error: update or delete on table "delivery" violates foreign key constraint "Expense_Voucher_delivery_id_fkey" on table "expense_voucher"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:147:5)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:36:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)
+[2026-05-30T09:52:14.587Z] [ERROR] update or delete on table "delivery" violates foreign key constraint "Expense_Voucher_delivery_id_fkey" on table "expense_voucher" error: update or delete on table "delivery" violates foreign key constraint "Expense_Voucher_delivery_id_fkey" on table "expense_voucher"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:147:5)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:36:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)
+[2026-05-30T09:52:40.502Z] [ERROR] update or delete on table "delivery" violates foreign key constraint "Expense_Voucher_delivery_id_fkey" on table "expense_voucher" error: update or delete on table "delivery" violates foreign key constraint "Expense_Voucher_delivery_id_fkey" on table "expense_voucher"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:147:5)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:36:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)
+[2026-05-30T10:16:22.479Z] [ERROR] update or delete on table "delivery" violates foreign key constraint "Expense_Voucher_delivery_id_fkey" on table "expense_voucher" error: update or delete on table "delivery" violates foreign key constraint "Expense_Voucher_delivery_id_fkey" on table "expense_voucher"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:147:5)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:45:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)
+[2026-05-30T10:16:35.925Z] [ERROR] update or delete on table "delivery" violates foreign key constraint "Expense_Voucher_delivery_id_fkey" on table "expense_voucher" error: update or delete on table "delivery" violates foreign key constraint "Expense_Voucher_delivery_id_fkey" on table "expense_voucher"
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:147:5)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:45:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)
+[2026-05-30T10:25:50.988Z] [ERROR] column "voucher_id" does not exist error: column "voucher_id" does not exist
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:154:9)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:45:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)
+[2026-05-30T10:25:55.041Z] [ERROR] column "voucher_id" does not exist error: column "voucher_id" does not exist
+    at C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\node_modules\pg\lib\client.js:646:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.deleteById (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\models\orders.model.js:154:9)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\services\orders.service.js:45:3)
+    at async exports.remove (C:\Users\KITTIPHAT NOIKATE\Documents\GitHub\Vanz\server\src\controllers\orders.controller.js:25:25)

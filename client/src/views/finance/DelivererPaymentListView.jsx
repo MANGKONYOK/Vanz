@@ -42,9 +42,16 @@ export default function DelivererPaymentListView({ onNavigate, showToast }) {
                     id: p.payment_code,
                     period: `${p.payment_period_start} to ${p.payment_period_end}`,
                     date: p.payment_datetime ? new Date(p.payment_datetime).toLocaleDateString() : '—',
+                    rawDate: p.payment_datetime,
+                    delivererCode: dlv.code || '—',
+                    delivererId: dlv.deliverer_id,
                     delivererName: prof.full_name || '—',
                     amount: parseFloat(p.total_payment || 0),
-                    status: p.status || 'PENDING'
+                    status: p.status || 'PENDING',
+                    rawItems: p.payment_items || [],
+                    delivery_id: p.delivery_id,
+                    payment_period_start: p.payment_period_start,
+                    payment_period_end: p.payment_period_end
                 };
             });
             setPayments(joined);

@@ -104,9 +104,28 @@ exports.update = async (id, data) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const hdrFields = ['status','address_snapshot','total_price'];
+    
     const sets = []; const p = [];
+    
+    if (data.customer_code !== undefined) {
+      const { rows: [cust] } = await client.query('SELECT id FROM customer WHERE code=$1', [data.customer_code]);
+      if (cust) {
+        p.push(cust.id);
+        sets.push(`customer_id = $${p.length}`);
+      }
+    }
+    
+    if (data.store_code !== undefined) {
+      const { rows: [store] } = await client.query('SELECT id FROM store WHERE code=$1', [data.store_code]);
+      if (store) {
+        p.push(store.id);
+        sets.push(`store_id = $${p.length}`);
+      }
+    }
+
+    const hdrFields = ['status','address_snapshot','total_price'];
     hdrFields.forEach(k => { if (data[k] !== undefined) { p.push(data[k]); sets.push(`${k} = $${p.length}`); }});
+    
     let hdr;
     if (sets.length) {
       p.push(id);
@@ -142,6 +161,30 @@ exports.deleteById = async (id) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    
+    // Find delivery IDs to clean up related expense vouchers and payments
+    const { rows: delRows } = await client.query('SELECT id FROM delivery WHERE order_id = $1', [id]);
+    const delIds = delRows.map(r => r.id);
+    
+    if (delIds.length > 0) {
+      const { rows: evRows } = await client.query('SELECT id FROM expense_voucher WHERE delivery_id = ANY($1)', [delIds]);
+      const evIds = evRows.map(r => r.id);
+      if (evIds.length > 0) {
+        await client.query('DELETE FROM expense_voucher_items WHERE expense_voucher_id = ANY($1)', [evIds]);
+        await client.query('DELETE FROM expense_voucher WHERE id = ANY($1)', [evIds]);
+      }
+      
+      const { rows: payRows } = await client.query('SELECT id FROM payment WHERE delivery_id = ANY($1)', [delIds]);
+      const payIds = payRows.map(r => r.id);
+      if (payIds.length > 0) {
+        await client.query('DELETE FROM payment_items WHERE payment_id = ANY($1)', [payIds]);
+        await client.query('DELETE FROM payment WHERE id = ANY($1)', [payIds]);
+      }
+    }
+
+    await client.query('DELETE FROM payment_items WHERE order_id=$1', [id]);
+    await client.query('DELETE FROM delivery WHERE order_id=$1', [id]);
+    await client.query('DELETE FROM dispatch_assignment WHERE order_id=$1', [id]);
     await client.query('DELETE FROM order_items WHERE order_id=$1', [id]);
     await client.query('DELETE FROM "order" WHERE id=$1', [id]);
     await client.query('COMMIT');

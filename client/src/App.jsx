@@ -21,6 +21,8 @@ export default function App() {
     const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
     const [promotionEditData, setPromotionEditData] = useState(null);
     const [orderEditData, setOrderEditData] = useState(null);
+    const [expenseEditData, setExpenseEditData] = useState(null);
+    const [paymentEditData, setPaymentEditData] = useState(null);
     const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
 
     useEffect(() => {
@@ -74,10 +76,10 @@ export default function App() {
                         {currentView === 'dispatch_form' && <DelivererDispatchView showToast={showToast} />}
 
                         {/* Finance */}
-                        {currentView === 'expense_list' && <ExpenseListView showToast={showToast} onNavigate={() => setCurrentView('expense_form')} />}
-                        {currentView === 'expense_form' && <ExpenseFormView onNavigateBack={() => setCurrentView('expense_list')} showToast={showToast} />}
-                        {currentView === 'payment_list' && <DelivererPaymentListView showToast={showToast} onNavigate={() => setCurrentView('payment_form')} />}
-                        {currentView === 'payment_form' && <DelivererPaymentView showToast={showToast} onNavigateBack={() => setCurrentView('payment_list')} />}
+                        {currentView === 'expense_list' && <ExpenseListView showToast={showToast} onNavigate={(data) => { setExpenseEditData(data && data.id ? data : null); setCurrentView('expense_form'); }} />}
+                        {currentView === 'expense_form' && <ExpenseFormView data={expenseEditData} onNavigateBack={() => { setExpenseEditData(null); setCurrentView('expense_list'); }} showToast={showToast} />}
+                        {currentView === 'payment_list' && <DelivererPaymentListView showToast={showToast} onNavigate={(data) => { setPaymentEditData(data && data.id ? data : null); setCurrentView('payment_form'); }} />}
+                        {currentView === 'payment_form' && <DelivererPaymentView data={paymentEditData} showToast={showToast} onNavigateBack={() => { setPaymentEditData(null); setCurrentView('payment_list'); }} />}
                         {currentView === 'revenue_trip' && <RevenueTripView showToast={showToast} />}
 
                         {/* Master Data */}
