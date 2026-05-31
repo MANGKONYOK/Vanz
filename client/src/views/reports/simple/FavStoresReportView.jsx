@@ -3,6 +3,25 @@ import { Heart, Search } from 'lucide-react';
 import { PageHeader, Btn, Card, Table, Tr, Td, FilterBar, FilterField, LovInput, LovModal } from '../../../components/ui';
 import { getJson, getApiErrorMessage } from '../../../api/http';
 
+function formatPhone(phone) {
+    if (!phone) return '—';
+    let cleaned = phone.replace(/[^\d+]/g, '');
+    if (cleaned.startsWith('+66')) {
+        cleaned = '0' + cleaned.slice(3);
+    }
+    if (cleaned.startsWith('0') && cleaned.length === 10) {
+        return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+    }
+    if (cleaned.startsWith('0') && cleaned.length === 9) {
+        if (cleaned.startsWith('02')) {
+            return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 5)}-${cleaned.slice(5)}`;
+        } else {
+            return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+        }
+    }
+    return phone;
+}
+
 export default function FavStoresReportView({ showToast }) {
     const [rows,       setRows]       = useState([]);
     const [loading,    setLoading]    = useState(false);
@@ -28,7 +47,7 @@ export default function FavStoresReportView({ showToast }) {
 
             setLovCustomers(customers.map(c => {
                 const prof = profileMap.get(c.profile_id) || {};
-                return { id: c.customer_code, name: prof.full_name || c.customer_code, phone: prof.phone || '-' };
+                return { id: c.customer_code, name: prof.full_name || c.customer_code, phone: formatPhone(prof.phone) };
             }));
             setLovStores(stores.map(s => ({
                 id: s.store_code, name: s.name,

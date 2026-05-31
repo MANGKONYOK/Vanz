@@ -1,0 +1,12 @@
+[2026-05-31T07:40:34.264Z] [ERROR] relation "review" does not exist error: relation "review" does not exist
+    at /Users/sakura/Documents/KMUTT/CPE/2.2/CPE241/Vanz/server/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async exports.hasRelatedData (/Users/sakura/Documents/KMUTT/CPE/2.2/CPE241/Vanz/server/src/models/customers.model.js:81:25)
+    at async exports.remove (/Users/sakura/Documents/KMUTT/CPE/2.2/CPE241/Vanz/server/src/services/customers.service.js:34:16)
+    at async exports.remove (/Users/sakura/Documents/KMUTT/CPE/2.2/CPE241/Vanz/server/src/controllers/customers.controller.js:25:25)
+[2026-05-31T07:41:17.031Z] [ERROR] relation "review" does not exist error: relation "review" does not exist
+    at /Users/sakura/Documents/KMUTT/CPE/2.2/CPE241/Vanz/server/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async exports.hasRelatedData (/Users/sakura/Documents/KMUTT/CPE/2.2/CPE241/Vanz/server/src/models/customers.model.js:81:25)
+    at async exports.remove (/Users/sakura/Documents/KMUTT/CPE/2.2/CPE241/Vanz/server/src/services/customers.service.js:34:16)
+    at async exports.remove (/Users/sakura/Documents/KMUTT/CPE/2.2/CPE241/Vanz/server/src/controllers/customers.controller.js:25:25)

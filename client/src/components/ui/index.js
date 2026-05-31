@@ -15,3 +15,5 @@ export { default as FilterField } from './FilterField';
 export { default as PageHeader } from './PageHeader';
 export { default as Pagination } from './Pagination';
 export { default as ConfirmModal } from './ConfirmModal';
+export { default as TableSortFilter, applyFiltersAndSort, FilterPills } from './TableSortFilter';
+

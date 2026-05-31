@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
-import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination } from '../../components/ui';
+import { Search, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { PageHeader, Btn, Card, CardHeader, Table, Tr, Td, Badge, Input, Select, Pagination, ConfirmModal, TableSortFilter, applyFiltersAndSort, FilterPills } from '../../components/ui';
 import { getJson, deleteJson, getApiErrorMessage } from '../../api/http';
 import ProductFormView from './ProductFormView';
 
@@ -16,17 +16,24 @@ export default function ProductListView({ showToast }) {
     const [rows, setRows] = useState([]);
     const [stores, setStores] = useState([]);   // passed down to form's LoV
     const [loading, setLoading] = useState(true);
-    const [tick, setTick] = useState(0);
+    const [error, setError] = useState(null);
+     const [tick, setTick] = useState(0);
     const [search, setSearch] = useState('');
-    const [sort, setSort] = useState({ key: 'name', direction: 'asc' });
+    const [sort, setSort] = useState({ key: '', direction: 'asc' });
+    const [filters, setFilters] = useState([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+    const [confirmDeleteName, setConfirmDeleteName] = useState('');
 
-    const refresh = () => setTick(t => t + 1);
+    const refresh = () => {
+        setLoading(true);
+        setError(null);
+        setTick(t => t + 1);
+    };
 
     useEffect(() => {
         let cancelled = false;
-        setLoading(true);
         Promise.all([
             getJson('/store-products'),
             getJson('/stores'),
@@ -57,21 +64,26 @@ export default function ProductListView({ showToast }) {
             });
             setRows(joined);
         }).catch(err => {
-            if (!cancelled) showToast(getApiErrorMessage(err, 'Failed to load products'), 'error');
+            if (!cancelled) {
+                setError(err);
+                showToast(getApiErrorMessage(err, 'Failed to load products'), 'error');
+            }
         }).finally(() => {
             if (!cancelled) setLoading(false);
         });
         return () => { cancelled = true; };
-    }, [tick]);
+    }, [tick, showToast]);
 
-    const handleDelete = async (p) => {
-        if (!window.confirm(`Delete product "${p.name}"?`)) return;
+    const handleDelete = async () => {
+        if (!confirmDeleteId) return;
         try {
-            await deleteJson(`/store-products/${p.productId}`);
-            showToast(`Product "${p.name}" deleted`);
+            await deleteJson(`/store-products/${confirmDeleteId}`);
+            showToast(`Product "${confirmDeleteName}" deleted`);
+            setConfirmDeleteId(null);
             refresh();
         } catch (err) {
             showToast(getApiErrorMessage(err, 'Delete failed'), 'error');
+            setConfirmDeleteId(null);
         }
     };
 
@@ -87,23 +99,19 @@ export default function ProductListView({ showToast }) {
         );
     }
 
-    const filtered = rows.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.storeName.toLowerCase().includes(search.toLowerCase()) ||
-        String(p.productId).includes(search)
-    );
+     const columns = [
+        { key: 'productId', label: 'No.', type: 'number' },
+        { key: 'name', label: 'Name', type: 'text' },
+        { key: 'storeName', label: 'Store Name', type: 'text' },
+        { key: 'price', label: 'Price', type: 'number' },
+        { key: 'status', label: 'Status', type: 'enum', options: ['AVAILABLE', 'OUT_OF_STOCK', 'DISCONTINUED', 'UNAVAILABLE'] },
+        { key: 'updatedAt', label: 'Updated At', type: 'date' }
+    ];
 
-    const sorted = [...filtered].sort((a, b) => {
-        const valA = a[sort.key] ?? '';
-        const valB = b[sort.key] ?? '';
-        if (valA < valB) return sort.direction === 'asc' ? -1 : 1;
-        if (valA > valB) return sort.direction === 'asc' ? 1 : -1;
-        return 0;
-    });
-
+    const sorted = applyFiltersAndSort(rows, search, ['productId', 'name', 'storeName'], filters, sort);
     const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
-    const start = filtered.length > 0 ? (page - 1) * pageSize + 1 : 0;
-    const end = Math.min(page * pageSize, filtered.length);
+    const start = sorted.length > 0 ? (page - 1) * pageSize + 1 : 0;
+    const end = Math.min(page * pageSize, sorted.length);
 
     const handleSort = (key) => {
         setSort(prev => ({
@@ -120,32 +128,59 @@ export default function ProductListView({ showToast }) {
                 action={<Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Add Product</Btn>}
             />
 
-            <Card className="overflow-hidden">
+             <Card className="overflow-hidden">
                 <CardHeader
                     search={
-                        <Input
-                            icon={Search}
-                            placeholder="Search ID, name, store..."
-                            value={search}
-                            onChange={e => { setSearch(e.target.value); setPage(1); }}
-                            className="bg-white border-slate-200 h-10 shadow-sm"
-                        />
+                        <div className="flex items-center gap-2 flex-1">
+                            <Input
+                                icon={Search}
+                                placeholder="Search ID, name, store..."
+                                value={search}
+                                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                                className="bg-white border-slate-200 h-10 shadow-sm"
+                            />
+                            <TableSortFilter
+                                columns={columns}
+                                sort={sort}
+                                onSortChange={s => { setSort(s); setPage(1); }}
+                                filters={filters}
+                                onFiltersChange={f => { setFilters(f); setPage(1); }}
+                            />
+                        </div>
                     }
                     filter={
                         <div className="flex items-center gap-3">
                             <span className="text-xs font-medium text-slate-500 dark:text-gray-300">
-                                {start}–{end} of {filtered.length} products
+                                {start}–{end} of {sorted.length} products
                             </span>
                             <Select
                                 value={pageSize}
                                 onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
-                                className="h-9 border-slate-200 bg-white shadow-sm w-24"
+                                className="w-28 h-9"
                             >
                                 {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / page</option>)}
                             </Select>
                         </div>
                     }
                 />
+
+                {filters.length > 0 && (
+                    <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
+                        <FilterPills
+                            columns={columns}
+                            filters={filters}
+                            onRemoveFilter={i => {
+                                const newFilters = filters.filter((_, idx) => idx !== i);
+                                setFilters(newFilters);
+                                setPage(1);
+                            }}
+                            onClearAll={() => {
+                                setFilters([]);
+                                setPage(1);
+                            }}
+                        />
+                    </div>
+                )}
 
                 <Table
                     onSort={handleSort}
@@ -161,9 +196,18 @@ export default function ProductListView({ showToast }) {
                     ]}
                 >
                     {loading ? (
-                        <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">Loading…</Td></Tr>
+                        <Tr><Td colSpan={6} center className="text-slate-400 py-8">Loading…</Td></Tr>
+                    ) : error ? (
+                        <Tr><Td colSpan={6} center className="py-8">
+                            <div className="flex flex-col items-center justify-center text-red-500 gap-2">
+                                <AlertCircle className="w-8 h-8 text-red-500 animate-bounce" />
+                                <span className="font-semibold text-sm">Network Error: Failed to fetch data from server</span>
+                                <span className="text-xs text-slate-400">{error.message || 'Please check your connection.'}</span>
+                                <Btn size="sm" variant="secondary" onClick={refresh} className="mt-2">Retry</Btn>
+                            </div>
+                        </Td></Tr>
                     ) : paginated.length === 0 ? (
-                        <Tr><Td colSpan={6} className="text-center text-slate-400 py-8">No products found</Td></Tr>
+                        <Tr><Td colSpan={6} center className="text-slate-400 py-8">No products found</Td></Tr>
                     ) : paginated.map(p => (
                         <Tr key={p.productId}>
                             <Td mono className="text-xs text-slate-500 dark:text-gray-300 font-bold whitespace-nowrap">{p.productId}</Td>
@@ -171,14 +215,14 @@ export default function ProductListView({ showToast }) {
                             <Td className="text-slate-600 dark:text-gray-300 whitespace-nowrap">{p.storeName}</Td>
                             <Td right bold mono className="whitespace-nowrap">฿{parseFloat(p.price).toFixed(2)}</Td>
                             <Td center className="whitespace-nowrap">
-                                <Badge color={STATUS_COLOR[p.status] || 'gray'}>{p.status}</Badge>
+                                <Badge color={STATUS_COLOR[p.status?.toUpperCase()] || 'gray'}>{p.status.replace(/_/g, ' ')}</Badge>
                             </Td>
                             <Td right className="whitespace-nowrap">
                                 <div className="flex justify-end gap-2">
                                     <Btn size="sm" variant="secondary" onClick={() => setEditing(p)}>
                                         <Edit2 className="w-3 h-3" /> Edit
                                     </Btn>
-                                    <Btn size="sm" variant="danger" onClick={() => handleDelete(p)}>
+                                    <Btn size="sm" variant="danger" onClick={() => { setConfirmDeleteId(p.productId); setConfirmDeleteName(p.name); }}>
                                         <Trash2 className="w-3 h-3" /> Delete
                                     </Btn>
                                 </div>
@@ -188,7 +232,7 @@ export default function ProductListView({ showToast }) {
                 </Table>
 
                 <Pagination
-                    totalItems={filtered.length}
+                    totalItems={sorted.length}
                     itemsPerPage={pageSize}
                     currentPage={page}
                     onPageChange={setPage}
@@ -196,6 +240,14 @@ export default function ProductListView({ showToast }) {
                     itemLabel="products"
                 />
             </Card>
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                title="Delete Product"
+                message={`Are you sure you want to delete product "${confirmDeleteName}"? This action cannot be undone and will remove this item from the store listing.`}
+                onConfirm={handleDelete}
+            />
         </div>
     );
 }

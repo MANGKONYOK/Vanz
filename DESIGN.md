@@ -1,6 +1,6 @@
 # DESIGN.md — Vanz Frontend Architecture & UI Design
 
-> Version 1.3 · Updated 28 May 2026  
+> Version 1.4 · Updated 31 May 2026  
 > Tech Stack: React 18 · Vite · Tailwind CSS v4 · Lucide React
 
 ---
@@ -153,9 +153,11 @@ client/src/
 │       ├── LovInput.jsx / LovModal.jsx
 │       ├── PageHeader.jsx
 │       ├── Pagination.jsx
+│       ├── ConfirmModal.jsx
 │       ├── RankBadge.jsx
 │       ├── StatCard.jsx
-│       └── Table.jsx              ← exports: Table (default), Tr, Td
+│       ├── Table.jsx              ← exports: Table (default), Tr, Td
+│       └── TableSortFilter.jsx    ← exports: default, applyFiltersAndSort, FilterPills
 └── views/
     ├── index.js
     ├── DashboardView.jsx
@@ -263,6 +265,10 @@ Quick reference. All components in `src/components/ui/`.
 | `Pagination` | `totalItems`, `itemsPerPage`, `currentPage`, `onPageChange`, `onItemsPerPageChange`, `itemLabel` | Page navigator — size options 10/25/50/100 |
 | `StatCard` | `label`, `value`, `icon`, `sub`, `color` | KPI card — `text-3xl font-black` value + `.stat-card` hover |
 | `RankBadge` | `rank` | #1 amber · #2 slate · #3 orange · #4+ mono text |
+| `ConfirmModal` | `isOpen`, `onClose`, `title`, `message`, `onConfirm` | Confirmation dialog replacing `window.confirm()` — shown before destructive deletes |
+| `TableSortFilter` | `columns`, `sort`, `onSortChange`, `filters`, `onFiltersChange` | Popover Sort + Filter panel — sort by any column, add multi-rule filters (contains/is/gt/lt/empty etc.) |
+| `FilterPills` | `columns`, `filters`, `onRemoveFilter`, `onClearAll` | Displays active filter rules as amber badge pills below the search bar; exportable from `TableSortFilter` |
+| `applyFiltersAndSort` | `(rows, search, fields, filters, sort)` | Pure helper — applies search, advanced filter rules, and sort to any array; exported from `TableSortFilter` |
 
 ---
 
@@ -1436,7 +1442,35 @@ Card → Table (results)
 
 ---
 
-## 9. Cross-Document Consistency Notes
+## 9. Server Improvements (v1.4)
+
+### 9.1 pool.js
+- Supports `DATABASE_URL` env var — automatically parsed into `DB_*` components
+- Typo fixed: `DB_PROTOCAL` → `DB_PROTOCOL` (both spellings accepted)
+- Accepts `postgresql` or `postgres` as valid protocol values
+
+### 9.2 response.js — handleError
+- Handles PostgreSQL error code `23505` (unique_violation): returns HTTP 400 with a human-readable "Duplicate record" message instead of a 500 crash
+- Field-level error pinpoints the conflicting code field and value
+
+### 9.3 orders.model.js
+- `list()` status filter is now case-insensitive (`PENDING` = `pending`)
+- `create()` accepts a custom order code in `data.code`; falls back to auto-generated `ORD-{id}` if blank
+- `update()` status column is now updatable; cascade delete cleans up `delivery`, `dispatch_assignment`, `payment`, and `expense_voucher` rows when an order is removed
+- `remove()` only allowed when status is `CANCELLED` or `COMPLETED` (previously only `PENDING`)
+
+### 9.4 orders.service.js
+- Status-gated mutation: when order status is not `PENDING`, only the `status` field may be changed — customer, store, address, price, and items are locked; any attempt throws a `ValidationError`
+- `orderItemsChanged()` helper compares existing vs. proposed items by product_id, quantity, and unit_price (±0.01 tolerance)
+
+### 9.5 Other Models / Services
+- `customers.model.js`, `deliverers.model.js`, `stores.model.js`, `promotions.model.js`: minor query improvements and error handling
+- `dispatch-assignments.model.js`: defensive FK resolution
+- `expense-vouchers.service.js`, `payments.service.js`: consistent delivery_id validation
+
+---
+
+## 10. Cross-Document Consistency Notes
 
 | # | Issue | Impact | Resolution |
 |---|-------|--------|------------|
@@ -1449,3 +1483,8 @@ Card → Table (results)
 | 7 | `payments.service.js` and `expense-vouchers.service.js` validated `delivery_code` | Server rejected valid POST bodies | **Fixed** — both services now validate `delivery_id` (positive integer); models updated to match |
 | 8 | `ExpenseFormView` included `PARKING` expense type | Not in API spec enum (FUEL/MAINTENANCE/TOLL/OTHER) | **Fixed** — PARKING removed from frontend type list |
 | 9 | `DelivererDispatchView` filtered `status === 'PREPARED'` | No such value in Order status enum | **Fixed** — filter now matches `CONFIRMED` or `PREPARING` |
+| 10 | All list views used `window.confirm()` for delete | Inconsistent UX, not styleable | **Fixed** (v1.4) — replaced with `ConfirmModal` across all master + operations views |
+| 11 | List views had no advanced filtering | Users could only text-search | **Fixed** (v1.4) — `TableSortFilter` added to all master list views; supports sort by any column + multi-rule filter |
+| 12 | Network errors silently failed in list views | Users saw blank tables with no feedback | **Fixed** (v1.4) — error state shows animated icon + message + Retry button in all list views |
+| 13 | Order `remove()` was blocked unless status = PENDING | Completed orders could not be deleted | **Fixed** (v1.4) — deletion allowed when status is CANCELLED or COMPLETED |
+| 14 | `pool.js` rejected `postgres://` URLs | Deployment to cloud DBs failed | **Fixed** (v1.4) — accepts both `postgresql` and `postgres` protocols; parses `DATABASE_URL` automatically |

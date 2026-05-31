@@ -23,21 +23,22 @@ export default function StoreProductsReportView({ showToast }) {
             getJson('/store-products').catch(() => []),
         ]).then(([stores, products]) => {
             if (cancelled) return;
-            const storeMap = new Map(stores.map(s => [s.store_id, s]));
+            const storeMap = new Map(stores.map(s => [String(s.store_id), s]));
             setLovStores(stores.map(s => ({ id: s.store_code, storeId: s.store_id, name: s.name, category: s.category || '-' })));
             const mapped = (products || []).map(p => {
-                const s = storeMap.get(p.store_id) || {};
+                const s = storeMap.get(String(p.store_id)) || {};
                 return {
                     id:         p.product_id,
                     storeCode:  s.store_code || '',
                     store:      s.name || '-',
                     name:       p.name,
                     price:      Number(p.unit_price || 0),
-                    status:     p.status || 'AVAILABLE',
+                    status:     (p.status || 'AVAILABLE').toUpperCase(),
                 };
             });
             setAllProducts(mapped);
             setRows(mapped);
+
         }).catch(e => {
             if (!cancelled) showToast?.(getApiErrorMessage(e, 'Failed to load products'), 'error');
         }).finally(() => {

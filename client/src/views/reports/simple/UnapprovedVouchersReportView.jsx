@@ -22,29 +22,30 @@ export default function UnapprovedVouchersReportView({ showToast }) {
             getJson('/profiles').catch(() => []),
         ]).then(([vouchers, deliveries, deliverers, profiles]) => {
             if (cancelled) return;
-            const profileMap  = new Map(profiles.map(p => [p.profile_id, p]));
-            const deliveryMap = new Map(deliveries.map(d => [d.delivery_id, d]));
-            const dlvMap      = new Map(deliverers.map(d => [d.deliverer_id, d]));
+            const profileMap  = new Map(profiles.map(p => [String(p.profile_id), p]));
+            const deliveryMap = new Map(deliveries.map(d => [String(d.delivery_id), d]));
+            const dlvMap      = new Map(deliverers.map(d => [String(d.deliverer_id), d]));
 
             const dm = new Map();
             for (const d of deliverers) {
-                const prof = profileMap.get(d.profile_id) || {};
-                dm.set(d.deliverer_id, prof.full_name || d.deliverer_code || `Deliverer#${d.deliverer_id}`);
+                const prof = profileMap.get(String(d.profile_id)) || {};
+                dm.set(String(d.deliverer_id), prof.full_name || d.deliverer_code || `Deliverer#${d.deliverer_id}`);
             }
             setDelivererMap(dm);
 
             setAllVouchers((vouchers || []).map(v => {
-                const delivery  = deliveryMap.get(v.delivery_id) || {};
-                const name      = dm.get(delivery.deliverer_id) || `Deliverer#${delivery.deliverer_id || '?'}`;
+                const delivery  = deliveryMap.get(String(v.delivery_id)) || {};
+                const name      = dm.get(String(delivery.deliverer_id)) || `Deliverer#${delivery.deliverer_id || '?'}`;
                 return {
                     id:            v.voucher_code,
                     delivererName: name,
                     date:          String(v.voucher_date || '').slice(0, 10),
                     items:         (v.expense_items || []).length,
                     total:         Number(v.total_amount || 0),
-                    status:        v.status || 'DRAFT',
+                    status:        (v.status || 'DRAFT').toUpperCase(),
                 };
             }));
+
         }).catch(e => {
             if (!cancelled) showToast?.(getApiErrorMessage(e, 'Failed to load vouchers'), 'error');
         }).finally(() => {

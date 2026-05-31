@@ -29,13 +29,26 @@ exports.create = async (data) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    let code = data.code;
+    if (code && typeof code === 'string' && code.trim()) {
+      code = code.trim();
+    } else {
+      code = 'CUST-TMP-' + Date.now();
+    }
     const { rows: [ins] } = await client.query(
       'INSERT INTO customer (profile_id,address_id,membership_level,total_spent,code) VALUES ($1,$2,$3,0,$4) RETURNING id',
-      [data.profile_id, data.address_id, data.membership_level, 'CUST-TMP-' + Date.now()]
+      [data.profile_id, data.address_id, data.membership_level, code]
     );
-    const code = 'CUST-' + String(ins.id).padStart(4, '0');
-    const { rows: [r] } = await client.query(
-      'UPDATE customer SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);
+    let r;
+    if (!data.code || typeof data.code !== 'string' || !data.code.trim()) {
+      const fallbackCode = 'CUST-' + String(ins.id).padStart(6, '0');
+      const { rows: [updated] } = await client.query(
+        'UPDATE customer SET code=$1 WHERE id=$2 RETURNING *', [fallbackCode, ins.id]);
+      r = updated;
+    } else {
+      const { rows: [selected] } = await client.query('SELECT * FROM customer WHERE id=$1', [ins.id]);
+      r = selected;
+    }
     await client.query('COMMIT');
     return fmt(r);
   } catch (e) { await client.query('ROLLBACK'); throw e; }

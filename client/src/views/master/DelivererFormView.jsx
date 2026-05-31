@@ -22,18 +22,25 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
     const [currentStatus, setCurrentStatus] = useState(data.currentStatus || 'AVAILABLE');
     const [previewCode,   setPreviewCode]   = useState(data.delivererCode  || '…');
     const [saving,        setSaving]        = useState(false);
+    const [isAuto,        setIsAuto]        = useState(true);
+    const [customCode,    setCustomCode]    = useState('');
 
     useEffect(() => {
         if (!isNew) return;
         getJson('/deliverers')
             .then(deliverers => {
                 const codes = deliverers.map(d => d.deliverer_code);
-                setPreviewCode(nextCode(codes, 'DLV-', 4));
+                setPreviewCode(nextCode(codes, 'DLV-', 6));
             })
             .catch(() => setPreviewCode('DLV-????'));
     }, [isNew]);
 
     const validate = () => {
+        if (isNew && !isAuto) {
+            const trimmed = customCode.trim();
+            if (!trimmed) return 'Custom ID is required when Auto is unchecked';
+            if (!/^DLV-\d{6}$/.test(trimmed)) return 'ID must be in the format DLV-000000 (DLV- followed by 6 digits)';
+        }
         if (!name.trim())    return 'Full Name is required';
         if (!phone.trim())   return 'Phone Number is required';
         if (!license.trim()) return 'License Plate is required';
@@ -60,6 +67,7 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
                     vehicle_type:   vehicleType,
                     license_plate:  license.trim().toUpperCase(),
                     current_status: currentStatus,
+                    code:           isAuto ? previewCode : customCode.trim(),
                 });
                 showToast('Deliverer created successfully!');
             } else {
@@ -89,7 +97,7 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
         <div className="fade-in space-y-5">
             <button
                 onClick={onBack}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-bold transition-colors"
             >
                 <ArrowLeft className="w-4 h-4" /> Back to Deliverers
             </button>
@@ -102,31 +110,34 @@ export default function DelivererFormView({ data = {}, onBack, onSaved, showToas
                 <div className="space-y-5">
                     {/* Row 1: Code preview | Status */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label="Deliverer Code">
-                            <Input
-                                value={previewCode}
-                                readOnly
-                                className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300 font-mono"
-                                title="Code is assigned by server on save"
-                            />
+                        <FormField label="ID" required>
+                            <div className="flex items-center gap-2 mt-1">
+                                <Input
+                                    value={isNew ? (isAuto ? previewCode : customCode) : previewCode}
+                                    onChange={e => setCustomCode(e.target.value)}
+                                    readOnly={!isNew || isAuto}
+                                    className={`font-mono flex-1 ${(!isNew || isAuto) ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-gray-300' : ''}`}
+                                    placeholder="DLV-000001"
+                                />
+                                {isNew && (
+                                    <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-gray-300 select-none cursor-pointer shrink-0 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/55 transition-colors h-9">
+                                        <input
+                                            type="checkbox"
+                                            checked={isAuto}
+                                            onChange={e => setIsAuto(e.target.checked)}
+                                            className="rounded accent-red-650 cursor-pointer"
+                                        />
+                                        <span>Auto</span>
+                                    </label>
+                                )}
+                            </div>
                         </FormField>
                         <FormField label="Status">
-                            <div className="bg-slate-100 p-1 rounded-xl flex w-full max-w-[280px] border border-slate-200/50 mt-1">
+                            <Select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)}>
                                 {STATUS_OPTIONS.map(opt => (
-                                    <button
-                                        key={opt.value}
-                                        type="button"
-                                        onClick={() => setCurrentStatus(opt.value)}
-                                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-center ${
-                                            currentStatus === opt.value
-                                                ? 'bg-red-500 text-white shadow-sm'
-                                                : 'text-slate-500 dark:text-gray-300 hover:text-slate-800 dark:hover:text-white'
-                                        }`}
-                                    >
-                                        {opt.label}
-                                    </button>
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                                 ))}
-                            </div>
+                            </Select>
                         </FormField>
                     </div>
 

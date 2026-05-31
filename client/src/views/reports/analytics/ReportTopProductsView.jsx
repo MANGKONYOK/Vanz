@@ -36,8 +36,8 @@ export default function ReportTopProductsView({ showToast }) {
                 getJson('/stores').catch(() => []),
             ]);
 
-            const productMap = new Map((products || []).map(p => [p.product_id, p]));
-            const storeMap   = new Map((stores    || []).map(s => [s.store_id,   s]));
+            const productMap = new Map((products || []).map(p => [String(p.product_id), p]));
+            const storeMap   = new Map((stores    || []).map(s => [String(s.store_id),   s]));
 
             // Aggregate sales by product
             const salesByProduct = {};
@@ -56,11 +56,11 @@ export default function ReportTopProductsView({ showToast }) {
             // Build ranked list
             let ranked = Object.entries(salesByProduct)
                 .map(([pid, agg]) => {
-                    const p   = productMap.get(Number(pid)) || {};
-                    const s   = storeMap.get(p.store_id)   || {};
+                    const p   = productMap.get(String(pid)) || {};
+                    const s   = storeMap.get(String(p.store_id))   || {};
                     const storeCodeMatch = storeCode ? (s.store_code === storeCode) : true;
                     return storeCodeMatch ? {
-                        pid:      Number(pid),
+                        pid:      String(pid),
                         store:    s.name     || '-',
                         name:     p.name     || `Product#${pid}`,
                         category: s.category || '-',

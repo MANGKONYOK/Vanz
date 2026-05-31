@@ -48,7 +48,7 @@ exports.findAll = async (f) => {
   const p = [];
   if (f.order_code)  { p.push(f.order_code);  q += ` AND code = $${p.length}`; }
   if (f.customer_id) { p.push(f.customer_id); q += ` AND customer_id = $${p.length}`; }
-  if (f.status)      { p.push(f.status);       q += ` AND status = $${p.length}`; }
+  if (f.status)      { p.push(String(f.status).toLowerCase()); q += ` AND status = $${p.length}`; }
   q += ' ORDER BY id DESC';
   const { rows } = await pool.query(q, p);
   return attachItemsBatch(rows.map(fmtHeader));
@@ -67,13 +67,25 @@ exports.create = async (data) => {
     if (!cust) throw Object.assign(new Error(`Customer ${data.customer_code} not found`), { name: 'NotFoundError' });
     const { rows: [store] } = await client.query('SELECT id FROM store WHERE code=$1', [data.store_code]);
     if (!store) throw Object.assign(new Error(`Store ${data.store_code} not found`), { name: 'NotFoundError' });
+    let code = data.code;
+    if (code && typeof code === 'string' && code.trim()) {
+      code = code.trim();
+    } else {
+      code = 'ORD-TMP-' + Date.now();
+    }
     const { rows: [ins] } = await client.query(
       'INSERT INTO "order" (customer_id,store_id,total_price,address_snapshot,status,code) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
-      [cust.id, store.id, data.total_price, data.address_snapshot, 'PENDING', 'ORD-TMP-' + Date.now()]
+      [cust.id, store.id, data.total_price, data.address_snapshot, data.status || 'PENDING', code]
     );
-    const year = new Date().getFullYear();
-    const code = 'ORD-' + year + '-' + String(ins.id).padStart(6, '0');
-    const { rows: [hdr] } = await client.query('UPDATE "order" SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);
+    let hdr;
+    if (!data.code || typeof data.code !== 'string' || !data.code.trim()) {
+      const fallbackCode = 'ORD-' + String(ins.id).padStart(6, '0');
+      const { rows: [updated] } = await client.query('UPDATE "order" SET code=$1 WHERE id=$2 RETURNING *', [fallbackCode, ins.id]);
+      hdr = updated;
+    } else {
+      const { rows: [selected] } = await client.query('SELECT * FROM "order" WHERE id=$1', [ins.id]);
+      hdr = selected;
+    }
     const items = [];
     for (const item of data.order_items) {
       const { rows: [i] } = await client.query(
@@ -92,9 +104,28 @@ exports.update = async (id, data) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const hdrFields = ['status','address_snapshot','total_price'];
+    
     const sets = []; const p = [];
+    
+    if (data.customer_code !== undefined) {
+      const { rows: [cust] } = await client.query('SELECT id FROM customer WHERE code=$1', [data.customer_code]);
+      if (cust) {
+        p.push(cust.id);
+        sets.push(`customer_id = $${p.length}`);
+      }
+    }
+    
+    if (data.store_code !== undefined) {
+      const { rows: [store] } = await client.query('SELECT id FROM store WHERE code=$1', [data.store_code]);
+      if (store) {
+        p.push(store.id);
+        sets.push(`store_id = $${p.length}`);
+      }
+    }
+
+    const hdrFields = ['status','address_snapshot','total_price'];
     hdrFields.forEach(k => { if (data[k] !== undefined) { p.push(data[k]); sets.push(`${k} = $${p.length}`); }});
+    
     let hdr;
     if (sets.length) {
       p.push(id);
@@ -130,6 +161,30 @@ exports.deleteById = async (id) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    
+    // Find delivery IDs to clean up related expense vouchers and payments
+    const { rows: delRows } = await client.query('SELECT id FROM delivery WHERE order_id = $1', [id]);
+    const delIds = delRows.map(r => r.id);
+    
+    if (delIds.length > 0) {
+      const { rows: evRows } = await client.query('SELECT id FROM expense_voucher WHERE delivery_id = ANY($1)', [delIds]);
+      const evIds = evRows.map(r => r.id);
+      if (evIds.length > 0) {
+        await client.query('DELETE FROM expense_voucher_items WHERE expense_voucher_id = ANY($1)', [evIds]);
+        await client.query('DELETE FROM expense_voucher WHERE id = ANY($1)', [evIds]);
+      }
+      
+      const { rows: payRows } = await client.query('SELECT id FROM payment WHERE delivery_id = ANY($1)', [delIds]);
+      const payIds = payRows.map(r => r.id);
+      if (payIds.length > 0) {
+        await client.query('DELETE FROM payment_items WHERE payment_id = ANY($1)', [payIds]);
+        await client.query('DELETE FROM payment WHERE id = ANY($1)', [payIds]);
+      }
+    }
+
+    await client.query('DELETE FROM payment_items WHERE order_id=$1', [id]);
+    await client.query('DELETE FROM delivery WHERE order_id=$1', [id]);
+    await client.query('DELETE FROM dispatch_assignment WHERE order_id=$1', [id]);
     await client.query('DELETE FROM order_items WHERE order_id=$1', [id]);
     await client.query('DELETE FROM "order" WHERE id=$1', [id]);
     await client.query('COMMIT');

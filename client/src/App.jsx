@@ -20,6 +20,9 @@ export default function App() {
     const [expandedNav, setExpandedNav] = useState({ simple: true, analytics: true });
     const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
     const [promotionEditData, setPromotionEditData] = useState(null);
+    const [orderEditData, setOrderEditData] = useState(null);
+    const [expenseEditData, setExpenseEditData] = useState(null);
+    const [paymentEditData, setPaymentEditData] = useState(null);
     const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
 
     useEffect(() => {
@@ -68,15 +71,15 @@ export default function App() {
                         {currentView === 'dashboard' && <DashboardView onNavigate={setCurrentView} />}
 
                         {/* Operations */}
-                        {currentView === 'customer_order_list' && <CustomerOrderListView showToast={showToast} onNavigate={() => setCurrentView('customer_order_form')} />}
-                        {currentView === 'customer_order_form' && <CustomerOrderFormView showToast={showToast} onNavigateBack={() => setCurrentView('customer_order_list')} />}
+                        {currentView === 'customer_order_list' && <CustomerOrderListView showToast={showToast} onNavigate={(data) => { setOrderEditData(data && data.id ? data : null); setCurrentView('customer_order_form'); }} />}
+                        {currentView === 'customer_order_form' && <CustomerOrderFormView data={orderEditData} showToast={showToast} onNavigateBack={() => { setOrderEditData(null); setCurrentView('customer_order_list'); }} />}
                         {currentView === 'dispatch_form' && <DelivererDispatchView showToast={showToast} />}
 
                         {/* Finance */}
-                        {currentView === 'expense_list' && <ExpenseListView showToast={showToast} onNavigate={() => setCurrentView('expense_form')} />}
-                        {currentView === 'expense_form' && <ExpenseFormView onNavigateBack={() => setCurrentView('expense_list')} showToast={showToast} />}
-                        {currentView === 'payment_list' && <DelivererPaymentListView showToast={showToast} onNavigate={() => setCurrentView('payment_form')} />}
-                        {currentView === 'payment_form' && <DelivererPaymentView showToast={showToast} onNavigateBack={() => setCurrentView('payment_list')} />}
+                        {currentView === 'expense_list' && <ExpenseListView showToast={showToast} onNavigate={(data) => { setExpenseEditData(data && data.id ? data : null); setCurrentView('expense_form'); }} />}
+                        {currentView === 'expense_form' && <ExpenseFormView data={expenseEditData} onNavigateBack={() => { setExpenseEditData(null); setCurrentView('expense_list'); }} showToast={showToast} />}
+                        {currentView === 'payment_list' && <DelivererPaymentListView showToast={showToast} onNavigate={(data) => { setPaymentEditData(data && data.id ? data : null); setCurrentView('payment_form'); }} />}
+                        {currentView === 'payment_form' && <DelivererPaymentView data={paymentEditData} showToast={showToast} onNavigateBack={() => { setPaymentEditData(null); setCurrentView('payment_list'); }} />}
                         {currentView === 'revenue_trip' && <RevenueTripView showToast={showToast} />}
 
                         {/* Master Data */}
@@ -88,20 +91,21 @@ export default function App() {
                         {currentView === 'promotion_form' && <PromotionFormView data={promotionEditData} onNavigateBack={() => { setPromotionEditData(null); setCurrentView('promotion_list'); }} showToast={showToast} />}
 
                         {/* Simple Reports */}
-                        {currentView === 'report_delivered_orders' && <DeliveredOrdersReportView />}
-                        {currentView === 'report_order_receipt' && <OrderReceiptView />}
-                        {currentView === 'report_store_products' && <StoreProductsReportView />}
-                        {currentView === 'report_fav_stores' && <FavStoresReportView />}
-                        {currentView === 'report_unapproved_vouchers' && <UnapprovedVouchersReportView />}
-                        {currentView === 'report_deliverer_ranking' && <DelivererRankingReportView />}
-                        {currentView === 'report_deliverer_history' && <DelivererHistoryReportView />}
-                        {currentView === 'report_category_products' && <CategoryProductsReportView />}
+                        {currentView === 'report_delivered_orders' && <DeliveredOrdersReportView showToast={showToast} />}
+                        {currentView === 'report_order_receipt' && <OrderReceiptView showToast={showToast} />}
+                        {currentView === 'report_store_products' && <StoreProductsReportView showToast={showToast} />}
+                        {currentView === 'report_fav_stores' && <FavStoresReportView showToast={showToast} />}
+                        {currentView === 'report_unapproved_vouchers' && <UnapprovedVouchersReportView showToast={showToast} />}
+                        {currentView === 'report_deliverer_ranking' && <DelivererRankingReportView showToast={showToast} />}
+                        {currentView === 'report_deliverer_history' && <DelivererHistoryReportView showToast={showToast} />}
+                        {currentView === 'report_category_products' && <CategoryProductsReportView showToast={showToast} />}
 
                         {/* Analytics Reports */}
-                        {currentView === 'report_top_products' && <ReportTopProductsView />}
-                        {currentView === 'report_top_deliverers' && <TopDeliverersReportView />}
-                        {currentView === 'report_expense_summary' && <ExpenseSummaryReportView />}
-                        {currentView === 'report_promo_perf' && <PromoPerfReportView />}
+                        {currentView === 'report_top_products' && <ReportTopProductsView showToast={showToast} />}
+                        {currentView === 'report_top_deliverers' && <TopDeliverersReportView showToast={showToast} />}
+                        {currentView === 'report_expense_summary' && <ExpenseSummaryReportView showToast={showToast} />}
+                        {currentView === 'report_promo_perf' && <PromoPerfReportView showToast={showToast} />}
+
 
                     </div>
                 </div>

@@ -22,8 +22,8 @@ export default function TopDeliverersReportView({ showToast }) {
                 getJson('/payments').catch(() => []),
             ]);
 
-            const profileMap  = new Map(profiles.map(p => [p.profile_id, p]));
-            const delivererMap = new Map(deliverers.map(d => [d.deliverer_id, d]));
+            const profileMap  = new Map(profiles.map(p => [String(p.profile_id), p]));
+            const delivererMap = new Map(deliverers.map(d => [String(d.deliverer_id), d]));
 
             // Count deliveries per deliverer within date range
             const deliveryCount = {};
@@ -38,7 +38,7 @@ export default function TopDeliverersReportView({ showToast }) {
             const earningsByDeliverer = {};
             for (const pay of (payments || [])) {
                 // Find the deliverer via delivery
-                const delivery = (deliveries || []).find(d => d.delivery_id === pay.delivery_id);
+                const delivery = (deliveries || []).find(d => String(d.delivery_id) === String(pay.delivery_id));
                 if (!delivery) continue;
                 const did = delivery.deliverer_id;
                 const earned = (pay.payment_items || []).reduce((s, i) =>
@@ -48,17 +48,18 @@ export default function TopDeliverersReportView({ showToast }) {
 
             const ranked = Object.entries(deliveryCount)
                 .map(([did, count]) => {
-                    const d    = delivererMap.get(Number(did)) || {};
-                    const prof = profileMap.get(d.profile_id) || {};
+                    const d    = delivererMap.get(String(did)) || {};
+                    const prof = profileMap.get(String(d.profile_id)) || {};
                     return {
-                        id:        Number(did),
+                        id:        did,
                         name:      prof.full_name || d.deliverer_code || `Deliverer#${did}`,
                         type:      d.vehicle_type || '—',
                         deliveries: count,
-                        earnings:  earningsByDeliverer[Number(did)] || 0,
+                        earnings:  earningsByDeliverer[String(did)] || 0,
                         rating:    Number(d.rating || 0),
                     };
                 })
+
                 .sort((a, b) => b.deliveries - a.deliveries)
                 .slice(0, Number(topN) || 10)
                 .map((r, i) => ({ ...r, rank: i + 1 }));

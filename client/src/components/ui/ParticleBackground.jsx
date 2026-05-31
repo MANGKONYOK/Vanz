@@ -51,7 +51,7 @@ export default function ParticleBackground({ isDarkMode }) {
                 this.density = (Math.random() * 30) + 1;
             }
             draw() {
-                ctx.fillStyle = isDarkMode ? 'rgba(255, 255, 255, 0.65)' : 'rgba(185, 28, 28, 0.85)';
+                ctx.fillStyle = isDarkMode ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.75)';
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.closePath();
@@ -109,7 +109,7 @@ export default function ParticleBackground({ isDarkMode }) {
                                  + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
                     if (distance < (width/10) * (height/10)) {
                         opacityValue = 1 - (distance / 15000);
-                        ctx.strokeStyle = isDarkMode ? `rgba(255, 255, 255, ${opacityValue * 0.35})` : `rgba(185, 28, 28, ${opacityValue * 0.5})`;
+                        ctx.strokeStyle = isDarkMode ? `rgba(255, 255, 255, ${opacityValue * 0.35})` : `rgba(0, 0, 0, ${opacityValue * 0.35})`;
                         ctx.lineWidth = 1;
                         ctx.beginPath();
                         ctx.moveTo(particlesArray[a].x, particlesArray[a].y);

@@ -33,11 +33,11 @@ const profileUpdate = z.object({
 const customerCreate = z.object({
   profile_id:       z.union([z.string().min(1, 'required'), z.number()]),
   address_id:       z.union([z.string().min(1, 'required'), z.number()]),
-  membership_level: z.enum(['STANDARD', 'GOLD', 'PLATINUM'], { errorMap: () => ({ message: 'must be one of STANDARD, GOLD, PLATINUM' }) }),
+  membership_level: z.enum(['Bronze', 'Silver', 'Gold', 'Platinum'], { errorMap: () => ({ message: 'must be one of Bronze, Silver, Gold, Platinum' }) }),
 }).passthrough();
 
 const customerUpdate = z.object({
-  membership_level: z.enum(['STANDARD', 'GOLD', 'PLATINUM'], { errorMap: () => ({ message: 'must be one of STANDARD, GOLD, PLATINUM' }) }).optional(),
+  membership_level: z.enum(['Bronze', 'Silver', 'Gold', 'Platinum'], { errorMap: () => ({ message: 'must be one of Bronze, Silver, Gold, Platinum' }) }).optional(),
 }).passthrough();
 
 // ── Deliverers ───────────────────────────────────────────────
@@ -96,6 +96,7 @@ const orderItemUpdate = z.object({
 
 // ── Orders ───────────────────────────────────────────────────
 const MUTABLE_ORDER_STATUS = ['PENDING', 'CONFIRMED', 'CANCELLED'];
+const ALL_ORDER_STATUS = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'PICKED_UP', 'DISPATCHED', 'DELIVERING', 'DELIVERED', 'COMPLETED', 'CANCELLED', 'FAILED'];
 const orderCreate = z.object({
   customer_code:    z.string().min(1, 'required'),
   store_code:       z.string().min(1, 'required'),
@@ -105,7 +106,7 @@ const orderCreate = z.object({
 }).passthrough();
 
 const orderUpdate = z.object({
-  status:           z.enum(MUTABLE_ORDER_STATUS, { errorMap: () => ({ message: `must be one of ${MUTABLE_ORDER_STATUS.join(', ')}` }) }).optional(),
+  status:           z.enum(ALL_ORDER_STATUS, { errorMap: () => ({ message: `must be one of ${ALL_ORDER_STATUS.join(', ')}` }) }).optional(),
   address_snapshot: z.any().optional(),
   total_price:      z.number().min(0, 'must be >= 0').optional(),
   order_items:      z.array(orderItemUpdate).optional(),
@@ -153,7 +154,7 @@ const expenseVoucherCreate = z.object({
 }).passthrough();
 
 const expenseVoucherUpdate = z.object({
-  status:        z.enum(['DRAFT', 'SUBMITTED'], { errorMap: () => ({ message: 'must be one of DRAFT, SUBMITTED' }) }).optional(),
+  status:        z.enum(['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'FAILED', 'SUBMITTED'], { errorMap: () => ({ message: 'must be one of DRAFT, PENDING, APPROVED, REJECTED, FAILED, SUBMITTED' }) }).optional(),
   voucher_date:  z.string().refine(v => new Date(v) <= new Date(), { message: 'cannot be a future date' }).optional(),
   total_amount:  z.number().min(0, 'must be >= 0').optional(),
   expense_items: z.array(expenseItemSchema).optional(),
@@ -176,7 +177,7 @@ const paymentCreate = z.object({
 }).passthrough();
 
 const paymentUpdate = z.object({
-  status:        z.enum(['PENDING', 'PAID', 'CANCELLED'], { errorMap: () => ({ message: 'must be one of PENDING, PAID, CANCELLED' }) }).optional(),
+  status:        z.enum(['PENDING', 'PROCESSING', 'PAID', 'COMPLETED', 'FAILED', 'CANCELLED'], { errorMap: () => ({ message: 'must be one of PENDING, PROCESSING, PAID, COMPLETED, FAILED, CANCELLED' }) }).optional(),
   total_payment: z.number().min(0, 'must be >= 0').optional(),
   payment_items: z.array(paymentItemSchema).optional(),
 }).passthrough();

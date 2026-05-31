@@ -20,15 +20,15 @@ export default function DelivererRankingReportView({ showToast }) {
             getJson('/profiles').catch(() => []),
         ]).then(([deliverers, profiles]) => {
             if (cancelled) return;
-            const profileMap = new Map(profiles.map(p => [p.profile_id, p]));
+            const profileMap = new Map(profiles.map(p => [String(p.profile_id), p]));
             const mapped = (deliverers || []).map(d => {
-                const prof = profileMap.get(d.profile_id) || {};
+                const prof = profileMap.get(String(d.profile_id)) || {};
                 return {
                     id:      d.deliverer_code,
                     name:    prof.full_name || d.deliverer_code,
                     type:    d.vehicle_type || '—',
                     rating:  Number(d.rating || 0),
-                    status:  d.current_status || '—',
+                    status:  (d.current_status || '—').toUpperCase(),
                 };
             });
             setLovData(mapped);

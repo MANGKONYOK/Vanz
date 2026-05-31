@@ -69,13 +69,25 @@ exports.create = async (data) => {
     const deliveryId = parseInt(data.delivery_id, 10);
     const { rows: [chk] } = await client.query('SELECT id FROM delivery WHERE id=$1', [deliveryId]);
     if (!chk) throw Object.assign(new Error(`Delivery ${data.delivery_id} not found`), { name: 'NotFoundError' });
+    let code = data.code;
+    if (code && typeof code === 'string' && code.trim()) {
+      code = code.trim();
+    } else {
+      code = 'PAY-TMP-' + Date.now();
+    }
     const { rows: [ins] } = await client.query(
       'INSERT INTO payment (delivery_id,payment_period_start,payment_period_end,total_payment,status,code,payment_datetime) VALUES ($1,$2,$3,$4,$5,$6,NOW()) RETURNING id',
-      [deliveryId, data.payment_period_start, data.payment_period_end, data.total_payment, 'PENDING', 'PAY-TMP-' + Date.now()]
+      [deliveryId, data.payment_period_start, data.payment_period_end, data.total_payment, 'PENDING', code]
     );
-    const year = new Date().getFullYear();
-    const code = 'PAY-' + year + '-' + String(ins.id).padStart(6, '0');
-    const { rows: [hdr] } = await client.query('UPDATE payment SET code=$1 WHERE id=$2 RETURNING *', [code, ins.id]);
+    let hdr;
+    if (!data.code || typeof data.code !== 'string' || !data.code.trim()) {
+      const fallbackCode = 'PAY-' + String(ins.id).padStart(6, '0');
+      const { rows: [updated] } = await client.query('UPDATE payment SET code=$1 WHERE id=$2 RETURNING *', [fallbackCode, ins.id]);
+      hdr = updated;
+    } else {
+      const { rows: [selected] } = await client.query('SELECT * FROM payment WHERE id=$1', [ins.id]);
+      hdr = selected;
+    }
     const items = [];
     for (const item of data.payment_items) {
       const { rows: [o] } = await client.query('SELECT id FROM "order" WHERE code=$1', [item.order_code]);

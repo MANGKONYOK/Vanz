@@ -2,32 +2,11 @@ import { useState, useEffect } from 'react';
 import { Printer, Search, Eye } from 'lucide-react';
 import { PageHeader, Btn, Card, LovModal, FilterBar, FilterField, LovInput } from '../../../components/ui';
 import { getJson, getApiErrorMessage } from '../../../api/http';
-import { MOCK_DELIVERED_ORDERS, MOCK_RECEIPT_ITEMS } from '../../../data/mockData';
 
 export default function OrderReceiptView({ showToast }) {
     const [isLovOpen, setIsLovOpen] = useState(false);
-    const [orderId, setOrderId] = useState('ORD-2026-008001');
-
-    // Default simulation receipt loaded on mount
-    const defaultSimulation = {
-        code: 'ORD-2026-008001',
-        date: '2026-03-21 14:32',
-        customer: 'Adisak Mongkolsuwan (Simulated)',
-        store: 'Somchai Kitchen',
-        deliverer: 'Somchai Jaidee',
-        items: MOCK_RECEIPT_ITEMS.map(i => ({
-            id: i.id,
-            name: i.name,
-            qty: i.qty,
-            price: i.price,
-            total: i.total,
-        })),
-        subtotal: 200,
-        deliveryFee: 40,
-        total: 240,
-    };
-
-    const [selectedOrder, setSelectedOrder] = useState(defaultSimulation);
+    const [orderId, setOrderId] = useState('');
+    const [selectedOrder, setSelectedOrder] = useState(null);
     const [lovOrders, setLovOrders] = useState([]);
 
     // Master lists for client-side joins
@@ -39,46 +18,24 @@ export default function OrderReceiptView({ showToast }) {
     const [deliverers, setDeliverers] = useState([]);
     const [products, setProducts] = useState([]);
 
-    // Hoisted function for resolving receipt details
+    // Resolving receipt details
     function loadReceiptForCode(code, oData = orders, cData = customers, pData = profiles, sData = stores, dlvData = deliveries, drData = deliverers, prodData = products) {
         const order = (oData || []).find(o => o.order_code === code);
         if (!order) {
-            // Simulated fallback if order is not in live database
-            const mockOrder = MOCK_DELIVERED_ORDERS.find(o => o.id === code);
-            if (mockOrder) {
-                setSelectedOrder({
-                    code: mockOrder.id,
-                    date: mockOrder.date + ' 14:32',
-                    customer: mockOrder.customer + ' (Simulated)',
-                    store: mockOrder.store,
-                    deliverer: mockOrder.deliverer,
-                    items: MOCK_RECEIPT_ITEMS.map(i => ({
-                        id: i.id,
-                        name: i.name,
-                        qty: i.qty,
-                        price: i.price,
-                        total: i.total,
-                    })),
-                    subtotal: 200,
-                    deliveryFee: 40,
-                    total: 240,
-                });
-            } else {
-                setSelectedOrder(null);
-            }
+            setSelectedOrder(null);
             return;
         }
 
-        const cust = cData.find(c => c.customer_id === order.customer_id) || {};
-        const prof = pData.find(p => p.profile_id === cust.profile_id) || {};
-        const store = sData.find(s => s.store_id === order.store_id) || {};
-        const delivery = dlvData.find(d => d.order_id === order.order_id) || {};
-        const deliverer = drData.find(d => d.deliverer_id === delivery.deliverer_id) || {};
-        const dlvProf = pData.find(p => p.profile_id === deliverer.profile_id) || {};
+        const cust = cData.find(c => String(c.customer_id) === String(order.customer_id)) || {};
+        const prof = pData.find(p => String(p.profile_id) === String(cust.profile_id)) || {};
+        const store = sData.find(s => String(s.store_id) === String(order.store_id)) || {};
+        const delivery = dlvData.find(d => String(d.order_id) === String(order.order_id)) || {};
+        const deliverer = drData.find(d => String(d.deliverer_id) === String(delivery.deliverer_id)) || {};
+        const dlvProf = pData.find(p => String(p.profile_id) === String(deliverer.profile_id)) || {};
 
         // Resolve product names
         const items = (order.order_items || []).map(item => {
-            const prod = prodData.find(p => p.product_id === item.product_id) || {};
+            const prod = prodData.find(p => String(p.product_id) === String(item.product_id)) || {};
             return {
                 id: item.order_item_id,
                 name: prod.name || `Product #${item.product_id}`,
@@ -128,13 +85,13 @@ export default function OrderReceiptView({ showToast }) {
             setDeliverers(deliverersData);
             setProducts(productsData);
 
-            // Filter delivered orders
+            // Filter delivered orders (case-insensitive)
             const delivered = (ordersData || [])
-                .filter(o => o.status === 'DELIVERED')
+                .filter(o => o.status?.toUpperCase() === 'DELIVERED')
                 .map(o => {
-                    const cust = customersData.find(c => c.customer_id === o.customer_id) || {};
-                    const prof = profilesData.find(p => p.profile_id === cust.profile_id) || {};
-                    const store = storesData.find(s => s.store_id === o.store_id) || {};
+                    const cust = customersData.find(c => String(c.customer_id) === String(o.customer_id)) || {};
+                    const prof = profilesData.find(p => String(p.profile_id) === String(cust.profile_id)) || {};
+                    const store = storesData.find(s => String(s.store_id) === String(o.store_id)) || {};
                     return {
                         id: o.order_code,
                         date: String(o.order_date || '').slice(0, 10),
@@ -149,29 +106,23 @@ export default function OrderReceiptView({ showToast }) {
                 setOrderId(firstCode);
                 loadReceiptForCode(firstCode, ordersData, customersData, profilesData, storesData, deliveriesData, deliverersData, productsData);
             } else {
-                // Fallback: Populate LoV picker list with mock orders if database is empty/disconnected
-                setLovOrders(MOCK_DELIVERED_ORDERS.map(o => ({
-                    id: o.id,
-                    date: o.date,
-                    customer: o.customer,
-                    store: o.store,
-                })));
-                setOrderId('ORD-2026-008001');
+                setLovOrders([]);
+                setOrderId('');
+                setSelectedOrder(null);
             }
         }).catch(e => {
             showToast?.(getApiErrorMessage(e, 'Failed to load receipt master data'), 'error');
         });
+
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <div className="fade-in flex flex-col items-center justify-center min-h-[75vh] py-6 print:py-0 print:block">
             <style dangerouslySetInnerHTML={{ __html: `
                 @media print {
-                    /* Hide sidebar, header, canvas background, toast, page title, and buttons */
                     aside, header, canvas, button, .print-hide, .toast-in {
                         display: none !important;
                     }
-                    /* Reset html, body, and major containers for printing */
                     html, body, #root, main, .flex-1, .fade-in {
                         background: white !important;
                         background-image: none !important;
@@ -183,7 +134,6 @@ export default function OrderReceiptView({ showToast }) {
                         overflow: visible !important;
                         display: block !important;
                     }
-                    /* Make all parent page layouts and scrollbars full width with zero padding */
                     .max-w-5xl, .p-5, .py-6, .main-scrollbar {
                         max-width: 100% !important;
                         width: 100% !important;
@@ -191,7 +141,6 @@ export default function OrderReceiptView({ showToast }) {
                         padding: 0 !important;
                         display: block !important;
                     }
-                    /* Target the outer print container to fill page nicely */
                     #receipt-print-area {
                         margin: 0 auto !important;
                         padding: 0 !important;
@@ -200,7 +149,6 @@ export default function OrderReceiptView({ showToast }) {
                         box-shadow: none !important;
                         border: none !important;
                     }
-                    /* Force inner receipt Card component to strip borders, shadows, backgrounds */
                     #receipt-print-area > div {
                         border: none !important;
                         box-shadow: none !important;
@@ -211,7 +159,6 @@ export default function OrderReceiptView({ showToast }) {
                         max-width: 100% !important;
                         box-sizing: border-box !important;
                     }
-                    /* Ensure all text inside card is solid black for print legibility */
                     #receipt-print-area * {
                         color: black !important;
                         border-color: #cbd5e1 !important;
@@ -223,6 +170,7 @@ export default function OrderReceiptView({ showToast }) {
                 columns={[{ key: 'id', label: 'Order ID' }, { key: 'date', label: 'Date' }, { key: 'customer', label: 'Customer' }, { key: 'store', label: 'Store' }]}
                 data={lovOrders}
                 onSelect={r => { setIsLovOpen(false); setOrderId(r.id); loadReceiptForCode(r.id); }} />
+            
             <div className="print-hide w-full flex flex-col items-center">
                 <PageHeader title="Order Receipt" subtitle="View and print customer order receipts" className="text-center mb-4" />
 
@@ -311,7 +259,7 @@ export default function OrderReceiptView({ showToast }) {
                 </div>
             ) : (
                 <div className="py-12 text-center text-slate-500 text-sm print-hide">
-                    No order receipt selected. Click the selector pill above or reload.
+                    No order receipt selected or no delivered orders found. Click the selector above to pick an order.
                 </div>
             )}
         </div>

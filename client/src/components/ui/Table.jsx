@@ -61,6 +61,6 @@ export function Tr({ children, onClick }) {
     return <tr onClick={onClick} className={`hover:bg-slate-50 dark:hover:bg-white/5 transition-colors ${onClick ? 'cursor-pointer' : ''}`}>{children}</tr>;
 }
 
-export function Td({ children, right, center, bold, mono, className = '' }) {
-    return <td className={`px-4 py-3 text-slate-700 dark:text-gray-200 ${right ? 'text-right' : ''} ${center ? 'text-center' : ''} ${bold ? 'font-bold text-slate-900 dark:text-white' : ''} ${mono ? 'mono text-xs' : ''} ${className}`}>{children}</td>;
+export function Td({ children, right, center, bold, mono, className = '', ...props }) {
+    return <td {...props} className={`px-4 py-3 text-slate-700 dark:text-gray-200 ${right ? 'text-right' : ''} ${center ? 'text-center' : ''} ${bold ? 'font-bold text-slate-900 dark:text-white' : ''} ${mono ? 'mono text-xs' : ''} ${className}`}>{children}</td>;
 }
