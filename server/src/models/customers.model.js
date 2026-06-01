@@ -79,6 +79,6 @@ exports.isProfileUsed = async (profileId) => {
 
 exports.hasRelatedData = async (id) => {
   const { rows: [c] } = await pool.query(
-    'SELECT (SELECT COUNT(*) FROM "order" WHERE customer_id=$1)+(SELECT COUNT(*) FROM review WHERE customer_id=$1)+(SELECT COUNT(*) FROM favorite_store WHERE customer_id=$1) AS cnt', [id]);
+    'SELECT (SELECT COUNT(*) FROM "order" WHERE customer_id=$1)+(SELECT COUNT(*) FROM favorite_store WHERE customer_id=$1) AS cnt', [id]);
   return parseInt(c.cnt, 10) > 0;
 };
